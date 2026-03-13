@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dreamdive"
+version = "0.1.0"
+description = "Foundational scaffold for a novel-grounded multi-agent simulation engine."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "openai>=1.0,<2",
+  "pydantic>=2.11,<3",
+]
+
+[project.scripts]
+dreamdive = "dreamdive.cli:main"
+
+[project.optional-dependencies]
+dev = []
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]

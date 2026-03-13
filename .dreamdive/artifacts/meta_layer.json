@@ -1,0 +1,171 @@
+{
+  "authorial": {
+    "beliefs_about": {
+      "fate": "Fate is a cycle of wandering and returning; destiny is predetermined but experienced through moments of choice between 'sleeping' and 'waking'.",
+      "love": "Love is a paradoxical bond between predator and prey; intimacy is defined by the willingness to destroy the other versus the choice to protect them out of loneliness.",
+      "power": "Power is an inescapable burden of the 'abandoned race'; true power requires solitude and the capacity for destruction, yet it is often masked by absurdity or weakness."
+    },
+    "central_thesis": {
+      "summary": "The journey of the 'abandoned race' involves traversing desolation to reclaim their home, where the protagonist must reconcile his monstrous potential with a fragile humanity, often mediated by a mysterious younger counterpart who holds the key to his awakening."
+    },
+    "dominant_tone": "A blend of high-fantasy grandeur, cynical modern teenage slacker humor, and underlying melancholic dread.",
+    "narrative_perspective": "Third-person limited, shifting focus primarily to Lu Mingfei's internal monologue while maintaining an omniscient awareness of the mythic backdrop.",
+    "symbolic_motifs": [
+      "White tea flower",
+      "The black box/deep sleep",
+      "Raising the battle flag",
+      "The abandoned child/puppy",
+      "Screens/Gaming interfaces vs. Reality"
+    ],
+    "themes": [
+      {
+        "confidence": "HIGH",
+        "description": "The duality of the ordinary loser and the destined king; the mask of mediocrity hiding immense power.",
+        "name": "Identity Duality"
+      },
+      {
+        "confidence": "HIGH",
+        "description": "Loneliness as a fundamental state of existence for those with special burdens; the fear of being alone vs. the terror of connection.",
+        "name": "Existential Loneliness"
+      },
+      {
+        "confidence": "MEDIUM",
+        "description": "The tension between fatalistic destiny and the illusion of free will; the cost of waking up from a comfortable sleep.",
+        "name": "Destiny vs. Choice"
+      }
+    ]
+  },
+  "character_voices": [
+    {
+      "character_id": "char_lu_mingfei",
+      "emotional_register": "Anxious, self-deprecating, internally sarcastic, outwardly passive, occasionally bursting with suppressed intensity.",
+      "gravitates_toward": [
+        "Internal monologue\u5410\u69fd (roasting)",
+        "Avoidance of responsibility",
+        "Seeking validation through gaming or small comforts"
+      ],
+      "rhetorical_tendencies": "Uses internet slang (GG, \u5e9f\u67f4) to deflect seriousness; contrasts epic narration with trivial thoughts.",
+      "sample_dialogues": [
+        {
+          "text": "\u771f\u70e6\uff01\u8c01\u5bb6\u7684\u5c0f\u5b69\u8dd1\u4e22\u4e86\uff1f\u54e5\u54e5\uff1f\u8fd9\u91cc\u6ca1\u6709\uff01",
+          "why_representative": "Shows his immediate irritation and denial of the supernatural connection he feels."
+        },
+        {
+          "text": "\u4f60\u4f1a\u5403\u6389\u6211\u4e48\uff1f... \u4f1a\u7684\uff0c\u90a3\u6837\u4f60\u5c31\u5c06\u548c\u6211\u4e00\u8d77\uff0c\u541b\u4e34\u4e16\u754c\uff01",
+          "why_representative": "Reveals his acceptance of a dark, fatalistic destiny despite his mundane exterior."
+        }
+      ],
+      "speech_patterns": [
+        "Colloquial Chinese mixed with gamer jargon",
+        "Self-interruption",
+        "Hesitant questioning followed by sudden resignation"
+      ],
+      "vocabulary_register": "Modern youth slang, technical gaming terms, contrasted with archaic fantasy vocabulary when channeling destiny.",
+      "what_they_never_say": "Direct expressions of confidence or leadership without irony."
+    },
+    {
+      "character_id": "char_konstantine",
+      "emotional_register": "Innocent, fearful, deeply attached, perceptive beyond years, seeking safety.",
+      "gravitates_toward": [
+        "Physical closeness to the older figure",
+        "Questioning the nature of death and consumption",
+        "Expressing trust in the 'brother'"
+      ],
+      "rhetorical_tendencies": "Simple, direct questions that cut through lies; uses metaphors of food and cages.",
+      "sample_dialogues": [
+        {
+          "text": "\u4e0d\u5bb3\u6015\uff0c\u548c\u54e5\u54e5\u5728\u4e00\u8d77\uff0c\u4e0d\u5bb3\u6015\u2026\u2026\u53ef\u4e3a\u4ec0\u4e48\u2026\u2026\u4e0d\u5403\u6389\u6211\u5462\uff1f",
+          "why_representative": "Highlights the twisted logic of their relationship: love expressed through the threat of consumption."
+        },
+        {
+          "text": "\u53ef\u662f\u6b7b\u771f\u7684\u8ba9\u4eba\u5f88\u96be\u8fc7\uff0c\u50cf\u662f\u88ab\u5c01\u5728\u4e00\u4e2a\u9ed1\u76d2\u5b50\u91cc...",
+          "why_representative": "Demonstrates his philosophical understanding of mortality and fear."
+        }
+      ],
+      "speech_patterns": [
+        "Soft, hesitant phrasing",
+        "Childlike innocence masking deep insight",
+        "Repeated reassurance"
+      ],
+      "vocabulary_register": "Simple, sensory-based language (darkness, cold, boxes).",
+      "what_they_never_say": "Aggression or rejection of the brother."
+    },
+    {
+      "character_id": "char_001",
+      "emotional_register": "Authoritative, calm, commanding, slightly detached.",
+      "gravitates_toward": [
+        "Enforcing rules",
+        "Acknowledging defeat with grace",
+        "Strategic thinking"
+      ],
+      "rhetorical_tendencies": "Direct commands, rhetorical questions used to assert dominance, formal tone.",
+      "sample_dialogues": [
+        {
+          "text": "\u6211\u4ece\u6765\u62d2\u7edd\u548c\u61e6\u592b\u8bf4\u8bdd\uff0c\u61e6\u592b\u4eec\u624d\u4f1a\u62d2\u7edd\u627f\u8ba4\u81ea\u5df1\u7684\u5931\u8d25\u3002",
+          "why_representative": "Establishes his code of honor and disdain for excuses."
+        }
+      ],
+      "speech_patterns": [
+        "Short, declarative sentences",
+        "Use of titles and formal address",
+        "Silence as a weapon"
+      ],
+      "vocabulary_register": "Formal, military/academic terminology.",
+      "what_they_never_say": "Admitting personal weakness or doubt openly."
+    }
+  ],
+  "language_context": {
+    "author_style": "Witty, fast-paced, blending pop-culture references with high-concept mythology; uses a 'cool' narrator voice that undercuts epic moments with modern cynicism.",
+    "dialogue_style": "Naturalistic, heavy on subtext; characters often say one thing while meaning another, especially regarding fate and relationships.",
+    "figurative_patterns": [
+      "Juxtaposition of the mundane (hamburgers, video games) with the cosmic (\u541e\u566c\u4e16\u754c\uff0c\u8352\u539f)",
+      "Visual metaphors involving light/shadow and cold/hot",
+      "Gaming terminology applied to life events"
+    ],
+    "language_style": "Contemporary Chinese web novel style (wangwen), characterized by short paragraphs, punchy dialogue, and internal monologue markers.",
+    "language_variety": "Standard Mandarin with specific dialectal flavorings in character speech (e.g., street slang), plus English loanwords common in tech/gaming contexts.",
+    "multilingual_features": [
+      "English acronyms (GG, EVA, S\u7ea7, Z\u7ea7)",
+      "Latin names (Adams, Konstantine, Ricardo M. Lu)",
+      "Japanese loanwords/concepts (EVA)"
+    ],
+    "primary_language": "Chinese",
+    "register_profile": "Shifts rapidly between colloquial/slang (Lu Mingfei's thoughts), formal/dramatic (mythic narration), and academic/military (Academy setting).",
+    "translation_notes": [
+      "Terms like 'S\u7ea7', 'Z\u7ea7' refer to a ranking system within the lore; keep as is or translate as 'Rank S/Z'.",
+      "'GG' should be kept as 'GG' or translated as '\u8ba4\u8f93/Good Game' depending on context clarity.",
+      "Names like '\u8def\u9e23\u6cfd' and '\u8def\u660e\u975e' share the surname 'Lu' (Road/Path), implying a shared lineage or mirror image; preserve this pun if possible."
+    ]
+  },
+  "real_world_context": {
+    "autobiographical_elements": "Reflects the anxieties of modern Chinese youth (gaokao pressure, family expectations, feeling 'average' in a competitive society) projected onto a fantasy framework.",
+    "historical_context": "Written during the peak of Chinese web fiction popularity (2010s), influenced by global anime/manga culture and Western fantasy tropes.",
+    "literary_tradition": "Fusion of Xianxia (cultivation/fate) aesthetics with urban fantasy and game-centric narrative structures.",
+    "unspeakable_constraints": [
+      "Strict censorship regarding political allegory; themes of rebellion are contained within fictional institutions (Academy).",
+      "Avoidance of explicit religious dogma; 'Gods' are reinterpreted as mythical races or biological entities."
+    ],
+    "written_when": "Early 2010s (serialized online)."
+  },
+  "writing_style": {
+    "description_density": "High density in action scenes and internal monologues; sparse description of background settings unless they serve a symbolic purpose.",
+    "dialogue_narration_balance": "Heavily weighted towards internal narration and dialogue; external action is often described through the lens of the protagonist's perception.",
+    "prose_description": "Vivid, sensory-focused (light, color, texture), often contrasting the sterile/cold with the warm/vibrant.",
+    "sample_passages": [
+      {
+        "text": "\u6240\u8c13\u5f03\u65cf\u7684\u547d\u8fd0\uff0c\u5c31\u662f\u8981\u7a7f\u8d8a\u8352\u539f\uff0c\u518d\u6b21\u7ad6\u8d77\u6218\u65d7\uff0c\u8fd4\u56de\u6545\u4e61\u3002\u6b7b\u4e0d\u53ef\u6015\uff0c\u53ea\u662f\u4e00\u573a\u957f\u7720\u3002\u5728\u6211\u53ef\u4ee5\u541e\u566c\u8fd9\u4e2a\u4e16\u754c\u4e4b\u524d\uff0c\u4e0e\u5176\u5b64\u72ec\u8dcb\u6d89\uff0c\u4e0d\u5982\u5b89\u7136\u6c89\u7761\u3002\u6211\u4eec\u4ecd\u4f1a\u9192\u6765\u3002",
+        "why_representative": "Captures the core mythic tone and the central conflict of the story."
+      },
+      {
+        "text": "\u4eba\u4e00\u751f\u91cc\u603b\u6709\u51e0\u6b21\u89c9\u5f97\u81ea\u5df1\u770b\u89c1\u4e86\u5929\u5802\u4e4b\u95e8\u6d1e\u5f00\uff0c\u8def\u660e\u975e\u7b49\u4e86\u5341\u516b\u5e74\uff0c\u5728\u4ed6\u6700\u8870\u7684\u90a3\u4e00\u523b\uff0c\u95e8\u7ec8\u4e8e\u5f00\u4e86\u3002",
+        "why_representative": "Establishes the protagonist's 'loser-to-hero' arc and the author's signature blend of destiny and irony."
+      }
+    ],
+    "sentence_rhythm": "Staccato and varied; short, punchy sentences for impact, interspersed with longer, flowing descriptive passages.",
+    "stylistic_signatures": [
+      "Use of 'Brother' (\u54e5\u54e5) as a term of endearment/power dynamic",
+      "Contrast between '\u8870' (unlucky/bad luck) and '\u71c3' (passionate/exciting)",
+      "Meta-commentary on the narrative itself (e.g., calling lines '\u62c9\u98ce')"
+    ]
+  }
+}

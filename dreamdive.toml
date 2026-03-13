@@ -1,0 +1,28 @@
+[defaults]
+workspace = ".dreamdive"
+session_id = "main"
+
+[ingest]
+source = "resources/dragonraja1_demo.txt"
+rerun_structural_scan = false
+rerun_chapters = false
+rerun_meta_layer = false
+rerun_entities = false
+
+[init-snapshot]
+source = "resources/dragonraja1_demo.txt"
+chapter_id = "003"
+tick_label = "snapshot"
+timeline_index = 0
+overwrite = true
+
+[run]
+ticks = 5
+overwrite = true
+
+[branch]
+overwrite = false
+
+[profiles.debug]
+debug = true
+debug_dir = "/tmp/dreamdive-debug"
