@@ -27,13 +27,23 @@ ENV/
 env/
 .venv
 
-# IDEs
+# IDEs & Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude Code & AI assistants
+.claude/
+.agent/
+.continue/
+.cursor/
 
 # DreamDive runtime data
 .dreamdive/
