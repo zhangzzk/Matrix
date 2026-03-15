@@ -22,11 +22,11 @@ LLM_PROVIDER_DEFAULTS: Dict[str, Dict[str, str]] = {
     },
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-        "model": "gemini-2.5-flash-lite",
+        "model": "gemini-2.5-flash",
     },
     "openai": {
         "base_url": "https://api.openai.com/v1",
-        "model": "gpt-5-mini",
+        "model": "gpt-4o-mini",
     },
     "qwen": {
         "base_url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
@@ -62,6 +62,7 @@ class SimulationSettings(BaseModel):
     invalidation_knowledge_threshold: float = 0.6
     horizon_multiplier: float = 4.0
     max_horizon_ticks: int = 50
+    tick_max_events: int = 15
 
     compression_interval_ticks: int = 15
     compression_high_salience_threshold: float = 0.7
