@@ -11,6 +11,7 @@ from dreamdive.cli import (
     _format_duration_compact,
     _format_ingest_detail,
     _format_ingest_progress,
+    _format_init_stage,
     _format_init_progress,
     _format_provider_usage,
     _format_session_not_found_message,
@@ -135,6 +136,28 @@ class CliHelpersTests(unittest.TestCase):
             ),
             "chapter 1/12 · 序幕 白帝城 · story start · session main",
         )
+
+    def test_format_init_progress_includes_agent_and_stage_details(self) -> None:
+        self.assertEqual(
+            _format_init_progress(
+                chapter_id="003",
+                chapter_title="Chapter 2 · 黄金瞳",
+                chapter_index=3,
+                chapter_count=5,
+                timeline_index=0,
+                session_id="main",
+                agent_index=4,
+                agent_total=27,
+                character_name="路明非",
+                stage_label="inferring state",
+            ),
+            "chapter 3/5 · Chapter 2 · 黄金瞳 · story start · session main · agent 4/27 · 路明非 · inferring state",
+        )
+
+    def test_format_init_stage_maps_initializer_events(self) -> None:
+        self.assertEqual(_format_init_stage({"stage": "prepare_agents", "agent_total": 27}), "preparing 27 agents")
+        self.assertEqual(_format_init_stage({"stage": "snapshot_inference"}), "inferring state")
+        self.assertEqual(_format_init_stage({"stage": "goal_seeding_fallback"}), "using heuristic goal fallback")
 
     def test_format_session_ready_detail_includes_starting_chapter_context(self) -> None:
         session = type(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Sequence
 
@@ -8,6 +9,7 @@ from dreamdive.schemas import (
     AgentContextPacket,
     BatchedTrajectoryProjectionPayload,
     CharacterSnapshot,
+    PromptRequest,
     TrajectoryProjectionPayload,
 )
 from dreamdive.simulation.context import ContextAssembler
@@ -78,11 +80,10 @@ class TrajectoryProjector:
                 )
             }
 
-        projections: Dict[str, TrajectoryProjectionPayload] = {}
+        # Build all batch requests upfront.
+        batches: List[tuple[int, List[CharacterSnapshot], PromptRequest]] = []
         for start in range(0, len(snapshots), self.batch_size):
             batch = snapshots[start : start + self.batch_size]
-            if progress_callback is not None:
-                progress_callback(start + 1, start + len(batch), len(snapshots))
             requests: List[dict] = []
             for snapshot in batch:
                 character_id = snapshot.identity.character_id
@@ -99,16 +100,39 @@ class TrajectoryProjector:
                         "planning_horizon": self._estimate_horizon(snapshot, tick_minutes),
                     }
                 )
-
             prompt = build_batched_trajectory_projection_prompt(
                 requests=requests,
                 current_time=current_time,
                 language_guidance=language_guidance,
             )
+            batches.append((start, batch, prompt))
+
+        # Run batches concurrently using threads.
+        projections: Dict[str, TrajectoryProjectionPayload] = {}
+
+        def _run_batch(
+            prompt: PromptRequest,
+            client_clone,
+        ) -> Dict[str, TrajectoryProjectionPayload]:
             payload = asyncio.run(
-                self.llm_client.call_json(prompt, BatchedTrajectoryProjectionPayload)
+                client_clone.call_json(prompt, BatchedTrajectoryProjectionPayload)
             )
-            projections.update(dict(payload.projections))
+            return dict(payload.projections)
+
+        with ThreadPoolExecutor(max_workers=min(len(batches), 4)) as executor:
+            futures = {}
+            for start, batch, prompt in batches:
+                clone = self.llm_client.clone()
+                future = executor.submit(_run_batch, prompt, clone)
+                futures[future] = (start, batch, clone)
+
+            for future in as_completed(futures):
+                start, batch, clone = futures[future]
+                if progress_callback is not None:
+                    progress_callback(start + 1, start + len(batch), len(snapshots))
+                self.llm_client.merge_records(clone)
+                projections.update(future.result())
+
         return projections
 
     def _estimate_horizon(self, snapshot: CharacterSnapshot, tick_minutes: int) -> str:

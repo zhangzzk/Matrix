@@ -9,7 +9,7 @@ from typing import Optional, Sequence
 from dreamdive.schemas import EpisodicMemory
 
 
-TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
+TOKEN_PATTERN = re.compile(r"[\u4e00-\u9fff]+|[a-z0-9']+")  # Chinese + ASCII
 STOPWORDS = {
     "a",
     "an",
@@ -91,6 +91,10 @@ def build_entity_semantic_text(entity: dict) -> str:
     return " ".join(values)
 
 
+from functools import lru_cache
+
+
+@lru_cache(maxsize=1024)
 def embed_text(
     text: str,
     *,
@@ -119,9 +123,25 @@ def embed_text(
     return [value / magnitude for value in vector]
 
 
+try:
+    import numpy as np
+    _HAS_NUMPY = True
+except ImportError:
+    _HAS_NUMPY = False
+
+
 def cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
     if not left or not right:
         return 0.0
+    if _HAS_NUMPY:
+        a = np.asarray(left, dtype=np.float32)
+        b = np.asarray(right, dtype=np.float32)
+        norm_a = np.linalg.norm(a)
+        norm_b = np.linalg.norm(b)
+        if norm_a <= 0 or norm_b <= 0:
+            return 0.0
+        return float(np.dot(a, b) / (norm_a * norm_b))
+
     limit = min(len(left), len(right))
     if limit <= 0:
         return 0.0
@@ -131,6 +151,39 @@ def cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
     if left_magnitude <= 0.0 or right_magnitude <= 0.0:
         return 0.0
     return max(0.0, min(1.0, dot / (left_magnitude * right_magnitude)))
+
+
+def batch_cosine_similarity(
+    query_embedding: Sequence[float],
+    target_embeddings: Sequence[Sequence[float]],
+) -> list[float]:
+    if not query_embedding or not target_embeddings:
+        return [0.0] * len(target_embeddings)
+
+    if _HAS_NUMPY:
+        q = np.asarray(query_embedding, dtype=np.float32)
+        targets = np.asarray(target_embeddings, dtype=np.float32)
+        
+        # Calculate dot products
+        dots = np.dot(targets, q)
+        
+        # Calculate norms
+        q_norm = np.linalg.norm(q)
+        target_norms = np.linalg.norm(targets, axis=1)
+        
+        # Avoid division by zero
+        if q_norm <= 0:
+            return [0.0] * len(target_embeddings)
+        
+        # Calculate similarities
+        with np.errstate(divide="ignore", invalid="ignore"):
+            similarities = dots / (q_norm * target_norms)
+            similarities = np.nan_to_num(similarities, nan=0.0)
+            
+        return similarities.tolist()
+
+    # Fallback to loop
+    return [cosine_similarity(query_embedding, target) for target in target_embeddings]
 
 
 def rank_memories(

@@ -21,6 +21,8 @@ class RecordingTransport:
         self.calls = 0
 
     async def complete(self, profile, prompt):
+        schema = prompt.metadata.get("response_schema", "unknown")
+        print(f"MOCK CALL #{self.calls}: {schema}")
         response = self.responses[self.calls]
         self.calls += 1
         return response
@@ -247,19 +249,7 @@ class SimulationWorkflowTests(unittest.TestCase):
                             "most_uncertain_relationship": "",
                         }
                     ),
-                    json.dumps(
-                        {
-                            "primary_intention": "stay hidden",
-                            "motivation": "survival",
-                            "immediate_next_action": "stay silent behind the cart",
-                            "contingencies": [],
-                            "greatest_fear_this_horizon": "being found",
-                            "abandon_condition": "safe route opens",
-                            "held_back_impulse": "run now",
-                            "projection_horizon": "4 ticks",
-                        }
-                    ),
-                    json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
+# removed unused projections and collisions
                     json.dumps(
                         {
                             "narrative_summary": "Arya listened as the patrol shifted away from her hiding place.",
@@ -293,6 +283,25 @@ class SimulationWorkflowTests(unittest.TestCase):
                             "reprojection_reason": "",
                         }
                     ),
+                    json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
+                    json.dumps(
+                        {
+                            "emotional_delta": {
+                                "dominant_now": "sharp focus",
+                                "underneath": "fear",
+                                "shift_reason": "The new route creates an opening",
+                            },
+                            "goal_stack_update": {
+                                "top_goal_status": "advanced",
+                                "top_goal_still_priority": True,
+                                "new_goal": None,
+                                "resolved_goal": None,
+                            },
+                            "relationship_updates": [],
+                            "needs_reprojection": False,
+                            "reprojection_reason": "",
+                        }
+                    ),
                 ]
             )
 
@@ -304,6 +313,7 @@ class SimulationWorkflowTests(unittest.TestCase):
                 timeline_index=0,
                 llm_client=client,
                 character_ids=["arya"],
+                max_workers=1,
             )
             store = SimulationRuntimeStore(root)
             store.save(session)
@@ -783,7 +793,7 @@ class SimulationWorkflowTests(unittest.TestCase):
                             "emotional_delta": {
                                 "dominant_now": "focused",
                                 "underneath": "fear",
-                                "shift_reason": "The patrol drifted away before Arya had to force the issue.",
+                                "shift_reason": "The threat passed.",
                             },
                             "goal_stack_update": {
                                 "top_goal_status": "advanced",
@@ -796,6 +806,25 @@ class SimulationWorkflowTests(unittest.TestCase):
                             "reprojection_reason": "",
                         }
                     ),
+                    json.dumps(
+                        {
+                            "emotional_delta": {
+                                "dominant_now": "cautious",
+                                "underneath": "protective",
+                                "shift_reason": "They got away with it.",
+                            },
+                            "goal_stack_update": {
+                                "top_goal_status": "advanced",
+                                "top_goal_still_priority": True,
+                                "new_goal": None,
+                                "resolved_goal": None,
+                            },
+                            "relationship_updates": [],
+                            "needs_reprojection": False,
+                            "reprojection_reason": "",
+                        }
+                    ),
+# Next block:
                     json.dumps(
                         {
                             "emotional_delta": {
@@ -825,6 +854,7 @@ class SimulationWorkflowTests(unittest.TestCase):
                 timeline_index=0,
                 llm_client=client,
                 character_ids=["arya", "gendry"],
+                max_workers=1,
             )
             session = session.model_copy(
                 update={

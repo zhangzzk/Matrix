@@ -11,14 +11,16 @@ rerun_entities = false
 
 [init-snapshot]
 source = "resources/dragonraja1_demo.txt"
-chapter_id = "003"
+chapter_id = "002"
 tick_label = "snapshot"
 timeline_index = 0
 overwrite = true
+max_workers = 16
 
 [run]
 ticks = 5
 overwrite = true
+tick_max_events = 15
 
 [branch]
 overwrite = false

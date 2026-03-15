@@ -29,7 +29,7 @@ class SimulationRuntimeStore:
     def save(self, session: SimulationSessionState) -> None:
         self.workspace_dir.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
-            json.dumps(session.model_dump(mode="json"), indent=2, sort_keys=True),
+            json.dumps(session.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False),
             encoding="utf-8",
         )
 
@@ -75,7 +75,7 @@ class PostgresSimulationRuntimeStore:
         return repair_session_state(SimulationSessionState.model_validate(data))
 
     def save(self, session: SimulationSessionState) -> None:
-        payload = json.dumps(session.model_dump(mode="json"), sort_keys=True)
+        payload = json.dumps(session.model_dump(mode="json"), sort_keys=True, ensure_ascii=False)
         with self.connection_factory() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(

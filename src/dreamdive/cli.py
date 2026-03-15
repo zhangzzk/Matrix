@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import threading
+import unicodedata
 from pathlib import Path
 from typing import Iterable
 
@@ -87,6 +88,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=argparse.SUPPRESS,
         help="Force rerunning entity extraction even if cached.",
     )
+    ingest.add_argument(
+        "--max-workers",
+        type=int,
+        default=None,
+        help="Max parallel LLM workers for chapter extraction (default: 4).",
+    )
 
     init_snapshot = subparsers.add_parser("init-snapshot", help="Initialize a simulation session.")
     init_snapshot.add_argument("source", nargs="?", help="Path to the novel text or markdown file.")
@@ -97,17 +104,20 @@ def build_parser() -> argparse.ArgumentParser:
     init_snapshot.add_argument("--character-id", action="append", dest="character_ids")
     init_snapshot.add_argument("--session-id")
     init_snapshot.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
+    init_snapshot.add_argument("--max-workers", type=int, default=None, help="Max parallel LLM workers for agent initialization (default: 4).")
 
     tick = subparsers.add_parser("tick", help="Advance an existing simulation session by one tick.")
     tick.add_argument("--workspace")
     tick.add_argument("--session-id")
     tick.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
+    tick.add_argument("--tick-max-events", type=int, help="Maximum background/foreground events to process per tick.")
 
     run = subparsers.add_parser("run", help="Advance an existing simulation session by multiple ticks.")
     run.add_argument("--workspace")
     run.add_argument("--ticks", type=int)
     run.add_argument("--session-id")
     run.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
+    run.add_argument("--tick-max-events", type=int, help="Maximum background/foreground events to process per tick.")
 
     background = subparsers.add_parser("background", help="Run due background maintenance jobs.")
     background.add_argument("--workspace")
@@ -256,6 +266,41 @@ def _format_status_line(
     return rendered
 
 
+def _char_display_width(char: str) -> int:
+    """Return the number of terminal columns a character occupies."""
+    eaw = unicodedata.east_asian_width(char)
+    return 2 if eaw in ("F", "W") else 1
+
+
+def _truncate_to_display_width(text: str, max_width: int) -> str:
+    """Truncate *text* so its display width fits within *max_width* columns.
+
+    ANSI escape sequences are skipped during width counting but preserved in
+    the output.  If truncation is required, the string is cut and an ellipsis
+    (``…``) is appended.
+    """
+    if max_width <= 0:
+        return text
+    width = 0
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        # Skip ANSI escape sequences (they occupy zero display columns).
+        if ch == "\033" and i + 1 < n and text[i + 1] == "[":
+            j = i + 2
+            while j < n and text[j] not in "ABCDEFGHJKSTfmnsulh":
+                j += 1
+            i = j + 1  # skip past the terminator
+            continue
+        cw = _char_display_width(ch)
+        if width + cw > max_width - 1:  # reserve 1 column for '…'
+            return text[:i] + "…\033[0m"
+        width += cw
+        i += 1
+    return text
+
+
 class _CliStatusLine:
     def __init__(
         self,
@@ -278,6 +323,12 @@ class _CliStatusLine:
 
     def _write_pretty(self, line: str, *, newline: bool = False) -> None:
         suffix = "\n" if newline else ""
+        try:
+            cols = os.get_terminal_size(self.stream.fileno()).columns
+        except (AttributeError, ValueError, OSError):
+            cols = 0
+        if cols > 0:
+            line = _truncate_to_display_width(line, cols)
         self.stream.write(f"\r\033[2K{line}{suffix}")
         self.stream.flush()
 
@@ -527,6 +578,10 @@ def _format_init_progress(
     chapter_count: int,
     timeline_index: int,
     session_id: str,
+    agent_index: int | None = None,
+    agent_total: int | None = None,
+    character_name: str = "",
+    stage_label: str = "",
 ) -> str:
     parts: list[str] = []
     if chapter_index > 0 and chapter_count > 0:
@@ -538,7 +593,33 @@ def _format_init_progress(
     parts.append(_format_story_time(timeline_index))
     if session_id:
         parts.append(f"session {session_id}")
+    if agent_index is not None and agent_total:
+        parts.append(f"agent {agent_index}/{agent_total}")
+    if character_name:
+        parts.append(character_name)
+    if stage_label:
+        parts.append(stage_label)
     return " · ".join(parts)
+
+
+def _format_init_stage(event: dict[str, object]) -> str:
+    stage = str(event.get("stage", "") or "")
+    if stage == "prepare_agents":
+        total = int(event.get("agent_total", 0) or 0)
+        return f"preparing {total} agent{'s' if total != 1 else ''}"
+    if stage == "agent_start":
+        return "assembling snapshot"
+    if stage == "snapshot_inference":
+        return "inferring state"
+    if stage == "snapshot_inference_fallback":
+        return "using heuristic state fallback"
+    if stage == "goal_seeding":
+        return "seeding goals"
+    if stage == "goal_seeding_fallback":
+        return "using heuristic goal fallback"
+    if stage == "agent_ready":
+        return "ready"
+    return ""
 
 
 def _available_local_session_ids(workspace_dir: Path) -> list[str]:
@@ -670,6 +751,8 @@ def main() -> int:
     _validate_command_args(parser, args)
 
     settings = get_settings()
+    if hasattr(args, "tick_max_events") and getattr(args, "tick_max_events", None) is not None:
+        settings.tick_max_events = args.tick_max_events
     debug_session = maybe_build_debug_session(args, settings)
     if args.command == "ingest":
         client = build_llm_client(settings, debug_session)
@@ -704,7 +787,7 @@ def main() -> int:
                     progress_callback=ingest_progress,
                 )
                 if emit_json:
-                    print(json.dumps(structural.model_dump(mode="json"), indent=2))
+                    print(json.dumps(structural.model_dump(mode="json"), indent=2, ensure_ascii=False))
 
             chapters = load_chapters(source_path)
             if debug_session is not None:
@@ -717,6 +800,7 @@ def main() -> int:
                 backend,
                 force_rerun=bool(getattr(args, "rerun_chapters", False)),
                 progress_callback=ingest_progress,
+                max_workers=int(getattr(args, "max_workers", 0) or 4),
             )
             if not args.skip_meta_layer:
                 meta = pipeline.run_meta_layer(
@@ -736,7 +820,7 @@ def main() -> int:
                 )
                 accumulated = accumulated.model_copy(update={"entities": entities.entities})
             if emit_json:
-                print(json.dumps(accumulated.model_dump(mode="json"), indent=2))
+                print(json.dumps(accumulated.model_dump(mode="json"), indent=2, ensure_ascii=False))
             else:
                 status.finish(
                     "World loaded",
@@ -774,6 +858,35 @@ def main() -> int:
             init_detail,
             enabled=not emit_json,
         ) as status:
+            def _update_init_progress(event: dict[str, object]) -> None:
+                status.update(
+                    detail=_format_init_progress(
+                        chapter_id=str(event.get("chapter_id", args.chapter_id) or args.chapter_id),
+                        chapter_title=str(
+                            event.get("chapter_title", chapter.title if chapter is not None else args.chapter_id)
+                            or ""
+                        ),
+                        chapter_index=int(
+                            event.get("chapter_index", chapter.order_index if chapter is not None else 0) or 0
+                        ),
+                        chapter_count=int(event.get("chapter_count", len(chapters)) or 0),
+                        timeline_index=int(args.timeline_index or 0),
+                        session_id=args.session_id,
+                        agent_index=(
+                            int(event["agent_index"])
+                            if event.get("agent_index") is not None
+                            else None
+                        ),
+                        agent_total=(
+                            int(event["agent_total"])
+                            if event.get("agent_total") is not None
+                            else None
+                        ),
+                        character_name=str(event.get("character_name", "") or ""),
+                        stage_label=_format_init_stage(event),
+                    )
+                )
+
             store = build_runtime_store(
                 Path(args.workspace),
                 settings=settings,
@@ -794,10 +907,12 @@ def main() -> int:
                 llm_client=client,
                 character_ids=args.character_ids,
                 debug_session=debug_session,
+                on_progress=_update_init_progress,
+                max_workers=int(getattr(args, "max_workers", 4) or 4),
             )
             store.save(session)
             if emit_json:
-                print(json.dumps(session.model_dump(mode="json"), indent=2))
+                print(json.dumps(session.model_dump(mode="json"), indent=2, ensure_ascii=False))
             else:
                 status.finish(
                     "Initialized",
@@ -849,7 +964,7 @@ def main() -> int:
             )
             store.save(updated)
             if emit_json:
-                print(json.dumps(updated.model_dump(mode="json"), indent=2))
+                print(json.dumps(updated.model_dump(mode="json"), indent=2, ensure_ascii=False))
             else:
                 status.finish(
                     "Simulation advanced",
@@ -941,7 +1056,7 @@ def main() -> int:
             )
             store.save(updated)
             if emit_json:
-                print(json.dumps(session_report(updated), indent=2))
+                print(json.dumps(session_report(updated), indent=2, ensure_ascii=False))
             else:
                 status.finish(
                     "Simulation complete",
@@ -995,7 +1110,7 @@ def main() -> int:
             )
             store.save(updated)
             if emit_json:
-                print(json.dumps(session_report(updated), indent=2))
+                print(json.dumps(session_report(updated), indent=2, ensure_ascii=False))
             else:
                 status.finish(
                     "World maintenance complete",
@@ -1049,7 +1164,7 @@ def main() -> int:
         )
         target_store.save(branched)
         if getattr(args, "json", False):
-            print(json.dumps(session_report(branched), indent=2))
+            print(json.dumps(session_report(branched), indent=2, ensure_ascii=False))
         else:
             print(
                 _format_status_line(
@@ -1076,7 +1191,7 @@ def main() -> int:
                     bytes_applied=len(applied_sql),
                 )
             if emit_json:
-                print(json.dumps({"applied": True, "bytes": len(applied_sql)}, indent=2))
+                print(json.dumps({"applied": True, "bytes": len(applied_sql)}, indent=2, ensure_ascii=False))
             else:
                 status.finish(
                     "Migration complete",
@@ -1128,6 +1243,7 @@ def main() -> int:
                         "url": url,
                     },
                     indent=2,
+                    ensure_ascii=False,
                 )
             )
         else:

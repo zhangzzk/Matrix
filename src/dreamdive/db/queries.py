@@ -12,8 +12,10 @@ from dreamdive.db.models import (
     StateChangeLogRecord,
     WorldSnapshotRecord,
 )
-from dreamdive.db.session import InMemoryStore
+import numpy as np
 from dreamdive.memory.retrieval import (
+    _HAS_NUMPY,
+    batch_cosine_similarity,
     build_entity_semantic_text,
     build_memory_semantic_text,
     cosine_similarity,
@@ -319,14 +321,21 @@ class EntityRepresentationRepository:
             if not (row.agent_id == representation.agent_id and row.entity_id == representation.entity_id)
         ]
         self.store.entity_representations.append(record)
+        
+        # Update index
+        agent_id = representation.agent_id
+        if agent_id not in self.store.entity_representations_by_agent:
+            self.store.entity_representations_by_agent[agent_id] = []
+        self.store.entity_representations_by_agent[agent_id] = [
+            row for row in self.store.entity_representations_by_agent[agent_id]
+            if row.entity_id != representation.entity_id
+        ]
+        self.store.entity_representations_by_agent[agent_id].append(record)
+        
         return record
 
     def list_for_agent(self, agent_id: str) -> Sequence[SubjectiveEntityRepresentation]:
-        rows = [
-            row
-            for row in self.store.entity_representations
-            if row.agent_id == agent_id
-        ]
+        rows = self.store.entity_representations_by_agent.get(agent_id, [])
         rows = sorted(rows, key=lambda row: (row.name, row.entity_id, row.id))
         return [
             SubjectiveEntityRepresentation(
@@ -354,29 +363,59 @@ class EntityRepresentationRepository:
         query_embedding: Sequence[float],
         limit: int,
     ) -> Sequence[SubjectiveEntityRepresentation]:
-        scored: list[tuple[float, SubjectiveEntityRepresentation]] = []
-        for entity in self.list_for_agent(agent_id):
-            embedding = entity.semantic_embedding or embed_text(
-                entity.semantic_text or build_entity_semantic_text(entity.model_dump(mode="json"))
-            )
-            score = cosine_similarity(query_embedding, embedding)
-            scored.append(
-                (
-                    score,
-                    entity.model_copy(
-                        update={
-                            "semantic_text": entity.semantic_text or build_entity_semantic_text(entity.model_dump(mode="json")),
-                            "semantic_embedding": embedding,
-                        }
-                    ),
+        scored: list[tuple[float, EntityRepresentationRecord]] = []
+        rows = self.store.entity_representations_by_agent.get(agent_id, [])
+        if not rows:
+            return []
+            
+        embeddings = []
+        for record in rows:
+            if _HAS_NUMPY:
+                # Use internal cache to avoid re-converting Python lists to numpy arrays
+                np_emb = getattr(record, "_np_embedding", None)
+                if np_emb is None:
+                    raw_emb = record.semantic_embedding or embed_text(
+                        record.semantic_text or build_entity_semantic_text(_record_to_dict(record))
+                    )
+                    np_emb = np.asarray(raw_emb, dtype=np.float32)
+                    setattr(record, "_np_embedding", np_emb)
+                embeddings.append(np_emb)
+            else:
+                embeddings.append(
+                    record.semantic_embedding or embed_text(
+                        record.semantic_text or build_entity_semantic_text(_record_to_dict(record))
+                    )
                 )
-            )
+            
+        scores = batch_cosine_similarity(query_embedding, embeddings)
+        for i, score in enumerate(scores):
+            scored.append((score, rows[i]))
+            
         ranked = sorted(
             scored,
             key=lambda item: (item[0], item[1].goal_relevance, item[1].name),
             reverse=True,
         )
-        return [entity for _, entity in ranked[: max(0, limit)]]
+        results = []
+        for score, record in ranked[: max(0, limit)]:
+            results.append(
+                SubjectiveEntityRepresentation(
+                    agent_id=record.agent_id,
+                    entity_id=record.entity_id,
+                    name=record.name,
+                    type=record.type,
+                    narrative_role=record.narrative_role,
+                    objective_facts=list(record.objective_facts),
+                    belief=record.belief,
+                    emotional_charge=record.emotional_charge,
+                    goal_relevance=record.goal_relevance,
+                    misunderstanding=record.misunderstanding,
+                    confidence=record.confidence,
+                    semantic_text=record.semantic_text,
+                    semantic_embedding=list(record.semantic_embedding) if record.semantic_embedding is not None else None,
+                )
+            )
+        return results
 
 
 class EventLogRepository:
@@ -444,6 +483,13 @@ class EpisodicMemoryRepository:
             embedding=embedding,
         )
         self.store.episodic_memory.append(record)
+        
+        # Update index
+        char_id = memory.character_id
+        if char_id not in self.store.episodic_memory_by_char:
+            self.store.episodic_memory_by_char[char_id] = []
+        self.store.episodic_memory_by_char[char_id].append(record)
+        
         return record
 
     def list_for_character(
@@ -454,9 +500,8 @@ class EpisodicMemoryRepository:
     ) -> Sequence[EpisodicMemory]:
         rows = [
             row
-            for row in self.store.episodic_memory
-            if row.character_id == character_id
-            and (timeline_index is None or row.timeline_index <= timeline_index)
+            for row in self.store.episodic_memory_by_char.get(character_id, [])
+            if timeline_index is None or row.timeline_index <= timeline_index
         ]
         rows = sorted(rows, key=lambda row: (row.timeline_index, row.event_sequence, row.id))
         return [
@@ -501,27 +546,98 @@ class EpisodicMemoryRepository:
         timeline_index: Optional[int] = None,
         include_compressed: bool = False,
     ) -> Sequence[EpisodicMemory]:
-        candidates = []
-        for memory in self.list_for_character(character_id, timeline_index=timeline_index):
-            if memory.compressed and not include_compressed:
+        rows = self.store.episodic_memory_by_char.get(character_id, [])
+        candidates_rows = []
+        embeddings = []
+        for record in rows:
+            if timeline_index is not None and record.timeline_index > timeline_index:
                 continue
-            embedding = memory.embedding or embed_text(build_memory_semantic_text(memory))
-            score = cosine_similarity(query_embedding, embedding)
-            candidates.append(
-                memory.model_copy(
-                    update={
-                        "semantic_score": score,
-                        "embedding": embedding,
-                    }
+            if record.compressed and not include_compressed:
+                continue
+            candidates_rows.append(record)
+            
+            if _HAS_NUMPY:
+                # Use internal cache to avoid re-converting Python lists to numpy arrays
+                np_emb = getattr(record, "_np_embedding", None)
+                if np_emb is None:
+                    raw_emb = record.embedding or embed_text(build_memory_semantic_text(_record_to_memory(record)))
+                    np_emb = np.asarray(raw_emb, dtype=np.float32)
+                    setattr(record, "_np_embedding", np_emb)
+                embeddings.append(np_emb)
+            else:
+                embeddings.append(
+                    record.embedding or embed_text(build_memory_semantic_text(_record_to_memory(record)))
                 )
-            )
+            
+        if not candidates_rows:
+            return []
+            
+        scores = batch_cosine_similarity(query_embedding, embeddings)
+        scored = [(score, record) for score, record in zip(scores, candidates_rows)]
+            
         ranked = sorted(
-            candidates,
-            key=lambda memory: (
-                memory.semantic_score or 0.0,
-                memory.replay_key.timeline_index,
-                memory.replay_key.event_sequence,
+            scored,
+            key=lambda item: (
+                item[0],
+                item[1].timeline_index,
+                item[1].event_sequence,
             ),
             reverse=True,
         )
-        return ranked[: max(0, limit)]
+        
+        results = []
+        for score, record in ranked[: max(0, limit)]:
+            results.append(
+                EpisodicMemory(
+                    character_id=record.character_id,
+                    replay_key=ReplayKey(
+                        tick=record.tick,
+                        timeline_index=record.timeline_index,
+                        event_sequence=record.event_sequence,
+                    ),
+                    event_id=record.event_id,
+                    participants=list(record.participants),
+                    location=record.location,
+                    summary=record.summary,
+                    emotional_tag=record.emotional_tag,
+                    salience=record.salience,
+                    pinned=record.pinned,
+                    compressed=record.compressed,
+                    embedding=list(record.embedding) if record.embedding is not None else None,
+                    semantic_score=score,
+                )
+            )
+        return results
+
+
+def _record_to_dict(record: EntityRepresentationRecord) -> dict:
+    return {
+        "name": record.name,
+        "type": record.type,
+        "narrative_role": record.narrative_role,
+        "objective_facts": record.objective_facts,
+        "belief": record.belief,
+        "emotional_charge": record.emotional_charge,
+        "goal_relevance": record.goal_relevance,
+        "misunderstanding": record.misunderstanding,
+        "semantic_text": record.semantic_text,
+    }
+
+
+def _record_to_memory(record: EpisodicMemoryRecord) -> EpisodicMemory:
+    return EpisodicMemory(
+        character_id=record.character_id,
+        replay_key=ReplayKey(
+            tick=record.tick,
+            timeline_index=record.timeline_index,
+            event_sequence=record.event_sequence,
+        ),
+        event_id=record.event_id,
+        participants=record.participants,
+        location=record.location,
+        summary=record.summary,
+        emotional_tag=record.emotional_tag,
+        salience=record.salience,
+        pinned=record.pinned,
+        compressed=record.compressed,
+    )

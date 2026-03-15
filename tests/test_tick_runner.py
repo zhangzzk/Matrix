@@ -116,6 +116,10 @@ def make_snapshot():
 
 
 class FailingEventSimulator:
+    def __init__(self, llm_client=None):
+        self.llm_client = llm_client or build_client([])
+        self.context_assembler = None
+
     def simulate_background(self, **_kwargs):
         raise RuntimeError("synthetic scene failure")
 

@@ -139,19 +139,31 @@ class LLMExtractionBackend:
                 batch_count=len(contexts),
             )
         merged_result = {"entities": []}
-        for batch_index, context in enumerate(contexts, start=1):
+        
+        async def _call_batch(batch_index, context):
             prompt = build_entity_extraction_prompt(
                 context=context,
                 batch_index=batch_index,
                 batch_count=len(contexts),
             )
-            try:
-                batch_result = asyncio.run(
-                    self.client.call_json(prompt, EntityExtractionPayload)
-                ).model_dump(mode="json")
-            except Exception as exc:
-                raise RuntimeError("Entity extraction failed during ingestion") from exc
-            merged_result = _merge_entity_payloads(merged_result, batch_result)
+            return await self.client.call_json(prompt, EntityExtractionPayload)
+
+        async def _run_all():
+            tasks = [
+                _call_batch(i + 1, ctx)
+                for i, ctx in enumerate(contexts)
+            ]
+            return await asyncio.gather(*tasks)
+
+        try:
+            batch_results = asyncio.run(_run_all())
+            for batch_res in batch_results:
+                merged_result = _merge_entity_payloads(
+                    merged_result, 
+                    batch_res.model_dump(mode="json")
+                )
+        except Exception as exc:
+            raise RuntimeError("Entity extraction failed during ingestion") from exc
         if self.debug_session is not None:
             self.debug_session.event(
                 "ingestion.entity_pass.done",

@@ -464,6 +464,7 @@ class IngestionPipeline:
         initial_accumulated: Optional[AccumulatedExtraction] = None,
         force_rerun: bool = False,
         progress_callback: Optional[IngestionProgressCallback] = None,
+        max_workers: int = 4,
     ) -> AccumulatedExtraction:
         accumulated = initial_accumulated or AccumulatedExtraction()
         if force_rerun:
@@ -480,18 +481,54 @@ class IngestionPipeline:
             if self.artifact_store is not None
             else None
         )
-        for chapter_index, chapter in enumerate(ordered_chapters, start=1):
-            result = self.run_single_chapter(
-                chapter,
-                backend,
-                accumulated,
-                structural_scan=structural_scan,
-                chapter_index=chapter_index,
-                chapter_count=chapter_count,
-                force_rerun=force_rerun,
-                progress_callback=progress_callback,
-            )
-            accumulated = result.accumulated
+
+        if max_workers <= 1:
+            for chapter_index, chapter in enumerate(ordered_chapters, start=1):
+                result = self.run_single_chapter(
+                    chapter,
+                    backend,
+                    accumulated,
+                    structural_scan=structural_scan,
+                    chapter_index=chapter_index,
+                    chapter_count=chapter_count,
+                    force_rerun=force_rerun,
+                    progress_callback=progress_callback,
+                )
+                accumulated = result.accumulated
+            return accumulated
+
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
+        # In parallel mode, we process all chapters concurrently.
+        # Note: Since they are independent extracts, we merge them at the end.
+        results: List[ChapterRunResult] = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_chapter = {
+                executor.submit(
+                    self.run_single_chapter,
+                    chapter,
+                    backend,
+                    accumulated, # Use the initial or current accumulated base
+                    structural_scan=structural_scan,
+                    chapter_index=i + 1,
+                    chapter_count=chapter_count,
+                    force_rerun=force_rerun,
+                    progress_callback=progress_callback,
+                ): chapter
+                for i, chapter in enumerate(ordered_chapters)
+            }
+            for future in as_completed(future_to_chapter):
+                results.append(future.result())
+
+        # Merge results in order of chapter index to preserve sequence as much as possible,
+        # although merge_accumulated_extraction is designed to be generally order-independent.
+        sorted_results = sorted(
+            results, 
+            key=lambda r: next(c.order_index for c in ordered_chapters if c.chapter_id == r.chapter_id)
+        )
+        for res in sorted_results:
+            accumulated = merge_accumulated_extraction(accumulated, res.accumulated)
+            
         return accumulated
 
     def run_single_chapter(

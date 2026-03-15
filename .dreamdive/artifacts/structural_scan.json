@@ -2,287 +2,307 @@
   "cast_list": [
     {
       "aliases": [
-        "\u674e\u5609\u56fe\u00b7M\u00b7\u8def",
-        "S\u7ea7\u65b0\u751f",
-        "\u8def\u9e23\u6cfd (\u5802\u5f1f)",
-        "\u5915\u9633\u7684\u523b\u75d5"
+        "诺诺",
+        "陈墨瞳"
       ],
-      "first_appearance": "\u5e8f\u5e55 \u767d\u5e1d\u57ce / \u7b2c\u4e00\u5e55 \u5361\u585e\u5c14\u4e4b\u95e8",
+      "first_appearance": "第一幕 卡塞尔之门 (QQ游戏ID: 诺诺)",
       "id": "char_001",
-      "name": "\u8def\u660e\u975e",
-      "role": "\u4e3b\u89d2\uff0c\u5361\u585e\u5c14\u5b66\u9662'S'\u7ea7\u65b0\u751f",
+      "name": "陈墨瞳",
+      "role": "卡塞尔学院二年级学生，学生会成员，路明非的师姐",
       "tier": 2
     },
     {
       "aliases": [
-        "\u9648\u58a8\u77b3",
-        "\u8bfa\u8bfa",
-        "\u5e08\u59d0"
+        "路鸣泽",
+        "夕阳的刻痕",
+        "寂寞的贪吃蛇",
+        "小魔鬼"
       ],
-      "first_appearance": "\u7b2c\u4e00\u5e55 \u5361\u585e\u5c14\u4e4b\u95e8",
+      "first_appearance": "序幕 白帝城",
       "id": "char_002",
-      "name": "\u9648\u58a8\u77b3",
-      "role": "\u5b66\u751f\u4f1a\u6210\u5458\uff0c\u8def\u660e\u975e\u7684\u5f15\u8def\u4eba",
+      "name": "路鸣泽",
+      "role": "路明非的堂弟",
       "tier": 2
     },
     {
-      "aliases": [
-        "\u53e4\u5fb7\u91cc\u5b89\u6559\u6388"
-      ],
-      "first_appearance": "\u7b2c\u4e00\u5e55 \u5361\u585e\u5c14\u4e4b\u95e8",
+      "aliases": [],
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_003",
-      "name": "\u53e4\u5fb7\u91cc\u5b89",
-      "role": "\u5361\u585e\u5c14\u5b66\u9662\u6559\u5e08\uff0c\u8def\u660e\u975e\u7684\u4e34\u65f6\u5bfc\u5e08",
+      "name": "路明非",
+      "role": "主角，卡塞尔学院新生，S级血统持有者",
       "tier": 2
     },
     {
       "aliases": [
-        "\u82ac\u683c\u5c14\u00b7\u51af\u00b7\u5f17\u6797\u65af",
-        "\u5e08\u5144",
-        "F\u7ea7\u5b66\u751f"
+        "古德里安教授"
       ],
-      "first_appearance": "\u7b2c\u4e8c\u5e55 \u9ec4\u91d1\u77b3",
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_004",
-      "name": "\u82ac\u683c\u5c14",
-      "role": "\u5361\u585e\u5c14\u5b66\u9662\u56db\u5e74\u7ea7\u7559\u7ea7\u751f\uff0c\u8def\u660e\u975e\u7684\u5ba4\u53cb",
+      "name": "古德里安",
+      "role": "卡塞尔学院教师，路明非的临时导师",
       "tier": 2
     },
     {
       "aliases": [
-        "\u607a\u6492",
-        "\u72c4\u514b\u63a8\u591a"
+        "叶胜"
       ],
-      "first_appearance": "\u7b2c\u4e8c\u5e55 \u9ec4\u91d1\u77b3",
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_005",
-      "name": "\u607a\u6492\u00b7\u52a0\u56fe\u7d22",
-      "role": "\u5b66\u751f\u4f1a\u4f1a\u957f\uff0cA\u7ea7\u5b66\u751f",
+      "name": "叶胜",
+      "role": "卡塞尔学院考官/执行者",
       "tier": 2
     },
     {
       "aliases": [
-        "\u695a\u5b50\u822a",
-        "\u6751\u96e8",
-        "\u8d85A\u7ea7"
+        "酒德亚纪",
+        "亚纪"
       ],
-      "first_appearance": "\u7b2c\u4e8c\u5e55 \u9ec4\u91d1\u77b3",
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_006",
-      "name": "\u695a\u5b50\u822a",
-      "role": "\u72ee\u5fc3\u4f1a\u4f1a\u957f\uff0cA\u7ea7\u5b66\u751f",
+      "name": "酒德亚纪",
+      "role": "卡塞尔学院考官",
       "tier": 2
     },
     {
       "aliases": [
-        "\u9152\u5fb7\u4e9a\u7eaa",
-        "\u4e9a\u7eaa"
+        "老唐"
       ],
-      "first_appearance": "\u7b2c\u4e00\u5e55 \u5361\u585e\u5c14\u4e4b\u95e8",
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_007",
-      "name": "\u9152\u5fb7\u4e9a\u7eaa",
-      "role": "\u8003\u5b98\uff0c\u6267\u884c\u90e8\u6210\u5458",
+      "name": "老唐",
+      "role": "路明非的网友，留学生",
       "tier": 2
     },
     {
       "aliases": [
-        "\u53f6\u80dc"
+        "楚子航"
       ],
-      "first_appearance": "\u7b2c\u4e00\u5e55 \u5361\u585e\u5c14\u4e4b\u95e8",
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_008",
-      "name": "\u53f6\u80dc",
-      "role": "\u8003\u5b98\uff0c\u6267\u884c\u90e8\u6210\u5458",
+      "name": "楚子航",
+      "role": "狮心会会长，传奇学长",
       "tier": 2
     },
     {
       "aliases": [
-        "\u66fc\u65bd\u5766\u56e0",
-        "\u98ce\u7eaa\u59d4\u5458\u4f1a\u4e3b\u5e2d"
+        "恺撒·加图索",
+        "恺撒"
       ],
-      "first_appearance": "\u7b2c\u4e8c\u5e55 \u9ec4\u91d1\u77b3",
+      "first_appearance": "第二幕 黄金瞳",
       "id": "char_009",
-      "name": "\u66fc\u65bd\u5766\u56e0",
-      "role": "\u98ce\u7eaa\u59d4\u5458\u4f1a\u4e3b\u5e2d\uff0c\u6559\u6388",
+      "name": "恺撒",
+      "role": "学生会会长",
       "tier": 2
     },
     {
       "aliases": [
-        "\u6602\u70ed",
-        "\u6821\u957f"
+        "富山雅史"
       ],
-      "first_appearance": "\u7b2c\u4e8c\u5e55 \u9ec4\u91d1\u77b3",
+      "first_appearance": "第二幕 黄金瞳",
       "id": "char_010",
-      "name": "\u6602\u70ed",
-      "role": "\u5361\u585e\u5c14\u5b66\u9662\u9662\u957f",
+      "name": "富山雅史",
+      "role": "心理辅导教员",
       "tier": 2
     },
     {
       "aliases": [
-        "\u5bcc\u5c71\u96c5\u53f2"
+        "芬格尔·冯·弗林斯",
+        "师兄"
       ],
-      "first_appearance": "\u7b2c\u4e8c\u5e55 \u9ec4\u91d1\u77b3",
+      "first_appearance": "第二幕 黄金瞳",
       "id": "char_011",
-      "name": "\u5bcc\u5c71\u96c5\u53f2",
-      "role": "\u5fc3\u7406\u8f85\u5bfc\u6559\u5458",
+      "name": "芬格尔",
+      "role": "卡塞尔学院四年级学生（留级八年），路明非室友",
       "tier": 2
     },
     {
       "aliases": [
-        "\u66fc\u65af",
-        "\u9f99\u5fb7\u65bd\u6cf0\u7279",
-        "\u8239\u957f"
+        "昂热",
+        "校长"
       ],
-      "first_appearance": "\u7b2c\u4e09\u5e55 \u9752\u94dc\u57ce",
+      "first_appearance": "第二幕 黄金瞳",
       "id": "char_012",
-      "name": "\u66fc\u65af\u00b7\u9f99\u5fb7\u65bd\u6cf0\u7279",
-      "role": "\u6267\u884c\u90e8\u6210\u5458\uff0c\u6469\u5c3c\u4e9a\u8d6b\u53f7\u8239\u957f",
+      "name": "昂热",
+      "role": "卡塞尔学院校长",
       "tier": 2
     },
     {
       "aliases": [
-        "\u8def\u9e23\u6cfd",
-        "\u5c0f\u9b54\u9b3c",
-        "\u795e\u79d8\u7537\u5b69"
+        "曼施坦因",
+        "风纪委员会教授"
       ],
-      "first_appearance": "\u5e8f\u5e55 \u767d\u5e1d\u57ce",
+      "first_appearance": "第二幕 黄金瞳",
       "id": "char_013",
-      "name": "\u8def\u9e23\u6cfd",
-      "role": "\u795e\u79d8\u5c11\u5e74\uff0c\u8def\u660e\u975e\u7684\u5f1f\u5f1f/\u795e\u79d8\u5b58\u5728",
+      "name": "曼施坦因",
+      "role": "风纪委员会教授",
       "tier": 2
     },
     {
       "aliases": [
-        "\u5947\u5170"
+        "陈雯雯"
       ],
-      "first_appearance": "\u7b2c\u56db\u5e55 \u9752\u94dc\u57ce",
+      "first_appearance": "第一幕 卡塞尔之门",
       "id": "char_014",
-      "name": "\u5947\u5170",
-      "role": "\u65b0\u751f\u8054\u8c0a\u4f1a\u4e3b\u5e2d",
+      "name": "陈雯雯",
+      "role": "路明非暗恋对象，文学社社长",
+      "tier": 2
+    },
+    {
+      "aliases": [
+        "赵孟华"
+      ],
+      "first_appearance": "第一幕 卡塞尔之门",
+      "id": "char_015",
+      "name": "赵孟华",
+      "role": "路明非同学，追求陈雯雯",
+      "tier": 2
+    },
+    {
+      "aliases": [
+        "苏晓樯",
+        "小天女"
+      ],
+      "first_appearance": "第一幕 卡塞尔之门",
+      "id": "char_016",
+      "name": "苏晓樯",
+      "role": "路明非同学",
+      "tier": 2
+    },
+    {
+      "aliases": [
+        "柳淼淼"
+      ],
+      "first_appearance": "第一幕 卡塞尔之门",
+      "id": "char_017",
+      "name": "柳淼淼",
+      "role": "路明非同学",
+      "tier": 2
+    },
+    {
+      "aliases": [
+        "诺玛",
+        "诺玛·劳恩斯"
+      ],
+      "first_appearance": "第一幕 卡塞尔之门",
+      "id": "char_018",
+      "name": "诺玛",
+      "role": "卡塞尔学院中央电脑（拟人化）",
       "tier": 2
     }
   ],
   "domain_systems": [
     {
-      "description": "\u9f99\u65cf\u8840\u7edf\u7eaf\u5ea6\u8bc4\u7ea7\u7cfb\u7edf\uff0c\u51b3\u5b9a\u5b66\u751f\u7279\u6743\u3001\u8d44\u6e90\u5206\u914d\u53ca\u80fd\u529b\u4e0a\u9650\u3002",
-      "name": "\u8840\u7edf\u9636\u7ea7",
-      "scale": "S > A > B > C > D > E > F (\u6700\u4f4e)"
+      "description": "基于龙族血统纯度的阶级划分系统，决定学生特权和资源分配。",
+      "name": "血统阶级",
+      "scale": "S, A, B, C, D, F (F为最低)"
     },
     {
-      "description": "\u5165\u5b66\u8d44\u683c\u4e0e\u8840\u7edf\u8bc4\u5b9a\u8003\u8bd5\uff0c\u901a\u8fc7\u6d4b\u8bd5\u5b66\u751f\u5bf9\u9f99\u6587\u7684\u5171\u9e23\uff08\u7075\u89c6\uff09\u6765\u786e\u8ba4\u6f5c\u529b\u548c\u8840\u7edf\u3002",
-      "name": "3E\u8003\u8bd5 (Extraction Evaluation Exam)",
-      "scale": "\u901a\u8fc7/\u5931\u8d25 (\u6216\u964d\u7ea7)"
+      "description": "卡塞尔学院特有的入学资格考试，考察学生对龙类知识的理解及血统反应。",
+      "name": "3E考试",
+      "scale": "通过/不通过"
     },
     {
-      "description": "\u9f99\u65cf\u6df7\u8840\u79cd\u4f7f\u7528\u7684\u8d85\u81ea\u7136\u8bed\u8a00\uff0c\u8a00\u51fa\u6cd5\u968f\uff0c\u5728\u7279\u5b9a\u9886\u57df\u5185\u5c06\u8bdd\u8bed\u8f6c\u5316\u4e3a\u89c4\u5219\u3002",
-      "name": "\u8a00\u7075",
-      "scale": "\u5177\u4f53\u6280\u80fd\u540d\u79f0 (\u5982\uff1a\u7687\u5e1d\u3001\u86c7\u3001\u4e0d\u5c18\u4e4b\u5730\u7b49)"
+      "description": "一种名为“言灵”的特殊能力，由龙族混血种发动，不同等级对应不同效果。",
+      "name": "言灵",
+      "scale": "未知具体等级列表，文中提及“皇帝”为S级或更高"
     },
     {
-      "description": "\u70bc\u91d1\u672f\u4f53\u7cfb\uff0c\u5229\u7528\u5143\u7d20\u548c\u7269\u8d28\u5236\u9020\u7279\u6b8a\u88c5\u5907\u6216\u6b66\u5668\u3002",
-      "name": "\u70bc\u91d1\u5b66",
-      "scale": "\u7b49\u7ea7\u6216\u5177\u4f53\u7269\u54c1"
+      "description": "每年一度的校内自由格斗活动，允许学生使用炼金武器进行对抗。",
+      "name": "自由一日",
+      "scale": "胜负判定"
     }
   ],
   "timeline_skeleton": {
     "known_future_events": [
-      "\u5914\u95e8\u8ba1\u5212\u542f\u52a8\uff0c\u63a2\u7d22\u957f\u6c5f\u6c34\u4e0b\u7684\u9752\u94dc\u4e4b\u57ce",
-      "\u53d1\u73b0\u9752\u94dc\u4e0e\u706b\u4e4b\u738b\u8bfa\u987f\u7684\u5375\u5e76\u8bd5\u56fe\u6467\u6bc1",
-      "\u8def\u660e\u975e\u5c06\u5728\u5361\u585e\u5c14\u5b66\u9662\u7ee7\u7eed\u5b66\u4e1a\u5e76\u9762\u5bf9\u66f4\u591a\u6311\u6218",
-      "\u767d\u738b\u8840\u88d4\u8eab\u4efd\u7684\u6f5c\u5728\u63ed\u793a\u4e0e\u5f71\u54cd"
+      "夔门计划将在一周后开始，旨在应对青铜与火之王苏醒",
+      "路明非需参加3E考试",
+      "路明非将接受更深入的屠龙训练",
+      "路明非作为S级新生，未来可能成为领袖级屠龙者或废物"
     ],
     "pre_story_events": [
-      "\u5343\u5e74\u524d\u9ed1\u738b\u5c3c\u5fb7\u970d\u683c\u6740\u6b7b\u767d\u738b\u5e76\u5efa\u7acb\u9f99\u65cf\u5386\u53f2",
-      "\u5341\u5e74\u524d\u683c\u9675\u5170\u51b0\u6d77\u884c\u52a8\u60e8\u8d25\uff0c\u90e8\u5206\u6267\u884c\u90e8\u6210\u5458\u727a\u7272",
-      "\u8def\u660e\u975e\u7236\u6bcd\u4f5c\u4e3a\u9f99\u65cf\u8840\u88d4\u957f\u671f\u5728\u5916\u8fdb\u884c\u8003\u53e4\u7814\u7a76",
-      "\u5361\u585e\u5c14\u5b66\u9662\u5efa\u7acb\u5e76\u4f20\u627f\u5c60\u9f99\u4f7f\u547d\u6570\u5343\u5e74"
+      "路明非父母失踪六年，一直在进行关于楼兰古城等考古项目",
+      "路明非申请了多所美国大学被拒，仅收到卡塞尔学院面试通知",
+      "卡塞尔学院在芝加哥火车站秘密运营CC1000次列车",
+      "黑龙尼德霍格数千年前被人类杀死于王座之上",
+      "上一位S级新生（四十多年前）因哲学思辨吞枪自杀",
+      "路明非高中时期暗恋陈雯雯三年未果"
     ],
-    "story_start": "\u516c\u51432009\u5e745\u6708\uff0c\u8def\u660e\u975e\u6536\u5230\u5361\u585e\u5c14\u5b66\u9662\u5f55\u53d6\u901a\u77e5\u4e66\uff0c\u5e76\u5728\u9ad8\u8003\u524d\u5915\u7ecf\u5386\u81ea\u7531\u4e00\u65e5\u4e8b\u4ef6\u540e\u6b63\u5f0f\u5165\u5b66\u3002"
+    "story_start": "公元2009年5月15日，星期五，路明非在芝加哥火车站登上前往卡塞尔学院的CC1000次快车"
   },
   "world": {
     "factions": [
       {
-        "goal": "\u57f9\u517b\u5c60\u9f99\u8005\uff0c\u5bf9\u6297\u9f99\u65cf\u590d\u82cf\uff0c\u4fdd\u62a4\u4eba\u7c7b\u4e16\u754c\u3002",
-        "name": "\u5361\u585e\u5c14\u5b66\u9662",
+        "goal": "培养屠龙高手，研究龙类，对抗龙族复兴，守护人类秘密",
+        "name": "卡塞尔学院",
         "relationships": {
-          "\u5b66\u751f\u4f1a": "\u7ade\u4e89\u5173\u7cfb (\u4e89\u593a\u5b66\u751f\u4f1a\u63a7\u5236\u6743)",
-          "\u6267\u884c\u90e8": "\u96b6\u5c5e/\u5408\u4f5c\u5173\u7cfb",
-          "\u72ee\u5fc3\u4f1a": "\u7ade\u4e89\u5173\u7cfb (\u4e89\u593a\u5b66\u751f\u4f1a\u63a7\u5236\u6743)",
-          "\u9f99\u65cf": "\u654c\u5bf9\u5173\u7cfb"
+          "学生会": "内部派系冲突",
+          "狮心会": "敌对/竞争关系"
         }
       },
       {
-        "goal": "\u5b66\u751f\u4f1a\u5185\u90e8\u6597\u4e89\uff0c\u7ef4\u62a4\u81ea\u8eab\u5229\u76ca\u4e0e\u8363\u8a89\u3002",
-        "name": "\u5b66\u751f\u4f1a",
+        "goal": "学生自治组织，参与自由一日，争夺校园控制权",
+        "name": "学生会",
         "relationships": {
-          "\u5361\u585e\u5c14\u5b66\u9662": "\u7ec4\u7ec7\u5206\u652f",
-          "\u72ee\u5fc3\u4f1a": "\u6b7b\u654c"
+          "狮心会": "宿敌"
         }
       },
       {
-        "goal": "\u72ee\u5fc3\u4f1a\u5185\u90e8\u6597\u4e89\uff0c\u7ef4\u62a4\u81ea\u8eab\u5229\u76ca\u4e0e\u8363\u8a89\u3002",
-        "name": "\u72ee\u5fc3\u4f1a",
+        "goal": "学生自治组织，与学生会长期对立",
+        "name": "狮心会",
         "relationships": {
-          "\u5361\u585e\u5c14\u5b66\u9662": "\u7ec4\u7ec7\u5206\u652f",
-          "\u5b66\u751f\u4f1a": "\u6b7b\u654c"
+          "学生会": "宿敌"
         }
       },
       {
-        "goal": "\u7ef4\u62a4\u5b66\u9662\u7eaa\u5f8b\uff0c\u76d1\u63a7\u5b66\u751f\u884c\u4e3a\uff0c\u6267\u884c\u5b89\u5168\u4efb\u52a1\u3002",
-        "name": "\u98ce\u7eaa\u59d4\u5458\u4f1a",
-        "relationships": {
-          "\u5361\u585e\u5c14\u5b66\u9662": "\u7ba1\u7406\u5206\u652f"
-        }
+        "goal": "维护校规，处理违纪事件",
+        "name": "风纪委员会",
+        "relationships": {}
       },
       {
-        "goal": "\u6267\u884c\u9ad8\u98ce\u9669\u7684\u5c60\u9f99\u4e0e\u8c03\u67e5\u4efb\u52a1\u3002",
-        "name": "\u6267\u884c\u90e8",
+        "goal": "龙族种族，曾试图毁灭世界",
+        "name": "龙族",
         "relationships": {
-          "\u5361\u585e\u5c14\u5b66\u9662": "\u6838\u5fc3\u884c\u52a8\u90e8\u95e8"
-        }
-      },
-      {
-        "goal": "\u9f99\u65cf\u590d\u5174\uff0c\u6bc1\u706d\u4eba\u7c7b\u6587\u660e\u3002",
-        "name": "\u9f99\u65cf",
-        "relationships": {
-          "\u4eba\u7c7b": "\u730e\u7269/\u654c\u4eba",
-          "\u5361\u585e\u5c14\u5b66\u9662": "\u6b7b\u654c"
+          "人类": "死敌"
         }
       }
     ],
     "key_locations": [
       {
-        "description": "\u4f4d\u4e8e\u7f8e\u56fd\u4f0a\u5229\u8bfa\u4f0a\u5dde\u829d\u52a0\u54e5\u8fdc\u90ca\u7684\u79c1\u7acb\u5927\u5b66\uff0c\u5b9e\u9645\u4e3a\u5c60\u9f99\u57fa\u5730\u3002",
-        "name": "\u5361\u585e\u5c14\u5b66\u9662",
-        "narrative_significance": "\u6545\u4e8b\u4e3b\u8981\u53d1\u751f\u5730\uff0c\u4eba\u7c7b\u5bf9\u6297\u9f99\u65cf\u7684\u6700\u540e\u5821\u5792\u3002"
+        "description": "位于美国伊利诺伊州芝加哥远郊的私立大学，实为屠龙基地",
+        "name": "卡塞尔学院",
+        "narrative_significance": "故事主要发生地，连接现实与龙类世界的枢纽"
       },
       {
-        "description": "\u4e2d\u56fd\u56db\u5ddd\u957f\u6c5f\u4e0a\u6e38\u6c34\u4e0b\u88ab\u6df9\u6ca1\u7684\u53e4\u57ce\u9057\u5740\u3002",
-        "name": "\u767d\u5e1d\u57ce / \u9752\u94dc\u4e4b\u57ce",
-        "narrative_significance": "\u9752\u94dc\u4e0e\u706b\u4e4b\u738b\u8bfa\u987f\u7684\u5bab\u6bbf\u6240\u5728\u5730\uff0c\u5173\u952e\u5267\u60c5\u8f6c\u6298\u70b9\u3002"
+        "description": "中国南方小城，路明非的家和高中所在地",
+        "name": "路明非家乡",
+        "narrative_significance": "路明非平凡生活的起点"
       },
       {
-        "description": "\u4e2d\u56fd\u5357\u65b9\u67d0\u57ce\u5e02\u7684\u666e\u901a\u8857\u9053\u4e0e\u5b66\u6821\u3002",
-        "name": "\u8def\u660e\u975e\u5bb6\u4e61",
-        "narrative_significance": "\u8def\u660e\u975e\u5e73\u51e1\u751f\u6d3b\u7684\u8d77\u70b9\uff0c\u5bf9\u6bd4\u73b0\u5b9e\u4e0e\u5947\u5e7b\u4e16\u754c\u7684\u573a\u6240\u3002"
+        "description": "芝加哥火车站，通往卡塞尔学院的隐秘入口",
+        "name": "芝加哥火车站",
+        "narrative_significance": "现实与神秘世界的交接点"
       },
       {
-        "description": "\u884c\u9a76\u4e8e\u829d\u52a0\u54e5\u81f3\u5361\u585e\u5c14\u5b66\u9662\u4e4b\u95f4\u7684\u795e\u79d8\u5217\u8f66\u3002",
-        "name": "CC1000\u6b21\u5feb\u8f66",
-        "narrative_significance": "\u8fde\u63a5\u4e24\u4e2a\u4e16\u754c\u7684\u901a\u9053\uff0c\u65b0\u4eba\u5165\u5b66\u7684\u5fc5\u7ecf\u4e4b\u8def\u3002"
+        "description": "长江三峡夔门附近水域",
+        "name": "夔门",
+        "narrative_significance": "即将展开的‘夔门计划’地点，沉睡的初代种所在处"
       },
       {
-        "description": "\u957f\u6c5f\u4e0a\u6e38\u6c34\u57df\u7684\u4e00\u8258\u519b\u8230/\u62d6\u8239\u3002",
-        "name": "\u6469\u5c3c\u4e9a\u8d6b\u53f7",
-        "narrative_significance": "\u6267\u884c\u90e8\u63a2\u7d22\u9752\u94dc\u4e4b\u57ce\u7684\u79fb\u52a8\u57fa\u5730\u3002"
+        "description": "丽晶酒店，面试地点",
+        "name": "丽晶酒店",
+        "narrative_significance": "路明非命运转折的初始场所"
       }
     ],
     "rules_and_constraints": [
-      "\u9f99\u65cf\u6df7\u8840\u79cd\u82e5\u8840\u7edf\u7eaf\u5ea6\u8d85\u8fc750%\u4f1a\u88ab\u540c\u5316\u4e3a\u9f99\u65cf\u8ffd\u968f\u8005\uff0c\u65e0\u6cd5\u88ab\u5f55\u53d6\u3002",
-      "\u8fdb\u5165\u5361\u585e\u5c14\u5b66\u9662\u9700\u7b7e\u7f72\u4fdd\u5bc6\u534f\u8bae\uff0c\u9000\u5b66\u5c06\u9762\u4e34\u8bb0\u5fc6\u6e05\u6d17\u3002",
-      "3E\u8003\u8bd5\u662f\u9274\u5b9a\u8840\u7edf\u7684\u552f\u4e00\u6807\u51c6\uff0c\u672a\u901a\u8fc7\u8005\u5c06\u88ab\u964d\u7ea7\u6216\u52d2\u4ee4\u9000\u5b66\u3002",
-      "\u81ea\u7531\u4e00\u65e5\u671f\u95f4\u5141\u8bb8\u5b66\u751f\u4f7f\u7528\u70bc\u91d1\u6b66\u5668\u8fdb\u884c\u6218\u6597\uff0c\u4f46\u4e0d\u5f97\u9020\u6210\u771f\u5b9e\u4f24\u4ea1\uff08\u4f7f\u7528\u5f17\u91cc\u5609\u5b50\u5f39\uff09\u3002",
-      "\u9f99\u65cf\u8840\u88d4\u62e5\u6709\u8a00\u7075\u80fd\u529b\uff0c\u4f46\u9700\u8981\u7279\u5b9a\u7684\u9f99\u6587\u5492\u8bed\u548c\u9886\u57df\u652f\u6301\u3002",
-      "\u67d0\u4e9b\u9057\u8ff9\uff08\u5982\u9752\u94dc\u57ce\uff09\u5177\u6709\u81ea\u52a8\u9632\u5fa1\u673a\u5236\uff0c\u4e00\u65e6\u89e6\u53d1\u4f1a\u6539\u53d8\u5185\u90e8\u7ed3\u6784\u3002",
-      "\u9ad8\u7eaf\u5ea6\u9f99\u65cf\u8840\u6db2\u53ef\u4f5c\u4e3a\u5f00\u542f\u53e4\u8001\u673a\u5173\u7684\u94a5\u5319\u3002"
+      "龙族混血种若血统比例超过50%会被同化为龙族追随者，不予录取",
+      "退学需签署记忆清洗协议，否则无法保留关于龙族的记忆",
+      "只有特定血统的人才能看见并理解龙文",
+      "卡塞尔学院学位虽正规但专业特殊，难以在其他领域通用",
+      "S级学生拥有极高的优先级和特权，但也面临巨大风险",
+      "龙族混血种能感知人类大脑活动，普通猎杀极难成功",
+      "弗里嘉子弹（炼金弹头）击中目标不会造成真实伤害，仅模拟中枪效果"
     ],
-    "setting": "\u73b0\u4ee3\u90fd\u5e02\u80cc\u666f\u4e0b\u9690\u85cf\u7684\u9f99\u65cf\u6218\u4e89\u4e16\u754c\uff0c\u4eba\u7c7b\u4e2d\u7684\u6df7\u8840\u79cd\u79d8\u5bc6\u7ec4\u5efa\u5b66\u9662\u5bf9\u6297\u5373\u5c06\u82cf\u9192\u7684\u9f99\u738b\u3002",
-    "time_period": "\u516c\u51432009\u5e74"
+    "setting": "现代都市背景下的隐藏奇幻世界，表面平静的人类社会下隐藏着数千年来人类与龙族的战争",
+    "time_period": "公元2009年"
   }
 }

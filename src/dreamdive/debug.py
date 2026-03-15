@@ -63,6 +63,7 @@ class DebugSession:
                 },
                 indent=2,
                 sort_keys=True,
+                ensure_ascii=False,
             ),
             encoding="utf-8",
         )
@@ -79,7 +80,7 @@ class DebugSession:
             "payload": payload,
         }
         with self.events_path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, sort_keys=True) + "\n")
+            handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
         summary = " ".join(f"{key}={payload[key]!r}" for key in sorted(payload))
         if summary:
             print(f"[dreamdive-debug] {name} {summary}", file=sys.stderr)
@@ -118,6 +119,7 @@ class DebugSession:
                 },
                 indent=2,
                 sort_keys=True,
+                ensure_ascii=False,
             ),
             encoding="utf-8",
         )
@@ -140,7 +142,7 @@ class DebugSession:
             (attempt_dir / "response.txt").write_text(raw_response, encoding="utf-8")
         if parsed_payload is not None:
             (attempt_dir / "parsed.json").write_text(
-                json.dumps(parsed_payload, indent=2, sort_keys=True),
+                json.dumps(parsed_payload, indent=2, sort_keys=True, ensure_ascii=False),
                 encoding="utf-8",
             )
         (attempt_dir / "result.json").write_text(
@@ -153,6 +155,7 @@ class DebugSession:
                 },
                 indent=2,
                 sort_keys=True,
+                ensure_ascii=False,
             ),
             encoding="utf-8",
         )

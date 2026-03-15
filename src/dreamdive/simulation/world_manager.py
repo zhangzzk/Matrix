@@ -31,10 +31,11 @@ class WorldManager:
         background_max_minutes: int = 10080,
         spotlight_threshold: float = 0.8,
         foreground_threshold: float = 0.4,
-        activation_threshold: float = 0.45,
+        activation_threshold: float = 0.55,
         batched_projection_threshold: float = 0.7,
         tick_recovery_ticks: int = 2,
         salience_carryover_decay: float = 0.75,
+        max_events_per_tick: int = 15,
     ) -> None:
         self.spotlight_min_minutes = spotlight_min_minutes
         self.spotlight_max_minutes = spotlight_max_minutes
@@ -48,6 +49,7 @@ class WorldManager:
         self.batched_projection_threshold = batched_projection_threshold
         self.tick_recovery_ticks = max(0, tick_recovery_ticks)
         self.salience_carryover_decay = max(0.0, min(1.0, salience_carryover_decay))
+        self.max_events_per_tick = max_events_per_tick
 
     def compute_tick_size(
         self,
@@ -314,7 +316,7 @@ class WorldManager:
                 if not queue:
                     continue
                 interleaved.append(queue.pop(0))
-        return interleaved
+        return interleaved[:self.max_events_per_tick]
 
     def plan_bridge_events(
         self,

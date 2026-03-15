@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import datetime
+import logging
 import time
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Counter, Dict, Iterable, List, Optional
 
 from dreamdive.db.queries import (
     EntityRepresentationRepository,
@@ -189,20 +193,22 @@ class SimulationTickRunner:
             high_priority_agents=len(high_priority_agent_ids),
             low_priority_agents=len(low_priority_agent_ids),
         )
+        self._emit_progress(progress_callback, stage="assembly", message=f"assembling context for {len(active_agent_ids)} active agents")
 
-        for runtime in agent_runtimes:
+        t0 = time.time()
+        contexts: Dict[str, AgentContextPacket] = {}
+
+        def _assemble_agent_context(runtime) -> tuple[str, AgentContextPacket, list[Dict[str, object]]]:
             character_id = runtime.snapshot.identity.character_id
-            if character_id not in active_agent_ids:
-                continue
             query_text = build_memory_query_text(
-                scene_description="tick planning",
+                scene_description="trajectory projection",
                 scene_participants=[],
                 location=str(runtime.snapshot.current_state.get("location", "")),
-                current_state=dict(runtime.snapshot.current_state),
+                current_state=runtime.snapshot.current_state,
             )
             context_packet = self.context_assembler.assemble(
                 snapshot=runtime.snapshot,
-                scene_description="tick planning",
+                scene_description="trajectory projection",
                 scene_participants=[],
                 time_label=current_tick_label,
                 world_entities=self._entity_candidates_for_context(
@@ -216,8 +222,21 @@ class SimulationTickRunner:
                     query_text=query_text,
                 ),
             )
-            contexts[character_id] = context_packet
-            runtime.world_entities = list(context_packet.world_entities)
+            return character_id, context_packet, list(context_packet.world_entities)
+
+        active_runtimes = [r for r in agent_runtimes if r.snapshot.identity.character_id in active_agent_ids]
+        with ThreadPoolExecutor(max_workers=max(1, min(len(active_runtimes), 8))) as executor:
+            future_to_char = {executor.submit(_assemble_agent_context, r): r for r in active_runtimes}
+            for future in as_completed(future_to_char):
+                try:
+                    character_id, context_packet, new_entities = future.result()
+                    contexts[character_id] = context_packet
+                    runtime_by_id[character_id].world_entities = new_entities
+                except Exception:
+                    pass
+        
+        self._emit_progress(progress_callback, stage="projection", message=f"starting projection for {len(active_agent_ids)} agents")
+
 
         high_priority_targets = [
             runtime
@@ -350,6 +369,74 @@ class SimulationTickRunner:
 
         bridge_events: List[Dict[str, object]] = []
         woken_agents: Dict[str, str] = {}
+        
+        # Pre-compute events concurrently
+        precomputed_outcomes = {}
+        simulation_tasks = []
+        for index, seed in list(enumerate(queued_seeds)):
+            mode = self.world_manager.classify_mode(seed.salience)
+            participants = [
+                runtime_by_id[agent_id].snapshot
+                for agent_id in seed.participants
+                if agent_id in runtime_by_id
+            ]
+            simulation_tasks.append((index, seed, participants, mode))
+        
+        if simulation_tasks:
+            self._emit_progress(
+                progress_callback,
+                stage="event_simulation",
+                message=f"simulating {len(simulation_tasks)} events concurrently",
+                active_agents=len(simulation_tasks)
+            )
+            def _compute_event(task_seed, task_participants, client_clone, mode):
+                clone_sim = EventSimulator(
+                    llm_client=client_clone,
+                    context_assembler=self.event_simulator.context_assembler,
+                )
+                if mode == "background":
+                    return clone_sim.simulate_background(
+                        seed=task_seed,
+                        snapshots=task_participants,
+                        current_time=current_tick_label,
+                        writing_style_note=writing_style_note,
+                        language_guidance=language_guidance,
+                    )
+                else:
+                    return clone_sim.simulate_spotlight(
+                        seed=task_seed,
+                        snapshots=task_participants,
+                        narrative_phase=arc_state.current_phase,
+                        tension_level=arc_state.tension_level,
+                        relevant_threads=arc_state.unresolved_threads,
+                        voice_samples_by_agent={
+                            runtime.snapshot.identity.character_id: runtime.voice_samples
+                            for runtime in agent_runtimes
+                        },
+                        world_entities_by_agent={
+                            runtime.snapshot.identity.character_id: runtime.world_entities
+                            for runtime in agent_runtimes
+                        },
+                        max_beats=8 if mode == "spotlight" else 4,
+                        language_guidance=language_guidance,
+                    )
+
+            with ThreadPoolExecutor(max_workers=min(len(simulation_tasks), 10)) as executor:
+                futures_list = []
+                for index, task_seed, task_participants, task_mode in simulation_tasks:
+                    clone = self.event_simulator.llm_client.clone()
+                    futures_list.append(
+                        (executor.submit(_compute_event, task_seed, task_participants, clone, task_mode), index, task_seed, clone)
+                    )
+
+                for future, index, task_seed, clone in futures_list:
+                    self.event_simulator.llm_client.merge_records(clone)
+                    try:
+                        precomputed_outcomes[task_seed.seed_id] = future.result()
+                    except Exception as exc:
+                        print(f"DEBUG EVENT FAILED: {task_seed.seed_id} - {exc}")
+                        precomputed_outcomes[task_seed.seed_id] = exc
+        
         for index, seed in enumerate(queued_seeds):
             self._emit_progress(
                 progress_callback,
@@ -375,14 +462,12 @@ class SimulationTickRunner:
             preparation_stage = "event_simulation"
 
             try:
+                precomputed = precomputed_outcomes.get(seed.seed_id)
+                if isinstance(precomputed, Exception):
+                    raise precomputed
+                outcome = precomputed
+
                 if mode == "background":
-                    outcome = self.event_simulator.simulate_background(
-                        seed=seed,
-                        snapshots=participants,
-                        current_time=current_tick_label,
-                        writing_style_note=writing_style_note,
-                        language_guidance=language_guidance,
-                    )
                     outcome_summary = outcome.narrative_summary
                     preparation_stage = "state_update"
                     prepared_updates = self._prepare_background_outcome(
@@ -394,23 +479,6 @@ class SimulationTickRunner:
                         language_guidance=language_guidance,
                     )
                 else:
-                    outcome = self.event_simulator.simulate_spotlight(
-                        seed=seed,
-                        snapshots=participants,
-                        narrative_phase=arc_state.current_phase,
-                        tension_level=arc_state.tension_level,
-                        relevant_threads=arc_state.unresolved_threads,
-                        voice_samples_by_agent={
-                            runtime.snapshot.identity.character_id: runtime.voice_samples
-                            for runtime in agent_runtimes
-                        },
-                        world_entities_by_agent={
-                            runtime.snapshot.identity.character_id: runtime.world_entities
-                            for runtime in agent_runtimes
-                        },
-                        max_beats=8 if mode == "spotlight" else 4,
-                        language_guidance=language_guidance,
-                    )
                     outcome_summary = outcome.resolution.scene_outcome
                     preparation_stage = "state_update"
                     prepared_updates = self._prepare_spotlight_outcome(
@@ -743,6 +811,7 @@ class SimulationTickRunner:
                         summary=outcome.narrative_summary,
                         emotional_tag=update.raw_update.emotional_delta.dominant_now,
                         salience=seed.salience,
+                        pinned=modeled_pinned(seed),
                     ),
                 )
             )

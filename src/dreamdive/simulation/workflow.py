@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence
@@ -62,6 +62,7 @@ def build_world_manager(settings: SimulationSettings) -> WorldManager:
         background_max_minutes=settings.tick_background_max_minutes,
         spotlight_threshold=settings.salience_spotlight_threshold,
         foreground_threshold=settings.salience_foreground_threshold,
+        max_events_per_tick=settings.tick_max_events,
     )
 
 
@@ -626,6 +627,32 @@ def _llm_issue_metadata(
     }
 
 
+@dataclass
+class _AgentInitInput:
+    """Pre-computed, read-only data for one agent's initialization."""
+    index: int
+    record: CharacterExtractionRecord
+    identity: CharacterIdentity
+    state_entries: List[StateChangeLogEntry]
+    relationships: List[RelationshipLogEntry]
+    memories: List[EpisodicMemory]
+    voice_samples: List[str]
+    world_entities: List[SubjectiveEntityRepresentation]
+
+
+@dataclass
+class _AgentInitResult:
+    """Result of initializing one agent (returned from a worker thread)."""
+    record: CharacterExtractionRecord
+    snapshot: object  # CharacterSnapshot
+    state_entries: List[StateChangeLogEntry]
+    relationships: List[RelationshipLogEntry]
+    memories: List[EpisodicMemory]
+    voice_samples: List[str]
+    world_entities: List[SubjectiveEntityRepresentation]
+    client_clone: object | None  # StructuredLLMClient or None
+
+
 def initialize_session(
     *,
     source_path: Path,
@@ -636,6 +663,8 @@ def initialize_session(
     llm_client,
     character_ids: Sequence[str] | None = None,
     debug_session: DebugSession | None = None,
+    on_progress: Callable[[dict[str, object]], None] | None = None,
+    max_workers: int = 4,
 ) -> SimulationSessionState:
     _drain_llm_issues(llm_client)
     accumulated = load_accumulated_extraction(workspace_dir, chapter_id=chapter_id)
@@ -649,7 +678,6 @@ def initialize_session(
         for record in accumulated.characters
         if not requested_ids or record.id in requested_ids
     ]
-    initializer = SnapshotInitializer(llm_client)
     replay_key = ReplayKey(tick=tick_label, timeline_index=timeline_index)
     agents: Dict[str, AgentRuntimeState] = {}
     initial_append_only_log: Dict[str, List[dict]] = _empty_append_only_log()
@@ -672,52 +700,160 @@ def initialize_session(
             selected_character_count=len(selected_records),
             scheduled_world_event_count=len(scheduled_events),
         )
+    if on_progress is not None:
+        on_progress(
+            {
+                "stage": "prepare_agents",
+                "chapter_id": chapter_id,
+                "chapter_title": chapter.title or chapter_id,
+                "chapter_index": chapter.order_index,
+                "chapter_count": len(chapters),
+                "agent_total": len(selected_records),
+            }
+        )
 
-    for record in selected_records:
-        identity = build_character_identity(record)
-        state_entries = build_state_entries(record, replay_key)
-        relationships = build_relationship_entries(record, replay_key)
-        memories = build_initial_memories(accumulated, record, replay_key)
-        voice_samples = voice_samples_for_character(accumulated, record.id)
-        world_entities = subjective_entities_for_character(accumulated, record.id)
-        snapshot = initializer.initialize(
-            SnapshotInitializationInput(
-                identity=identity,
-                replay_key=replay_key,
-                text_excerpt=chapter.text[:4000],
-                event_summary_up_to_t=chapter_event_summaries(accumulated, record.id),
-                nearby_characters=[relation.target_id for relation in record.relationships],
-                goal_hints=list(record.current_state.goal_stack),
-                language_guidance=language_guidance,
-                state_entries=state_entries,
-                memories=memories,
-                relationships=relationships,
-                default_state={"location": record.current_state.location or ""},
+    # Pre-compute per-agent read-only data (no LLM calls here).
+    agent_inputs: List[_AgentInitInput] = []
+    for index, record in enumerate(selected_records, start=1):
+        agent_inputs.append(
+            _AgentInitInput(
+                index=index,
+                record=record,
+                identity=build_character_identity(record),
+                state_entries=build_state_entries(record, replay_key),
+                relationships=build_relationship_entries(record, replay_key),
+                memories=[], # Will be populated in parallel inside _run_agent
+                voice_samples=voice_samples_for_character(accumulated, record.id),
+                world_entities=subjective_entities_for_character(accumulated, record.id),
             )
         )
-        agents[record.id] = AgentRuntimeState(
+
+    effective_workers = min(max(max_workers, 1), len(agent_inputs) or 1)
+    chapter_text_excerpt = chapter.text[:4000]
+    agent_total = len(selected_records)
+
+    chapter_meta = {
+        "chapter_id": chapter_id,
+        "chapter_title": chapter.title or chapter_id,
+        "chapter_index": chapter.order_index,
+        "chapter_count": len(chapters),
+    }
+
+    def _run_agent(inp: _AgentInitInput) -> _AgentInitResult:
+        """Initialise one agent with its own LLM client clone."""
+        clone = llm_client.clone() if effective_workers > 1 else llm_client
+        initializer = SnapshotInitializer(clone)
+
+        if on_progress is not None:
+            on_progress(
+                {
+                    "stage": "agent_start",
+                    **chapter_meta,
+                    "agent_index": inp.index,
+                    "agent_total": agent_total,
+                    "character_id": inp.record.id,
+                    "character_name": inp.record.name,
+                }
+            )
+
+        # Move heavy memory embedding to parallel threads
+        memories = build_initial_memories(accumulated, inp.record, replay_key)
+        
+        snapshot = initializer.initialize(
+            SnapshotInitializationInput(
+                identity=inp.identity,
+                replay_key=replay_key,
+                text_excerpt=chapter_text_excerpt,
+                event_summary_up_to_t=chapter_event_summaries(accumulated, inp.record.id),
+                nearby_characters=[relation.target_id for relation in inp.record.relationships],
+                goal_hints=list(inp.record.current_state.goal_stack),
+                language_guidance=language_guidance,
+                state_entries=inp.state_entries,
+                memories=memories,
+                relationships=inp.relationships,
+                default_state={"location": inp.record.current_state.location or ""},
+            ),
+            progress_callback=(
+                None
+                if on_progress is None
+                else lambda event, _idx=inp.index, _rec=inp.record: on_progress(
+                    {
+                        **chapter_meta,
+                        "agent_index": _idx,
+                        "agent_total": agent_total,
+                        "character_id": _rec.id,
+                        "character_name": _rec.name,
+                        **event,
+                    }
+                )
+            ),
+        )
+
+        if on_progress is not None:
+            on_progress(
+                {
+                    "stage": "agent_ready",
+                    **chapter_meta,
+                    "agent_index": inp.index,
+                    "agent_total": agent_total,
+                    "character_id": inp.record.id,
+                    "character_name": inp.record.name,
+                }
+            )
+
+        return _AgentInitResult(
+            record=inp.record,
             snapshot=snapshot,
+            state_entries=inp.state_entries,
+            relationships=inp.relationships,
+            memories=memories,
+            voice_samples=inp.voice_samples,
+            world_entities=inp.world_entities,
+            client_clone=clone if clone is not llm_client else None,
+        )
+
+    # Run agents in parallel (or sequentially if max_workers=1).
+    if effective_workers > 1:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        results: List[_AgentInitResult] = []
+        with ThreadPoolExecutor(max_workers=effective_workers) as pool:
+            futures = {pool.submit(_run_agent, inp): inp for inp in agent_inputs}
+            for future in as_completed(futures):
+                results.append(future.result())
+    else:
+        results = [_run_agent(inp) for inp in agent_inputs]
+
+    # Merge cloned client records back into the main client.
+    for result in results:
+        if result.client_clone is not None:
+            llm_client.merge_records(result.client_clone)
+
+    # Assemble agents dict and append-only log from results.
+    for result in results:
+        agents[result.record.id] = AgentRuntimeState(
+            snapshot=result.snapshot,
             needs_reprojection=True,
-            voice_samples=voice_samples,
-            world_entities=[entity.model_dump(mode="json") for entity in world_entities],
+            voice_samples=result.voice_samples,
+            world_entities=[entity.model_dump(mode="json") for entity in result.world_entities],
         )
         initial_append_only_log["state_changes"].extend(
-            entry.model_dump(mode="json") for entry in state_entries
+            entry.model_dump(mode="json") for entry in result.state_entries
         )
         initial_append_only_log["relationships"].extend(
-            entry.model_dump(mode="json") for entry in relationships
+            entry.model_dump(mode="json") for entry in result.relationships
         )
         initial_append_only_log["episodic_memories"].extend(
-            memory.model_dump(mode="json") for memory in memories
+            memory.model_dump(mode="json") for memory in result.memories
         )
         initial_append_only_log["entity_representations"].extend(
-            entity.model_dump(mode="json") for entity in world_entities
+            entity.model_dump(mode="json") for entity in result.world_entities
         )
         initial_append_only_log["goal_stacks"].append(
             GoalStackSnapshot(
-                character_id=record.id,
+                character_id=result.record.id,
                 replay_key=replay_key,
-                goals=snapshot.goals,
+                goals=result.snapshot.goals,
             ).model_dump(mode="json")
         )
     initialization_llm_issues = _stamp_llm_issues(

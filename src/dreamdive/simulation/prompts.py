@@ -37,7 +37,7 @@ def build_snapshot_inference_prompt(
     nearby_characters: List[str],
     language_guidance: str = "",
 ) -> PromptRequest:
-    identity_json = json.dumps(identity.model_dump(mode="json"), indent=2, sort_keys=True)
+    identity_json = json.dumps(identity.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False)
     event_summary = "\n".join(f"- {item}" for item in event_summary_up_to_t) or "- None provided"
     language_block = format_language_guidance_block(language_guidance)
     output_contract = _json_contract(
@@ -101,8 +101,8 @@ def build_goal_seed_prompt(
     relationships: List[RelationshipLogEntry],
     language_guidance: str = "",
 ) -> PromptRequest:
-    identity_json = json.dumps(identity.model_dump(mode="json"), indent=2, sort_keys=True)
-    inferred_json = json.dumps(inferred_state.model_dump(mode="json"), indent=2, sort_keys=True)
+    identity_json = json.dumps(identity.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False)
+    inferred_json = json.dumps(inferred_state.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False)
     language_block = format_language_guidance_block(language_guidance)
     output_contract = _json_contract(
         {
@@ -140,7 +140,7 @@ def build_goal_seed_prompt(
         "RECENT EVENTS:\n"
         + ("\n".join(f"- {item}" for item in recent_events) or "- None provided")
         + "\n\nKEY RELATIONSHIPS:\n"
-        + json.dumps(relationship_summary, indent=2, sort_keys=True)
+        + json.dumps(relationship_summary, indent=2, sort_keys=True, ensure_ascii=False)
         + "\n\nDefine up to four concrete, prioritized goals grounded in this character's actual psychology. "
         "Also identify what they are actively avoiding and the relationship they are most uncertain about. "
         "Return JSON only.\n\n"
@@ -192,16 +192,16 @@ def build_trajectory_projection_prompt(
         "Speak and reason entirely from this character's first-person perspective.\n\n"
         f"{language_block}"
         "WHO YOU ARE:\n"
-        f"{json.dumps(context_packet.identity, indent=2, sort_keys=True)}\n\n"
+        f"{json.dumps(context_packet.identity, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
         "YOUR CURRENT STATE:\n"
-        f"{json.dumps(context_packet.current_state, indent=2, sort_keys=True)}\n"
+        f"{json.dumps(context_packet.current_state, indent=2, sort_keys=True, ensure_ascii=False)}\n"
         f"Time: {current_time}\n\n"
         "WHAT YOU REMEMBER:\n"
-        f"{json.dumps(context_packet.working_memory, indent=2)}\n\n"
+        f"{json.dumps(context_packet.working_memory, indent=2, ensure_ascii=False)}\n\n"
         "WHO YOU KNOW IS AROUND:\n"
-        f"{json.dumps(context_packet.relationship_context, indent=2, sort_keys=True)}\n\n"
+        f"{json.dumps(context_packet.relationship_context, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
         "WORLD CONTEXT (as you understand it):\n"
-        f"{json.dumps(context_packet.world_entities, indent=2, sort_keys=True)}\n\n"
+        f"{json.dumps(context_packet.world_entities, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
         f"Your planning horizon: {horizon}\n\n"
         "From your perspective only, provide your primary intention, motivation, immediate next action, "
         "2-3 structured contingencies, greatest_fear_this_horizon, abandon_condition, held_back_impulse, "
@@ -260,7 +260,7 @@ def build_batched_trajectory_projection_prompt(
         f"{language_block}"
         f"CURRENT TIME: {current_time}\n\n"
         "CHARACTER REQUESTS:\n"
-        f"{json.dumps(requests, indent=2, sort_keys=True)}\n\n"
+        f"{json.dumps(requests, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
         "Return a JSON object with a `projections` field whose keys are character IDs and whose values "
         "match the single-character trajectory schema.\n\n"
         "OUTPUT CONTRACT:\n"

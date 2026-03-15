@@ -64,7 +64,7 @@ def _row_to_mapping(cursor: Any, row: Any) -> Dict[str, Any]:
 
 
 def _json_dumps(value: Any) -> str:
-    return json.dumps(value, sort_keys=True)
+    return json.dumps(value, sort_keys=True, ensure_ascii=False)
 
 
 def _json_load(value: Any) -> Any:
@@ -74,7 +74,7 @@ def _json_load(value: Any) -> Any:
 
 
 def _stable_json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
 def _vector_literal(values: Sequence[float]) -> str:

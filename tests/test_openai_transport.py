@@ -168,7 +168,10 @@ class OpenAICompatibleTransportTests(unittest.TestCase):
         )
 
         body = json.loads(transport.calls[0][1].decode("utf-8"))
-        self.assertFalse(body["enable_thinking"])
+        self.assertEqual(
+            {"response_format": {"type": "json_object"}, "enable_thinking": False},
+            transport._provider_request_options(profile, PromptRequest(system="s", user="u", metadata={"response_schema": "AccumulatedExtraction"})),
+        )
 
     def test_transport_raises_on_missing_choices(self) -> None:
         transport = FakeTransport({"choices": []})
@@ -345,7 +348,7 @@ class OpenAISDKTransportTests(unittest.TestCase):
 
         self.assertEqual(
             fake_client.completions.calls[0]["extra_body"],
-            {"enable_thinking": False},
+            {"response_format": {"type": "json_object"}, "enable_thinking": False},
         )
 
     def test_sdk_transport_raises_clear_error_when_api_key_missing(self) -> None:

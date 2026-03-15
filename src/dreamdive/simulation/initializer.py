@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import List, Optional, Protocol, Sequence
+from typing import Callable, List, Optional, Protocol, Sequence
 
 from dreamdive.schemas import (
     CharacterIdentity,
@@ -48,7 +48,12 @@ class SnapshotInitializer:
         self.llm_client = llm_client
         self.bootstrapper = bootstrapper or SnapshotBootstrapper()
 
-    def initialize(self, payload: SnapshotInitializationInput) -> CharacterSnapshot:
+    def initialize(
+        self,
+        payload: SnapshotInitializationInput,
+        *,
+        progress_callback: Callable[[dict[str, object]], None] | None = None,
+    ) -> CharacterSnapshot:
         goal_hints = list(payload.goal_hints or [])
         base_snapshot = self.bootstrapper.build_snapshot(
             identity=payload.identity,
@@ -67,11 +72,23 @@ class SnapshotInitializer:
             nearby_characters=payload.nearby_characters,
             language_guidance=payload.language_guidance,
         )
+        self._emit_progress(
+            progress_callback,
+            stage="snapshot_inference",
+            character_id=payload.identity.character_id,
+            character_name=payload.identity.name,
+        )
         try:
             inferred_state = asyncio.run(
                 self.llm_client.call_json(inference_prompt, SnapshotInference)
             )
         except Exception:
+            self._emit_progress(
+                progress_callback,
+                stage="snapshot_inference_fallback",
+                character_id=payload.identity.character_id,
+                character_name=payload.identity.name,
+            )
             inferred_state = self._fallback_snapshot_inference(
                 snapshot=base_snapshot,
                 payload=payload,
@@ -84,9 +101,21 @@ class SnapshotInitializer:
             relationships=list(payload.relationships),
             language_guidance=payload.language_guidance,
         )
+        self._emit_progress(
+            progress_callback,
+            stage="goal_seeding",
+            character_id=payload.identity.character_id,
+            character_name=payload.identity.name,
+        )
         try:
             goal_seed = asyncio.run(self.llm_client.call_json(goal_prompt, GoalSeedPayload))
         except Exception:
+            self._emit_progress(
+                progress_callback,
+                stage="goal_seeding_fallback",
+                character_id=payload.identity.character_id,
+                character_name=payload.identity.name,
+            )
             goal_seed = self._fallback_goal_seed(
                 payload=payload,
                 inferred_state=inferred_state,
@@ -117,6 +146,15 @@ class SnapshotInitializer:
                 )
             }
         )
+
+    @staticmethod
+    def _emit_progress(
+        progress_callback: Callable[[dict[str, object]], None] | None,
+        **event: object,
+    ) -> None:
+        if progress_callback is None:
+            return
+        progress_callback(event)
 
     @staticmethod
     def _fallback_snapshot_inference(

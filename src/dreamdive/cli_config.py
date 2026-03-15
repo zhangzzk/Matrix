@@ -33,17 +33,20 @@ CLI_DEFAULTS: Dict[str, Dict[str, object]] = {
         "character_ids": [],
         "session_id": "default",
         "overwrite": False,
+        "max_workers": 4,
     },
     "tick": {
         "workspace": ".dreamdive",
         "session_id": "default",
         "overwrite": True,
+        "tick_max_events": 15,
     },
     "run": {
         "workspace": ".dreamdive",
         "ticks": 1,
         "session_id": "default",
         "overwrite": True,
+        "tick_max_events": 15,
     },
     "background": {
         "workspace": ".dreamdive",

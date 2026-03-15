@@ -102,9 +102,35 @@ class StructuredLLMClient:
             retry_delay_seconds=active_settings.llm_retry_delay_seconds,
         )
 
+    def clone(self) -> "StructuredLLMClient":
+        """Create a lightweight copy sharing the same transport and profiles.
+
+        The clone has independent ``issue_records`` and ``success_records``
+        lists so it is safe for use in a separate thread.  Call
+        ``merge_records`` on the original to collect results afterwards.
+        """
+        return StructuredLLMClient(
+            profiles=list(self.profiles),
+            transport=self.transport,
+            retry_attempts=self.retry_attempts,
+            retry_delay_seconds=self.retry_delay_seconds,
+            debug_session=None,  # debug writes are not thread-safe
+        )
+
+    def merge_records(self, other: "StructuredLLMClient") -> None:
+        """Merge issue and success records from *other* into this client."""
+        self.issue_records.extend(other.issue_records)
+        self.success_records.extend(other.success_records)
+
     async def call_json(self, prompt: PromptRequest, schema: type[TModel]) -> TModel:
         last_error: Optional[Exception] = None
         attempted_profiles: list[str] = []
+        # Ensure the prompt carries response_schema so the transport can
+        # request JSON output mode from providers that support it.
+        if not prompt.metadata.get("response_schema"):
+            prompt = prompt.model_copy(
+                update={"metadata": {**prompt.metadata, "response_schema": schema.__name__}}
+            )
         for profile in self.profiles:
             if profile.name not in attempted_profiles:
                 attempted_profiles.append(profile.name)
@@ -248,7 +274,7 @@ class StructuredLLMClient:
         schema: type[TModel],
         error: Exception,
     ) -> PromptRequest:
-        schema_json = json.dumps(schema.model_json_schema(), sort_keys=True)
+        schema_json = json.dumps(schema.model_json_schema(), sort_keys=True, ensure_ascii=False)
         previous_response = invalid_response if invalid_response.strip() else "[EMPTY RESPONSE]"
         return PromptRequest(
             system=original_prompt.system,

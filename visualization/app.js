@@ -1,5 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const DEFAULT_SESSION_PATH = params.get("session") || "../.dreamdive/simulation_session.json";
+const PAGE_MODE = document.body.dataset.view || "story";
 
 const EVENT_COLORS = {
   goal_collision: "#8c2f2a",
@@ -762,9 +763,32 @@ function render() {
   const currentTickScale = formatTickScale(state.tick, state.model);
   const currentStepLabel = formatCurrentStep(state.tick, state.model);
   const llmIssueSummary = summarizeLlmIssues(state.tick);
+  if (PAGE_MODE === "atlas") {
+    root.innerHTML = renderAtlasPage({
+      llmIssueSummary,
+      currentTickScale,
+      currentStepLabel,
+    });
+  } else {
+    root.innerHTML = renderStoryPage({
+      visibleCharacters,
+      narrative,
+      tensionSeries,
+      currentBeat,
+      nextBeat,
+      currentTickScale,
+      currentStepLabel,
+      llmIssueSummary,
+    });
+  }
 
-  root.innerHTML = `
+  bindEvents();
+}
+
+function renderAtlasPage(context) {
+  return `
     <div class="workspace">
+      ${renderPageSwitch()}
       <header class="header header--masthead">
         <div class="header__title">
           <p class="eyebrow">Dreamdive Data Atlas</p>
@@ -774,110 +798,131 @@ function render() {
           </p>
         </div>
         <div class="header__status">
-          <div class="snapshot-tag">Story time ${escapeHtml(formatTick(state.tick))}${currentStepLabel ? ` · ${escapeHtml(currentStepLabel)}` : ""}${currentTickScale ? ` · ${escapeHtml(currentTickScale)}` : ""}</div>
+          <div class="snapshot-tag">Story time ${escapeHtml(formatTick(state.tick))}${context.currentStepLabel ? ` · ${escapeHtml(context.currentStepLabel)}` : ""}${context.currentTickScale ? ` · ${escapeHtml(context.currentTickScale)}` : ""}</div>
           <div class="header-meta">
-            ${renderHeaderMeta(llmIssueSummary)}
+            ${renderAtlasHeaderMeta(context.llmIssueSummary)}
           </div>
         </div>
       </header>
 
       <main class="dashboard">
         ${renderDataAtlas()}
+      </main>
+    </div>
+  `;
+}
 
-        <section class="runtime-divider">
-          <div class="runtime-divider__copy">
-            <p class="eyebrow">Runtime Lens</p>
-            <h2 class="card__title">Replay The Stored Data</h2>
-            <p class="card__summary">
-              The atlas above explains the storage model. The controls below let you scrub that stored data across story time and inspect what the current session branch looks like at each cursor.
-            </p>
+function renderStoryPage(context) {
+  return `
+    <div class="workspace">
+      ${renderPageSwitch()}
+      <header class="header header--masthead">
+        <div class="header__title">
+          <p class="eyebrow">Visualization Layer</p>
+          <h1>${escapeHtml(state.model.title)}</h1>
+          <p class="subtitle">
+            ${escapeHtml(buildSubtitle(context.narrative))}
+          </p>
+        </div>
+        <div class="header__status">
+          <div class="snapshot-tag">Story time ${escapeHtml(formatTick(state.tick))}${context.currentStepLabel ? ` · ${escapeHtml(context.currentStepLabel)}` : ""}${context.currentTickScale ? ` · ${escapeHtml(context.currentTickScale)}` : ""}</div>
+          <div class="header-meta">
+            ${renderStoryHeaderMeta(context.llmIssueSummary, context.visibleCharacters.length)}
           </div>
-        </section>
+        </div>
+      </header>
 
-        <section class="control-ribbon">
-          <div class="control-card control-card--playback">
+      <section class="control-ribbon">
+        <div class="control-card control-card--playback">
+          <div class="control-row">
+            <label>Playback</label>
+            <button class="button ${state.isPlaying ? "" : "button--soft"}" data-action="play-toggle">
+              ${state.isPlaying ? "Pause" : "Play"}
+            </button>
+            <button class="button button--soft" data-action="reset-cursor">Reset</button>
+            <button class="button button--soft" data-action="jump-now">Jump To Latest</button>
+          </div>
+          <div class="slider-row">
+            <div class="range-wrap">
+              <input
+                type="range"
+                min="${state.model.minTick}"
+                max="${state.model.maxTick}"
+                value="${state.tick}"
+                step="1"
+                data-action="scrub"
+              />
+              <output>${escapeHtml(formatTickLabel(state.tick, state.model))}</output>
+            </div>
             <div class="control-row">
-              <label>Playback</label>
-              <button class="button ${state.isPlaying ? "" : "button--soft"}" data-action="play-toggle">
-                ${state.isPlaying ? "Pause" : "Play"}
+              <label for="speed-select">Speed</label>
+              <select id="speed-select" data-action="speed-select">
+                ${[1, 2, 4, 8]
+                  .map(
+                    (speed) => `
+                      <option value="${speed}" ${speed === state.playSpeed ? "selected" : ""}>
+                        ${speed}x
+                      </option>
+                    `,
+                  )
+                  .join("")}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-card control-card--mode">
+          <div class="control-row">
+            <label>Reading mode</label>
+            <div class="mode-toggle">
+              <button class="${state.mode === "external" ? "is-selected" : ""}" data-action="mode" data-mode="external">
+                External
               </button>
-              <button class="button button--soft" data-action="reset-cursor">Reset</button>
-              <button class="button button--soft" data-action="jump-now">Jump To Latest</button>
-            </div>
-            <div class="slider-row">
-              <div class="range-wrap">
-                <input
-                  type="range"
-                  min="${state.model.minTick}"
-                  max="${state.model.maxTick}"
-                  value="${state.tick}"
-                  step="1"
-                  data-action="scrub"
-                />
-                <output>${escapeHtml(formatTickLabel(state.tick, state.model))}</output>
-              </div>
-              <div class="control-row">
-                <label for="speed-select">Speed</label>
-                <select id="speed-select" data-action="speed-select">
-                  ${[1, 2, 4, 8]
-                    .map(
-                      (speed) => `
-                        <option value="${speed}" ${speed === state.playSpeed ? "selected" : ""}>
-                          ${speed}x
-                        </option>
-                      `,
-                    )
-                    .join("")}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="control-card control-card--mode">
-            <div class="control-row">
-              <label>Reading mode</label>
-              <div class="mode-toggle">
-                <button class="${state.mode === "external" ? "is-selected" : ""}" data-action="mode" data-mode="external">
-                  External
-                </button>
-                <button class="${state.mode === "internal" ? "is-selected" : ""}" data-action="mode" data-mode="internal">
-                  Internal
-                </button>
-              </div>
-            </div>
-            <p class="subtitle">
-              ${escapeHtml(
-                state.mode === "external"
-                  ? "Stay on visible action, movement, and consequences."
-                  : "Bring goals, emotion, and subtext into the frame.",
-              )}
-            </p>
-          </div>
-
-          <div class="control-card control-card--filters">
-            <div class="control-row">
-              <label>Cast in frame</label>
-              <p class="control-note">${escapeHtml(`${visibleCharacters.length} of ${state.model.characters.length} visible`)}</p>
-            </div>
-            <div class="character-filter">
-              <button class="chip ${visibleCharacters.length === state.model.characters.length ? "is-active" : ""}" data-action="show-all">
-                All characters
+              <button class="${state.mode === "internal" ? "is-selected" : ""}" data-action="mode" data-mode="internal">
+                Internal
               </button>
-              ${state.model.characters
-                .map(
-                  (character) => `
-                    <button
-                      class="chip ${state.visibleCharacterIds.has(character.id) ? "is-active" : ""}"
-                      data-action="toggle-character"
-                      data-character-id="${escapeHtml(character.id)}"
-                    >
-                      ${escapeHtml(character.name)}
-                    </button>
-                  `,
-                )
-                .join("")}
             </div>
           </div>
+          <p class="subtitle">
+            ${escapeHtml(
+              state.mode === "external"
+                ? "Stay on visible action, movement, and consequences."
+                : "Bring goals, emotion, and subtext into the frame.",
+            )}
+          </p>
+        </div>
+
+        <div class="control-card control-card--filters">
+          <div class="control-row">
+            <label>Cast in frame</label>
+            <p class="control-note">${escapeHtml(`${context.visibleCharacters.length} of ${state.model.characters.length} visible`)}</p>
+          </div>
+          <div class="character-filter">
+            <button class="chip ${context.visibleCharacters.length === state.model.characters.length ? "is-active" : ""}" data-action="show-all">
+              All characters
+            </button>
+            ${state.model.characters
+              .map(
+                (character) => `
+                  <button
+                    class="chip ${state.visibleCharacterIds.has(character.id) ? "is-active" : ""}"
+                    data-action="toggle-character"
+                    data-character-id="${escapeHtml(character.id)}"
+                  >
+                    ${escapeHtml(character.name)}
+                  </button>
+                `,
+              )
+              .join("")}
+          </div>
+        </div>
+      </section>
+
+      <main class="dashboard">
+        <section class="story-jump">
+          <a class="story-jump__link" href="${escapeHtml(buildPageHref("atlas"))}">
+            Open the Data Atlas for the accurate storage schema, table inventory, and replay model.
+          </a>
         </section>
 
         <section class="stage-grid">
@@ -886,22 +931,22 @@ function render() {
               <p class="card__kicker">Story now</p>
               <h2 class="hero-title">Current reading</h2>
               <p class="card__summary">
-                ${escapeHtml(buildHeroSummary(narrative, nextBeat))}
+                ${escapeHtml(buildHeroSummary(context.narrative, context.nextBeat))}
               </p>
               <div class="story-signals">
-                ${renderStorySignal("Current phase", humanizeSlug(narrative.current_phase || "setup"), `${(narrative.unresolved_threads || []).length} unresolved thread${(narrative.unresolved_threads || []).length === 1 ? "" : "s"}`)}
-                ${renderStorySignal("Shared pressure", formatPercent(narrative.tension_level || 0), currentStepLabel || "Step not recorded")}
+                ${renderStorySignal("Current phase", humanizeSlug(context.narrative.current_phase || "setup"), `${(context.narrative.unresolved_threads || []).length} unresolved thread${(context.narrative.unresolved_threads || []).length === 1 ? "" : "s"}`)}
+                ${renderStorySignal("Shared pressure", formatPercent(context.narrative.tension_level || 0), context.currentStepLabel || "Step not recorded")}
                 ${renderStorySignal("Scenes on record", String(state.model.loggedEvents.length), state.model.loggedEvents.length ? "Committed event markers" : "No committed scenes yet")}
-                ${renderStorySignal("Story horizon", formatTick(state.model.maxTick), currentTickScale || "Tick span not recorded")}
+                ${renderStorySignal("Story horizon", formatTick(state.model.maxTick), context.currentTickScale || "Tick span not recorded")}
               </div>
               <div class="beat-pair">
-                ${renderBeatCard("Last committed scene", currentBeat, "The simulation is still in opening position.")}
-                ${renderBeatCard("On deck", nextBeat, "No future beat is scheduled beyond this cursor.")}
+                ${renderBeatCard("Last committed scene", context.currentBeat, "The simulation is still in opening position.")}
+                ${renderBeatCard("On deck", context.nextBeat, "No future beat is scheduled beyond this cursor.")}
               </div>
               <div class="thread-cluster">
                 <span class="thread-cluster__label">Unresolved threads</span>
                 <div class="pill-row">
-                  ${renderThreadPills(narrative.unresolved_threads)}
+                  ${renderThreadPills(context.narrative.unresolved_threads)}
                 </div>
               </div>
             </div>
@@ -931,7 +976,7 @@ function render() {
               <div class="card__body">
                 <p class="card__kicker">Forecast</p>
                 <h2 class="card__title">Story runway</h2>
-                <p class="card__summary">${escapeHtml(buildRunwaySummary(nextBeat))}</p>
+                <p class="card__summary">${escapeHtml(buildRunwaySummary(context.nextBeat))}</p>
                 <div class="forecast-list">
                   ${renderForecastList(3)}
                 </div>
@@ -940,7 +985,7 @@ function render() {
           </div>
         </section>
 
-        ${renderLlmIssueSection(llmIssueSummary)}
+        ${renderLlmIssueSection(context.llmIssueSummary)}
 
         <section class="card timeline-card">
           <div class="card__body">
@@ -953,8 +998,8 @@ function render() {
                 </p>
               </div>
               <div class="section-pulse">
-                ${renderPulseTag("Committed", currentBeat ? `${itemLabel(currentBeat)} · ${formatTick(currentBeat.timeline_index)}` : "Waiting for the first committed scene")}
-                ${renderPulseTag("On deck", nextBeat ? `${itemLabel(nextBeat)} · ${formatTick(nextBeat.timeline_index)}` : "No scheduled beat beyond the cursor")}
+                ${renderPulseTag("Committed", context.currentBeat ? `${itemLabel(context.currentBeat)} · ${formatTick(context.currentBeat.timeline_index)}` : "Waiting for the first committed scene")}
+                ${renderPulseTag("On deck", context.nextBeat ? `${itemLabel(context.nextBeat)} · ${formatTick(context.nextBeat.timeline_index)}` : "No scheduled beat beyond the cursor")}
               </div>
             </div>
             <div class="chart-shell">
@@ -974,17 +1019,17 @@ function render() {
             <p class="card__kicker">Pressure</p>
             <h2 class="card__title">Tension Curve</h2>
             <div class="phase-banner">
-              <span>${escapeHtml(humanizeSlug(narrative.current_phase || "setup"))}</span>
-              <span>${escapeHtml(`${(narrative.unresolved_threads || []).length} threads live`)}</span>
+              <span>${escapeHtml(humanizeSlug(context.narrative.current_phase || "setup"))}</span>
+              <span>${escapeHtml(`${(context.narrative.unresolved_threads || []).length} threads live`)}</span>
             </div>
             <p class="card__summary">
               The curve reads from recorded world snapshots when they exist, and falls back to the initial and current arc state while the session is still near its opening beat.
             </p>
             <div class="chart-shell">
-              ${renderTensionSvg(tensionSeries)}
+              ${renderTensionSvg(context.tensionSeries)}
             </div>
             ${
-              tensionSeries.length < 2
+              context.tensionSeries.length < 2
                 ? `<p class="empty-note">Run additional simulation ticks to turn this opening-state line into a real dramatic contour.</p>`
                 : ""
             }
@@ -996,19 +1041,21 @@ function render() {
             <p class="card__kicker">Affinity</p>
             <h2 class="card__title">Relationship Graph</h2>
             <p class="card__summary">
-              Ring layout: every visible character sits on the outer orbit, and directed edges show current relationship pressure between them.
+              Force-directed scatter plot layout: characters are positioned dynamically based on relational pressures.
             </p>
             <div class="relationship-panel">
               <div class="chart-shell chart-shell--relationship">
-                ${renderRelationshipSvg(visibleCharacters)}
+                ${renderRelationshipSvg(context.visibleCharacters)}
               </div>
-              <div class="relationship-ledger relationship-ledger--stack">
-                ${renderRelationshipLedger(visibleCharacters)}
+              <div class="relationship-controls">
+                <div class="legend-group">
+                  <span>Edges:</span>
+                  <div class="legend-item"><span class="legend-line" style="background: #B88E4B; height: 3px;"></span> Alliance</div>
+                  <div class="legend-item"><span class="legend-line" style="border-top: 3px dashed #517498; background: transparent;"></span> Neutral</div>
+                  <div class="legend-item"><span class="legend-line" style="background: #8c2f2a; height: 3px;"></span> Hostile</div>
+                </div>
               </div>
             </div>
-            <p class="footer-note">
-              ${escapeHtml(describeRelationshipState(visibleCharacters))}
-            </p>
           </div>
         </section>
 
@@ -1020,7 +1067,7 @@ function render() {
               Each lane shows location continuity across the shared time axis. Internal mode adds goal focus and richer state text at the cursor.
             </p>
             <div class="swimlane">
-              ${visibleCharacters.map((character) => renderSwimlaneRow(character)).join("")}
+              ${context.visibleCharacters.map((character) => renderSwimlaneRow(character)).join("")}
             </div>
           </div>
         </section>
@@ -1035,8 +1082,19 @@ function render() {
       </div>
     </aside>
   `;
+}
 
-  bindEvents();
+function renderPageSwitch() {
+  return `
+    <nav class="page-switch" aria-label="Visualization pages">
+      <a class="page-switch__link ${PAGE_MODE === "story" ? "is-active" : ""}" href="${escapeHtml(buildPageHref("story"))}">
+        Story View
+      </a>
+      <a class="page-switch__link ${PAGE_MODE === "atlas" ? "is-active" : ""}" href="${escapeHtml(buildPageHref("atlas"))}">
+        Data Atlas
+      </a>
+    </nav>
+  `;
 }
 
 function renderDataAtlas() {
@@ -1405,7 +1463,16 @@ function renderPulseTag(label, value) {
   `;
 }
 
-function renderHeaderMeta(summary) {
+function renderStoryHeaderMeta(summary, visibleCount) {
+  const items = [
+    state.model.metadata.chapter_id ? `Chapter ${state.model.metadata.chapter_id}` : "",
+    visibleCount ? `${visibleCount} cast in view` : "",
+    summary.totalCount ? `${summary.totalCount} LLM warnings recorded` : "No LLM warnings recorded",
+  ].filter(Boolean);
+  return items.map((item) => `<span class="header-meta__item">${escapeHtml(item)}</span>`).join("");
+}
+
+function renderAtlasHeaderMeta(summary) {
   const items = [
     "Session-first checkpoint",
     `${state.model.storageAtlas.logFamilies.length} log families`,
@@ -1679,85 +1746,103 @@ function renderRelationshipSvg(visibleCharacters) {
   const height = 480;
   const centerX = width / 2;
   const centerY = height / 2;
-  const orbitRadiusX = width * 0.29;
-  const orbitRadiusY = height * 0.31;
-  const labelOrbitX = orbitRadiusX + 78;
-  const labelOrbitY = orbitRadiusY + 54;
-  const nodes = visibleCharacters.map((character, index) => {
-    const angle = (-Math.PI / 2) + (index / Math.max(visibleCharacters.length, 1)) * Math.PI * 2;
-    const eventCount = countCharacterEvents(character.id);
-    const prominence = Math.max(8, Math.min(12, 8 + eventCount * 0.18));
-    const direction = Math.cos(angle);
-    const side = direction > 0.2 ? "right" : direction < -0.2 ? "left" : "middle";
+  const nodes = visibleCharacters.map((character) => {
     return {
       ...character,
-      x: centerX + Math.cos(angle) * orbitRadiusX,
-      y: centerY + Math.sin(angle) * orbitRadiusY,
-      labelX: centerX + Math.cos(angle) * labelOrbitX,
-      labelY: centerY + Math.sin(angle) * labelOrbitY,
-      side,
-      nodeRadius: prominence,
-      labelWidth: Math.min(178, Math.max(108, truncate(character.name, 20).length * 7.4 + 40)),
-      prominence,
-      moodColor: emotionColorForCharacter(character.id, state.tick),
+      nodeRadius: 8,
+      moodColor: "#4B76A0", // Uniform default node color for scatter plot
     };
   });
-  settleRelationshipLabels(nodes);
-  const nodePositions = Object.fromEntries(nodes.map((node) => [node.id, node]));
-  const edges = getRelationshipsAt(state.tick)
+  
+  const edgesRaw = getRelationshipsAt(state.tick)
     .filter((relationship) => {
       return state.visibleCharacterIds.has(relationship.from_character_id) && state.visibleCharacterIds.has(relationship.to_character_id);
     })
     .sort((left, right) => relationshipStrength(left) - relationshipStrength(right));
-  const edgeKeys = new Set(edges.map((edge) => `${edge.from_character_id}::${edge.to_character_id}`));
+
+  const edgeKeys = new Set(edgesRaw.map((edge) => `${edge.from_character_id}::${edge.to_character_id}`));
+
+  const links = edgesRaw.map(edge => ({
+    ...edge,
+    source: edge.from_character_id,
+    target: edge.to_character_id
+  }));
+
+  // Setup D3 Force Layout Simulation synchronously
+  const simulation = d3.forceSimulation(nodes)
+    .force("charge", d3.forceManyBody().strength(-300)) // Repel force
+    .force("center", d3.forceCenter(centerX, centerY)) // Center of SVG
+    .force("link", d3.forceLink(links).id(d => d.id).distance(120)) // Link targets
+    .force("collide", d3.forceCollide().radius(15).iterations(2)) // Avoid dense overlap
+    .stop(); // Don't animate in DOM real-time
+
+  // Spool simulation physics forward 300 steps explicitly to reach a stable static graph
+  for (let i = 0; i < 300; ++i) simulation.tick();
+  
+  // Clamp node coordinates within SVG bounds minus padding
+  const padding = 20;
+  nodes.forEach(node => {
+    node.x = Math.max(padding, Math.min(width - padding, node.x));
+    node.y = Math.max(padding, Math.min(height - padding, node.y));
+  });
+  
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Relationship graph">
       <defs>
-        <radialGradient id="relationship-field" cx="50%" cy="50%" r="68%">
-          <stop offset="0%" stop-color="rgba(173,79,45,0.06)" />
-          <stop offset="100%" stop-color="rgba(35,65,93,0)" />
-        </radialGradient>
+        <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.3"/>
+        </filter>
       </defs>
-      <ellipse cx="${centerX}" cy="${centerY}" rx="${orbitRadiusX}" ry="${orbitRadiusY}" fill="url(#relationship-field)" stroke="rgba(24,33,45,0.08)" stroke-dasharray="6 10" />
       <g>
-        ${edges
+        ${links
           .map((edge) => {
-            const from = nodePositions[edge.from_character_id];
-            const to = nodePositions[edge.to_character_id];
-            if (!from || !to) {
-              return "";
-            }
-            const edgeColor = relationshipColor(edge.sentiment_shift, edge.trust_value);
+            // d3.forceLink replaces string sources with actual node objects
+            const from = edge.source; 
+            const to = edge.target;
+            if (from == null || to == null) return "";
+
             const trustValue = Number(edge.trust_value || 0);
-            const widthScale = 1.8 + Math.max(0.15, Math.abs(trustValue)) * 4.6;
+            
+            let edgeColor = "#517498"; // Default Neutral Blue
+            let isDashed = true;
+            let strokeWidth = 1.5;
+            
+            if (trustValue > 0.3 || (edge.sentiment_shift && /(loyal|trust|respect|allied|positive)/.test(edge.sentiment_shift.toLowerCase()))) {
+               edgeColor = "#B88E4B"; // Alliance Gold
+               isDashed = false;
+               strokeWidth = 2;
+            } else if (trustValue < -0.3 || (edge.sentiment_shift && /(hostile|enmity|critical|conflict)/.test(edge.sentiment_shift.toLowerCase()))) {
+               edgeColor = "#8c2f2a"; // Hostile Red
+               isDashed = false;
+               strokeWidth = 2;
+            }
+
             const dx = to.x - from.x;
             const dy = to.y - from.y;
-            const distance = Math.hypot(dx, dy) || 1;
-            const ux = dx / distance;
-            const uy = dy / distance;
-            const px = -uy;
-            const py = ux;
+            
+            const curvature = 0.25; 
+            const cx = (from.x + to.x) / 2 - dy * curvature;
+            const cy = (from.y + to.y) / 2 + dx * curvature;
+            
             const hasReverse = edgeKeys.has(`${edge.to_character_id}::${edge.from_character_id}`);
-            const pairOffset = hasReverse ? 12 * (edge.from_character_id < edge.to_character_id ? -1 : 1) : 0;
-            const shiftX = px * pairOffset;
-            const shiftY = py * pairOffset;
-            const startX = from.x + shiftX + ux * (from.nodeRadius + 8);
-            const startY = from.y + shiftY + uy * (from.nodeRadius + 8);
-            const arrowTipX = to.x + shiftX - ux * (to.nodeRadius + 6);
-            const arrowTipY = to.y + shiftY - uy * (to.nodeRadius + 6);
-            const arrowLength = 10;
-            const arrowWidth = 9;
-            const baseCenterX = arrowTipX - ux * arrowLength;
-            const baseCenterY = arrowTipY - uy * arrowLength;
-            const leftBaseX = baseCenterX + px * (arrowWidth / 2);
-            const leftBaseY = baseCenterY + py * (arrowWidth / 2);
-            const rightBaseX = baseCenterX - px * (arrowWidth / 2);
-            const rightBaseY = baseCenterY - py * (arrowWidth / 2);
+            const finalCx = hasReverse ? (from.x + to.x) / 2 - dy * 0.35 : cx;
+            const finalCy = hasReverse ? (from.y + to.y) / 2 + dx * 0.35 : cy;
+
             return `
-              <g>
-                <line x1="${startX}" y1="${startY}" x2="${baseCenterX}" y2="${baseCenterY}" stroke="rgba(255,255,255,0.86)" stroke-width="${widthScale + 3.6}" stroke-linecap="round" stroke-opacity="0.7" />
-                <line x1="${startX}" y1="${startY}" x2="${baseCenterX}" y2="${baseCenterY}" stroke="${edgeColor}" stroke-width="${widthScale}" stroke-opacity="${Math.max(0.38, Math.min(0.96, 0.34 + Math.abs(trustValue) * 0.54))}" stroke-linecap="round" stroke-dasharray="${trustValue < 0 ? "9 7" : "0"}" />
-                <polygon points="${arrowTipX},${arrowTipY} ${leftBaseX},${leftBaseY} ${rightBaseX},${rightBaseY}" fill="${edgeColor}" fill-opacity="${Math.max(0.48, Math.min(0.96, 0.44 + Math.abs(trustValue) * 0.48))}" />
+              <g class="relationship-edge-group" style="cursor: pointer;">
+                <!-- Target Visual Line -->
+                <path d="M ${from.x} ${from.y} Q ${finalCx} ${finalCy} ${to.x} ${to.y}" 
+                      fill="none" 
+                      stroke="${edgeColor}" 
+                      stroke-width="${strokeWidth}" 
+                      stroke-opacity="0.8"
+                      ${isDashed ? 'stroke-dasharray="4 4"' : ''} />
+                      
+                <!-- Thick Invisible Hitbox for Edge Hover -->
+                <path d="M ${from.x} ${from.y} Q ${finalCx} ${finalCy} ${to.x} ${to.y}" 
+                      fill="none" 
+                      stroke="transparent" 
+                      stroke-width="12" />
                 <title>${escapeHtml(buildRelationshipTooltip(edge))}</title>
               </g>
             `;
@@ -1767,38 +1852,12 @@ function renderRelationshipSvg(visibleCharacters) {
       <g>
         ${nodes
           .map((node) => {
-            const labelHeight = 34;
-            const labelY = node.labelY - labelHeight / 2;
-            const labelX = node.side === "right"
-              ? node.labelX + 18
-              : node.side === "left"
-                ? node.labelX - node.labelWidth - 18
-                : node.labelX - node.labelWidth / 2;
-            const textX = node.side === "left"
-              ? labelX + node.labelWidth - 16
-              : node.side === "middle"
-                ? labelX + node.labelWidth / 2
-                : labelX + 16;
-            const textAnchor = node.side === "middle" ? "middle" : node.side === "left" ? "end" : "start";
-            const connectorStartX = node.x + (node.side === "right" ? node.nodeRadius + 4 : node.side === "left" ? -(node.nodeRadius + 4) : 0);
-            const connectorStartY = node.y;
-            const connectorEndX = node.side === "right"
-              ? labelX
-              : node.side === "left"
-                ? labelX + node.labelWidth
-                : labelX + node.labelWidth / 2;
-            const connectorEndY = node.labelY;
+            const roleText = node.identity?.domain_attributes?.role || "Unknown Role";
             return `
-              <g data-action="open-character" data-character-id="${escapeHtml(node.id)}">
-                <line x1="${connectorStartX}" y1="${connectorStartY}" x2="${connectorEndX}" y2="${connectorEndY}" stroke="rgba(24,33,45,0.14)" stroke-width="1.5" />
-                <rect x="${labelX}" y="${labelY}" width="${node.labelWidth}" height="${labelHeight}" rx="17" fill="rgba(255,252,248,0.94)" stroke="rgba(24,33,45,0.08)" />
-                <circle cx="${labelX + 14}" cy="${node.labelY}" r="4.5" fill="${node.moodColor}" />
-                <text x="${textX}" y="${node.labelY + 4}" text-anchor="${textAnchor}" fill="rgba(24,33,45,0.84)" font-size="12.5" font-weight="600">
-                  ${escapeHtml(truncate(node.name, 20))}
-                </text>
-                <circle cx="${node.x}" cy="${node.y}" r="${node.nodeRadius + 5}" fill="rgba(255,255,255,0.72)" stroke="rgba(24,33,45,0.08)" stroke-width="1.2" />
-                <circle cx="${node.x}" cy="${node.y}" r="${node.nodeRadius}" fill="${node.moodColor}" stroke="rgba(255,255,255,0.96)" stroke-width="2.5" />
-                <title>${escapeHtml(buildCharacterTooltip(node.id))}</title>
+              <g class="node-group" transform="translate(${node.x},${node.y})" data-action="open-character" data-character-id="${escapeHtml(node.id)}" style="pointer-events: bounding-box; cursor: pointer;">
+                <title>${escapeHtml(node.name)}\nRole: ${escapeHtml(roleText)}</title>
+                <circle class="character-node" r="${node.nodeRadius}" fill="${node.moodColor}" filter="url(#node-shadow)"></circle>
+                <circle class="character-node" r="${node.nodeRadius}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
               </g>
             `;
           })
@@ -2567,6 +2626,12 @@ function buildAtlasSubtitle() {
   return `The loaded checkpoint currently contains ${formatCount(atlas.liveAgentCount)} live agents, ${formatCount(atlas.totalLogEntries)} append-only rows, and an optional ${atlas.sqlTables.length}-table SQL mirror.`;
 }
 
+function buildPageHref(mode) {
+  const target = mode === "atlas" ? "./atlas.html" : "./index.html";
+  const query = params.toString();
+  return query ? `${target}?${query}` : target;
+}
+
 function buildSubtitle(narrative) {
   const threadCount = Array.isArray(narrative.unresolved_threads) ? narrative.unresolved_threads.length : 0;
   const sourceLabel = state.model.metadata.story_context || basenameStem(state.model.sourcePath) || "simulation";
@@ -3011,7 +3076,7 @@ function renderError(error) {
   root.className = "app-shell app-shell--error";
   root.innerHTML = `
     <div class="error-state">
-      <p class="eyebrow">Dreamdive Data Atlas</p>
+      <p class="eyebrow">${escapeHtml(PAGE_MODE === "atlas" ? "Dreamdive Data Atlas" : "Visualization Layer")}</p>
       <h1>Unable to load the simulation session</h1>
       <p>${escapeHtml(error.message || "Unknown error")}</p>
       <p class="footer-note">

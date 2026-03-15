@@ -3,64 +3,66 @@
     {
       "aliases": [],
       "current_state": {
-        "emotional_state": "\u60ca\u9b42\u672a\u5b9a\uff0c\u611f\u5230\u5fc3\u75db\u4e0e\u6050\u60e7\uff0c\u968f\u540e\u8f6c\u4e3a\u5e86\u5e78\u68a6\u5883\u662f\u5047\u7684",
+        "emotional_state": "惊魂未定，感到恐惧与庆幸交织",
         "goal_stack": [
-          "\u786e\u8ba4\u81ea\u5df1\u5e76\u672a\u5931\u53bb\u91cd\u8981\u7684\u4eba",
-          "\u9002\u5e94\u73b0\u5b9e\u4e16\u754c\u7684\u5e73\u9759\u751f\u6d3b"
+          "确认现实世界的安全性",
+          "理解梦境的警示意义"
         ],
-        "location": "\u73b0\u4ee3\u90fd\u5e02\u7684\u5bb6\u4e2d\uff08\u4e0b\u5348\uff09",
-        "physical_state": "\u5168\u8eab\u51b7\u6c57\uff0c\u547c\u5438\u6025\u4fc3\uff0c\u521a\u4ece\u68a6\u4e2d\u60ca\u9192"
+        "location": "芝加哥火车站附近的普通房间",
+        "physical_state": "从梦中惊醒，呼吸急促，全身冷汗"
       },
-      "id": "char_lu_mingfei",
+      "id": "char_001",
       "identity": {
-        "role": "\u9f99\u65cf\u6df7\u8840\u79cd\uff08\u5f03\u65cf\uff09\uff0c\u81ea\u79f0\u201c\u54e5\u54e5\u201d"
+        "role": "龙族混血种，S级新生"
       },
       "memory_seeds": [
-        "\u68a6\u89c1\u81ea\u5df1\u5728\u767d\u5e1d\u57ce\uff0c\u88ab\u4e00\u4e2a\u540d\u53eb\u5eb7\u65af\u5766\u4e01\u7684\u5b69\u5b50\u79f0\u4e3a\u54e5\u54e5",
-        "\u68a6\u4e2d\u5b69\u5b50\u88ab\u6302\u5728\u706b\u5211\u67f1\u4e0a\u732e\u796d\uff0c\u57ce\u5e02\u5316\u4e3a\u5730\u72f1",
-        "\u68a6\u9192\u540e\u542c\u5230\u9ad8\u67b6\u8f7b\u8f68\u566a\u97f3\uff0c\u610f\u8bc6\u5230\u73b0\u5b9e\u5b58\u5728"
+        "梦见自己身穿白衣，在茶花旁书写，与名为康斯坦丁的孩子对话",
+        "梦境中白帝城被烈火焚毁，康斯坦丁被挂在高杆上献祭",
+        "梦醒后听到高架轻轨噪音，意识到身处现代都市"
       ],
-      "name": "\u8def\u660e\u975e",
+      "name": "路明非",
       "personality": {
-        "trait": "\u8868\u9762\u73a9\u4e16\u4e0d\u606d\u3001\u5185\u5fc3\u5b64\u72ec\uff0c\u5bf9\u5f31\u8005\u6709\u607b\u9690\u4e4b\u5fc3\u4f46\u4e60\u60ef\u7528\u5410\u69fd\u63a9\u9970\u60c5\u611f"
+        "trait": "内心戏丰富，表面看似慵懒实则重情义，对孤独有深刻恐惧"
       },
       "relationships": [
         {
-          "sentiment": "\u6df1\u6c89\u7684\u6127\u759a\u4e0e\u4fdd\u62a4\u6b32",
-          "shared_history_summary": "\u5728\u68a6\u5883\u4e2d\u4f5c\u4e3a\u54e5\u54e5\u7167\u987e\u5e76\u8bd5\u56fe\u9001\u522b\u540d\u4e3a\u5eb7\u65af\u5766\u4e01\u7684\u5b69\u5b50\uff0c\u6700\u7ec8\u76ee\u7779\u5176\u6b7b\u4ea1\u3002\u73b0\u5b9e\u4e2d\u5173\u7cfb\u5c1a\u4e0d\u660e\u786e\uff0c\u53ef\u80fd\u662f\u6f5c\u610f\u8bc6\u6295\u5c04\u6216\u524d\u4e16\u8bb0\u5fc6\u3002",
-          "target_id": "char_konstantine",
+          "sentiment": "深切的爱护与愧疚",
+          "shared_history_summary": "在梦境中作为哥哥陪伴康斯坦丁，承诺带其君临世界，后在梦境结局目睹其被献祭而死。现实中似乎已分离或从未真正拥有过这位弟弟。",
+          "target_id": "char_002",
           "trust": 1.0,
-          "type": "\u5144\u5f1f/\u5b88\u62a4\u8005"
+          "type": "哥哥/守护者"
         }
       ]
     },
     {
       "aliases": [],
       "current_state": {
-        "emotional_state": "\u60b2\u4f24\u3001\u6050\u60e7\u3001\u671f\u5f85",
-        "goal_stack": [
-          "\u5bfb\u627e\u56de\u5bb6\u7684\u8def",
-          "\u5bfb\u6c42\u54e5\u54e5\u7684\u5e87\u62a4"
-        ],
-        "location": "\u68a6\u5883\u4e2d\u7684\u767d\u5e1d\u57ce\u8857\u9053 / \u9ad8\u6746\u9876\u7aef",
-        "physical_state": "\u5e74\u5e7c\uff0c\u767d\u8863\uff0c\u6700\u540e\u88ab\u70c8\u706b\u707c\u70e7"
+        "emotional_state": "警觉、依赖、期待死亡与哥哥在一起",
+        "goal_stack": [],
+        "location": "梦境中的白帝城（已毁灭）",
+        "physical_state": "在梦境结尾被悬挂在高杆顶端，全身被火焰灼烧"
       },
-      "id": "char_konstantine",
+      "id": "char_002",
       "identity": {
-        "role": "\u5e7c\u7ae5\uff08\u68a6\u5883\u4e2d\u7684\u5f1f\u5f1f/\u540c\u4f34\uff09"
+        "note": "目前仅存在于路明非的梦境记忆中，现实中身份不明或为虚构投射",
+        "role": "路明非梦境中的弟弟/弃族成员"
       },
-      "memory_seeds": [],
-      "name": "\u5eb7\u65af\u5766\u4e01",
+      "memory_seeds": [
+        "称呼路明非为哥哥",
+        "担心外面有很多人，害怕黑暗和牢笼般的死亡",
+        "询问哥哥是否会吃掉他，并期待那样能永远在一起"
+      ],
+      "name": "康斯坦丁",
       "personality": {
-        "trait": "\u8b66\u89c9\u5982\u5e7c\u517d\uff0c\u7eaf\u771f\u5374\u5bf9\u6b7b\u4ea1\u548c\u5b64\u72ec\u6709\u6df1\u523b\u8ba4\u77e5"
+        "trait": "纯真如幼兽，对哥哥极度依赖，视死亡为长眠而非终结"
       },
       "relationships": [
         {
-          "sentiment": "\u4fe1\u8d56\u4e0e\u4f9d\u604b",
-          "shared_history_summary": "\u5728\u6f2b\u957f\u7684\u5c81\u6708\u4e2d\u53ea\u6709\u5f7c\u6b64\u76f8\u4f34\uff0c\u89c6\u8def\u660e\u975e\u4e3a\u552f\u4e00\u7684\u4f9d\u9760\u548c\u54e5\u54e5\u3002",
-          "target_id": "char_lu_mingfei",
+          "sentiment": "绝对信任与依恋",
+          "shared_history_summary": "在梦境中与路明非共同生活数千年，路明非是唯一陪伴他的存在。",
+          "target_id": "char_001",
           "trust": 1.0,
-          "type": "\u5f1f\u5f1f/\u4f9d\u8d56\u8005"
+          "type": "弟弟"
         }
       ]
     }
@@ -79,14 +81,13 @@
         "who_is_bound_by": [],
         "who_weaponizes": []
       },
-      "entity_id": "ent_white_dragon_city",
-      "name": "\u767d\u5e1d\u57ce",
-      "narrative_role": "\u5386\u53f2\u9057\u8ff9\u4e0e\u68a6\u5883\u6838\u5fc3\u573a\u666f",
+      "entity_id": "ent_001",
+      "name": "白帝城",
+      "narrative_role": "梦境核心场景，象征路明非内心深处对灾难与牺牲的记忆投影",
       "objective_facts": [
-        "\u4e00\u5ea7\u88ab\u70c8\u706b\u541e\u566c\u7684\u57ce\u5e02\uff0c\u66fe\u88ab\u79f0\u4e3a\u767d\u5e1d\u57ce",
-        "\u57ce\u5e02\u4e2d\u592e\u7acb\u6709\u9ad8\u6746\uff0c\u7528\u4e8e\u6267\u884c\u732e\u796d",
-        "\u724c\u533e\u4e0a\u5199\u7740\u201c\u767d\u5e1d\u201d\u4e8c\u5b57",
-        "\u5728\u68a6\u5883\u4e2d\u88ab\u63cf\u8ff0\u4e3a\u5730\u72f1\u822c\u7684\u666f\u8c61"
+        "在路明非的梦境中被烈火焚烧",
+        "城市中央立有高杆，用于献祭",
+        "牌匾上写着“白帝”二字"
       ],
       "type": "location"
     },
@@ -103,13 +104,34 @@
         "who_is_bound_by": [],
         "who_weaponizes": []
       },
-      "entity_id": "ent_sacrifice_pole",
-      "name": "\u732e\u796d\u9ad8\u6746",
-      "narrative_role": "\u60b2\u5267\u53d1\u751f\u7684\u7126\u70b9",
+      "entity_id": "ent_002",
+      "name": "弃族",
+      "narrative_role": "路明非梦境中提及的命运概念",
       "objective_facts": [
-        "\u4f4d\u4e8e\u57ce\u5e02\u6b63\u4e2d\u592e",
-        "\u7528\u4e8e\u60ac\u6302\u5e76\u711a\u70e7\u6d3b\u4eba\uff08\u5eb7\u65af\u5766\u4e01\uff09",
-        "\u8c61\u5f81\u7740\u76db\u5927\u7684\u732e\u796d\u4eea\u5f0f"
+        "命运定义为穿越荒原，竖起战旗，返回故乡",
+        "死不可怕，只是一场长眠",
+        "在吞噬世界之前，选择安然沉睡，等待醒来"
+      ],
+      "type": "concept"
+    },
+    {
+      "absent_figure_details": {
+        "counterfactual": "",
+        "most_present_in": [],
+        "reason_absent": ""
+      },
+      "agent_representations": [],
+      "concept_details": {
+        "authorial_stance": "",
+        "definitions_by_character": {},
+        "who_is_bound_by": [],
+        "who_weaponizes": []
+      },
+      "entity_id": "ent_003",
+      "name": "汉堡",
+      "narrative_role": "路明非内心独白中的幽默元素，体现其现代人的思维习惯",
+      "objective_facts": [
+        "路明非在梦中提到中午刚吃了一个汉堡"
       ],
       "type": "object"
     }
@@ -117,22 +139,21 @@
   "events": [
     {
       "consequences": [
-        "\u8def\u660e\u975e\u9996\u6b21\u76f4\u9762\u6f5c\u610f\u8bc6\u7684\u75db\u82e6\u8bb0\u5fc6\u6216\u9884\u8a00",
-        "\u63ed\u793a\u4e86\u8def\u660e\u975e\u4e0e\u5eb7\u65af\u5766\u4e01\u4e4b\u95f4\u6df1\u539a\u7684\u7f81\u7eca",
-        "\u6697\u793a\u4e86\u767d\u5e1d\u57ce/\u9752\u94dc\u4e4b\u57ce\u7684\u5386\u53f2\u60b2\u5267"
+        "路明非确认了梦境是假的，但内心留下了深刻的痛楚和对未来的不安",
+        "揭示了路明非潜意识中对失去亲人的恐惧以及‘弃族’命运的共鸣"
       ],
       "id": "evt_001",
-      "location": "\u8def\u660e\u975e\u7684\u5367\u5ba4\uff08\u73b0\u5b9e\uff09 / \u767d\u5e1d\u57ce\uff08\u68a6\u5883\uff09",
+      "location": "梦境：白帝城 / 现实：芝加哥某处住所",
       "participant_knowledge": {
-        "char_konstantine": "\u77e5\u6653\u81ea\u5df1\u662f\u2018\u5f03\u65cf\u2019\u7684\u547d\u8fd0\uff0c\u660e\u767d\u6b7b\u4ea1\u5982\u540c\u957f\u7720\uff0c\u671f\u5f85\u4e0e\u54e5\u54e5\u4e00\u540c\u541b\u4e34\u4e16\u754c\u3002",
-        "char_lu_mingfei": "\u5728\u68a6\u4e2d\u5f97\u77e5\u81ea\u5df1\u62e5\u6709\u2018\u54e5\u54e5\u2019\u7684\u8eab\u4efd\uff0c\u5e76\u9884\u89c1\u5230\u5eb7\u65af\u5766\u4e01\u7684\u6b7b\uff1b\u9192\u6765\u540e\u786e\u8ba4\u8fd9\u662f\u68a6\u5883\uff0c\u4f46\u5bf9\u68a6\u4e2d\u7684\u75db\u611f\u8bb0\u5fc6\u72b9\u65b0\u3002"
+        "char_001": "在梦中以为自己是康斯坦丁的哥哥，承诺守护他；醒来后意识到这是梦，但对梦中情感记忆清晰。",
+        "char_002": "仅在梦中存在，认为哥哥会吞噬世界，希望被哥哥吃掉以逃避死亡的孤独。"
       },
       "participants": [
-        "char_lu_mingfei",
-        "char_konstantine"
+        "char_001",
+        "char_002"
       ],
-      "summary": "\u8def\u660e\u975e\u5728\u68a6\u4e2d\u7ecf\u5386\u4e86\u4e00\u573a\u5173\u4e8e\u767d\u5e1d\u57ce\u7684\u732e\u796d\u5e7b\u8c61\uff0c\u76ee\u7779\u540d\u4e3a\u5eb7\u65af\u5766\u4e01\u7684\u5b69\u5b50\u88ab\u70c8\u706b\u711a\u70e7\u800c\u6b7b\uff0c\u968f\u540e\u60ca\u9192\u4e8e\u73b0\u5b9e\u3002",
-      "time": "\u516c\u51432009\u5e745\u6708\u67d0\u65e5\u4e0b\u5348"
+      "summary": "路明非在芝加哥火车站附近做了一场关于白帝城毁灭和弟弟康斯坦丁被献祭的噩梦，随后惊醒。",
+      "time": "公元2009年5月15日，星期五下午（梦境时间模糊，现实时间为午后）"
     }
   ],
   "meta": {
@@ -173,14 +194,15 @@
     }
   },
   "world": {
-    "factions": [],
+    "factions": [
+      "弃族"
+    ],
     "locations": [
-      "\u767d\u5e1d\u57ce"
+      "白帝城"
     ],
     "rules_and_constraints": [
-      "\u5f03\u65cf\u7684\u547d\u8fd0\u662f\u7a7f\u8d8a\u8352\u539f\uff0c\u7ad6\u8d77\u6218\u65d7\uff0c\u8fd4\u56de\u6545\u4e61\u3002",
-      "\u9f99\u65cf\u7684\u6b7b\u4ea1\u88ab\u89c6\u4e3a\u4e00\u573a\u957f\u7720\uff0c\u800c\u975e\u7ec8\u7ed3\u3002",
-      "\u9ad8\u7eaf\u5ea6\u7684\u9f99\u65cf\u8840\u8109\u53ef\u80fd\u5f15\u53d1\u5f3a\u70c8\u7684\u7cbe\u795e\u5171\u9e23\u6216\u68a6\u5883\u4f53\u9a8c\u3002"
+      "弃族的命运包含穿越荒原、竖旗返乡及沉睡等待觉醒的循环",
+      "龙类混血种可能拥有深层的潜意识记忆或预言性梦境"
     ],
     "setting": null,
     "time_period": null

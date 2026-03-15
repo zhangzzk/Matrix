@@ -126,16 +126,20 @@ class EventSimulator:
             transcript.append(turn)
             private_state[agent_id].append(turn.internal)
 
-            resolution_prompt = build_resolution_check_prompt(
-                scene_transcript=self._public_transcript(transcript),
-                scene_setup=scene_setup,
-                beat_count=beat_index + 1,
-                max_beats=max_beats,
-                language_guidance=language_guidance,
-            )
-            resolution = asyncio.run(
-                self.llm_client.call_json(resolution_prompt, ResolutionCheckPayload)
-            )
+            # Skip resolution check for the first 2 beats to save LLM calls.
+            # In most cases, a scene needs at least 3 beats to reach any meaningful resolution.
+            if beat_index >= 2:
+                resolution_prompt = build_resolution_check_prompt(
+                    scene_transcript=self._public_transcript(transcript),
+                    scene_setup=scene_setup,
+                    beat_count=beat_index + 1,
+                    max_beats=max_beats,
+                    language_guidance=language_guidance,
+                )
+                resolution = asyncio.run(
+                    self.llm_client.call_json(resolution_prompt, ResolutionCheckPayload)
+                )
+            
             beat_index += 1
             if resolution.resolved or not resolution.continue_scene:
                 break

@@ -45,7 +45,7 @@ class OpenAICompatibleTransport:
             ],
         }
         payload.update(self._provider_request_options(profile, prompt))
-        body = json.dumps(payload).encode("utf-8")
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {profile.api_key}",
@@ -90,14 +90,16 @@ class OpenAICompatibleTransport:
         profile: LLMProfileSettings,
         prompt: PromptRequest,
     ) -> Dict[str, Any]:
+        options: Dict[str, Any] = {}
+        has_schema = bool(prompt.metadata.get("response_schema"))
+        # Request JSON output mode when a structured schema is expected.
+        if has_schema:
+            options["response_format"] = {"type": "json_object"}
         # Qwen 3.5 models enable thinking by default. For schema-bound JSON prompts,
         # explicitly disable it to reduce latency and avoid malformed structured output.
-        if (
-            profile.name == "qwen"
-            and bool(prompt.metadata.get("response_schema"))
-        ):
-            return {"enable_thinking": False}
-        return {}
+        if profile.name == "qwen" and has_schema:
+            options["enable_thinking"] = False
+        return options
 
     @staticmethod
     def _read_http_error(error: HTTPError) -> str:

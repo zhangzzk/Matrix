@@ -183,11 +183,16 @@ class SnapshotInitializationTests(unittest.TestCase):
             default_state={"location": "unknown"},
         )
 
-        snapshot = initializer.initialize(payload)
+        events = []
+        snapshot = initializer.initialize(payload, progress_callback=events.append)
 
         self.assertEqual(snapshot.current_state["location"], "courtyard")
         self.assertEqual(snapshot.inferred_state.immediate_tension, "Avoid discovery")
         self.assertEqual(snapshot.goals[0].goal, "escape the castle unnoticed")
+        self.assertEqual(
+            [event["stage"] for event in events],
+            ["snapshot_inference", "goal_seeding"],
+        )
         transport = client.transport
         self.assertEqual(len(transport.prompts), 2)
         self.assertEqual(
@@ -241,12 +246,22 @@ class SnapshotInitializationTests(unittest.TestCase):
             default_state={"location": "宿舍"},
         )
 
-        snapshot = initializer.initialize(payload)
+        events = []
+        snapshot = initializer.initialize(payload, progress_callback=events.append)
         issues = client.drain_issue_records()
 
         self.assertEqual(snapshot.current_state["location"], "宿舍")
         self.assertEqual(snapshot.inferred_state.emotional_state.dominant, "心神不宁")
         self.assertEqual(snapshot.goals[0].goal, "先稳住局面")
+        self.assertEqual(
+            [event["stage"] for event in events],
+            [
+                "snapshot_inference",
+                "snapshot_inference_fallback",
+                "goal_seeding",
+                "goal_seeding_fallback",
+            ],
+        )
         self.assertTrue(any(issue.get("severity") == "critical" for issue in issues))
 
 

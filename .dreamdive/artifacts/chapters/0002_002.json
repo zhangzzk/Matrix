@@ -3,626 +3,523 @@
     {
       "aliases": [],
       "current_state": {
-        "emotional_state": "\u60ca\u9b42\u672a\u5b9a\uff0c\u611f\u5230\u5fc3\u75db\u4e0e\u6050\u60e7\uff0c\u968f\u540e\u8f6c\u4e3a\u5e86\u5e78\u68a6\u5883\u662f\u5047\u7684",
+        "emotional_state": "惊魂未定，感到恐惧与庆幸交织",
         "goal_stack": [
-          "\u786e\u8ba4\u81ea\u5df1\u5e76\u672a\u5931\u53bb\u91cd\u8981\u7684\u4eba",
-          "\u9002\u5e94\u73b0\u5b9e\u4e16\u754c\u7684\u5e73\u9759\u751f\u6d3b"
+          "确认现实世界的安全性",
+          "理解梦境的警示意义"
         ],
-        "location": "\u73b0\u4ee3\u90fd\u5e02\u7684\u5bb6\u4e2d\uff08\u4e0b\u5348\uff09",
-        "physical_state": "\u5168\u8eab\u51b7\u6c57\uff0c\u547c\u5438\u6025\u4fc3\uff0c\u521a\u4ece\u68a6\u4e2d\u60ca\u9192"
-      },
-      "id": "char_lu_mingfei",
-      "identity": {
-        "role": "\u9f99\u65cf\u6df7\u8840\u79cd\uff08\u5f03\u65cf\uff09\uff0c\u81ea\u79f0\u201c\u54e5\u54e5\u201d"
-      },
-      "memory_seeds": [
-        "\u68a6\u89c1\u81ea\u5df1\u5728\u767d\u5e1d\u57ce\uff0c\u88ab\u4e00\u4e2a\u540d\u53eb\u5eb7\u65af\u5766\u4e01\u7684\u5b69\u5b50\u79f0\u4e3a\u54e5\u54e5",
-        "\u68a6\u4e2d\u5b69\u5b50\u88ab\u6302\u5728\u706b\u5211\u67f1\u4e0a\u732e\u796d\uff0c\u57ce\u5e02\u5316\u4e3a\u5730\u72f1",
-        "\u68a6\u9192\u540e\u542c\u5230\u9ad8\u67b6\u8f7b\u8f68\u566a\u97f3\uff0c\u610f\u8bc6\u5230\u73b0\u5b9e\u5b58\u5728"
-      ],
-      "name": "\u8def\u660e\u975e",
-      "personality": {
-        "trait": "\u8868\u9762\u73a9\u4e16\u4e0d\u606d\u3001\u5185\u5fc3\u5b64\u72ec\uff0c\u5bf9\u5f31\u8005\u6709\u607b\u9690\u4e4b\u5fc3\u4f46\u4e60\u60ef\u7528\u5410\u69fd\u63a9\u9970\u60c5\u611f"
-      },
-      "relationships": [
-        {
-          "sentiment": "\u6df1\u6c89\u7684\u6127\u759a\u4e0e\u4fdd\u62a4\u6b32",
-          "shared_history_summary": "\u5728\u68a6\u5883\u4e2d\u4f5c\u4e3a\u54e5\u54e5\u7167\u987e\u5e76\u8bd5\u56fe\u9001\u522b\u540d\u4e3a\u5eb7\u65af\u5766\u4e01\u7684\u5b69\u5b50\uff0c\u6700\u7ec8\u76ee\u7779\u5176\u6b7b\u4ea1\u3002\u73b0\u5b9e\u4e2d\u5173\u7cfb\u5c1a\u4e0d\u660e\u786e\uff0c\u53ef\u80fd\u662f\u6f5c\u610f\u8bc6\u6295\u5c04\u6216\u524d\u4e16\u8bb0\u5fc6\u3002",
-          "target_id": "char_konstantine",
-          "trust": 1.0,
-          "type": "\u5144\u5f1f/\u5b88\u62a4\u8005"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u60b2\u4f24\u3001\u6050\u60e7\u3001\u671f\u5f85",
-        "goal_stack": [
-          "\u5bfb\u627e\u56de\u5bb6\u7684\u8def",
-          "\u5bfb\u6c42\u54e5\u54e5\u7684\u5e87\u62a4"
-        ],
-        "location": "\u68a6\u5883\u4e2d\u7684\u767d\u5e1d\u57ce\u8857\u9053 / \u9ad8\u6746\u9876\u7aef",
-        "physical_state": "\u5e74\u5e7c\uff0c\u767d\u8863\uff0c\u6700\u540e\u88ab\u70c8\u706b\u707c\u70e7"
-      },
-      "id": "char_konstantine",
-      "identity": {
-        "role": "\u5e7c\u7ae5\uff08\u68a6\u5883\u4e2d\u7684\u5f1f\u5f1f/\u540c\u4f34\uff09"
-      },
-      "memory_seeds": [],
-      "name": "\u5eb7\u65af\u5766\u4e01",
-      "personality": {
-        "trait": "\u8b66\u89c9\u5982\u5e7c\u517d\uff0c\u7eaf\u771f\u5374\u5bf9\u6b7b\u4ea1\u548c\u5b64\u72ec\u6709\u6df1\u523b\u8ba4\u77e5"
-      },
-      "relationships": [
-        {
-          "sentiment": "\u4fe1\u8d56\u4e0e\u4f9d\u604b",
-          "shared_history_summary": "\u5728\u6f2b\u957f\u7684\u5c81\u6708\u4e2d\u53ea\u6709\u5f7c\u6b64\u76f8\u4f34\uff0c\u89c6\u8def\u660e\u975e\u4e3a\u552f\u4e00\u7684\u4f9d\u9760\u548c\u54e5\u54e5\u3002",
-          "target_id": "char_lu_mingfei",
-          "trust": 1.0,
-          "type": "\u5f1f\u5f1f/\u4f9d\u8d56\u8005"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u9707\u60ca\u3001\u604d\u60da\uff0c\u610f\u8bc6\u5230\u4eba\u751f\u8f6c\u6298\u70b9\u5df2\u81f3",
-        "goal_stack": [
-          "\u63a5\u53d7\u5361\u585e\u5c14\u5b66\u9662\u5165\u5b66\u9080\u8bf7",
-          "\u786e\u8ba4\u81ea\u5df1\u4eba\u751f\u7684\u9690\u85cf\u9009\u9879"
-        ],
-        "location": "\u5357\u65b9\u5c0f\u57ce\u8857\u9053\uff08\u77f3\u677f\u8def\u4e0a\uff09",
-        "physical_state": "\u8eab\u7a7f\u5b9a\u5236\u897f\u88c5\uff0c\u521a\u6302\u65ad\u7535\u8bdd\uff0c\u5904\u4e8e\u61f5\u5708\u72b6\u6001"
+        "location": "芝加哥火车站附近的普通房间",
+        "physical_state": "从梦中惊醒，呼吸急促，全身冷汗"
       },
       "id": "char_001",
       "identity": {
-        "role": "S\u7ea7\u6df7\u8840\u79cd\u5019\u9009\u4eba\uff0c\u5361\u585e\u5c14\u5b66\u9662\u65b0\u751f"
+        "role": "龙族混血种，S级新生"
       },
       "memory_seeds": [
-        "\u88ab\u8bfa\u8bfa\u5728\u661f\u9645\u4e89\u9738\u4e2d\u770b\u7a7f\u5e95\u724c\u5e76\u51fb\u8d25",
-        "\u4e0e\u8001\u5510\u89c6\u9891\u901a\u8bdd\u7ec3\u4e60\u82f1\u8bed\u9762\u8bd5\u53e3\u8bed",
-        "\u770b\u5230\u9648\u96ef\u96ef\u3001\u82cf\u6653\u6a2f\u3001\u8d75\u5b5f\u534e\u7b49\u540c\u5b66\u5747\u88ab\u6dd8\u6c70\u6216\u5931\u8d25",
-        "\u9762\u5bf9\u8003\u5b98\u5173\u4e8e\u5916\u661f\u4eba\u3001\u8d85\u80fd\u529b\u53ca\u552f\u7269\u552f\u5fc3\u7684\u63d0\u95ee",
-        "\u5728\u7535\u5f71\u9662\u88ab\u8d75\u5b5f\u534e\u5f53\u4f17\u8868\u767d\u6210\u529f\u7f9e\u8fb1\uff0c\u6210\u4e3a\u80cc\u666f\u677f\u5b57\u6bcd'i'",
-        "\u8bfa\u8bfa\u9a7e\u9a76\u6cd5\u62c9\u5229\u51fa\u73b0\u5e76\u6551\u573a\uff0c\u4e3a\u5176\u6362\u88c5",
-        "\u5f97\u77e5\u81ea\u5df1\u662f\u88ab\u6821\u957f\u4eb2\u81ea\u9009\u4e2d\u7684S\u7ea7\u5019\u9009\u4eba",
-        "\u7b54\u5e94\u52a0\u5165\u5361\u585e\u5c14\u5b66\u9662\uff0c\u653e\u5f03\u9ad8\u8003",
-        "\u6b63\u5f0f\u7b7e\u7f72\u6587\u4ef6\u52a0\u5165\u5361\u585e\u5c14\u5b66\u9662\uff0c\u653e\u5f03\u9ad8\u8003",
-        "\u5f97\u77e5\u81ea\u5df1\u662f\u7f16\u53f7A.D.0013\u7684S\u7ea7\u5b66\u751f",
-        "\u8bfa\u739b\u7cfb\u7edf\u6fc0\u6d3b\u5e76\u5f00\u653e\u6570\u5343\u4e2a\u79d8\u5bc6\u7f51\u5173",
-        "\u9ed1\u8272\u76f4\u5347\u673a\u524d\u6765\u63a5\u5e94"
+        "梦见自己身穿白衣，在茶花旁书写，与名为康斯坦丁的孩子对话",
+        "梦境中白帝城被烈火焚毁，康斯坦丁被挂在高杆上献祭",
+        "梦醒后听到高架轻轨噪音，意识到身处现代都市"
       ],
-      "name": "\u8def\u660e\u975e",
+      "name": "路明非",
       "personality": {
-        "trait": "\u81ea\u8ba4\u8870\u8fd0\u7f20\u8eab\uff0c\u4e60\u60ef\u7528\u963fQ\u7cbe\u795e\u81ea\u6211\u5b89\u6170\uff0c\u5185\u5fc3\u6e34\u671b\u5947\u8ff9\u4e0e\u8d85\u80fd\u529b"
+        "trait": "内心戏丰富，表面看似慵懒实则重情义，对孤独有深刻恐惧"
       },
       "relationships": [
         {
-          "sentiment": "\u758f\u79bb\u4e0e\u5229\u7528",
-          "shared_history_summary": "\u5802\u5f1f\u8def\u9e23\u6cfd\u5e38\u6307\u6325\u8def\u660e\u975e\u505a\u4e8b\uff0c\u8def\u660e\u975e\u5219\u901a\u8fc7\u5047\u626e\u5973\u6027\u7f51\u53cb\u620f\u5f04\u8def\u9e23\u6cfd\u3002",
-          "target_id": "char_013",
-          "trust": 0.5,
-          "type": "\u5144\u5f1f/\u5802\u5144\u5f1f"
-        },
-        {
-          "sentiment": "\u5355\u604b\u7834\u706d\u4e0e\u81ea\u5632",
-          "shared_history_summary": "\u7cbe\u5fc3\u7b56\u5212\u7684\u8868\u767d\u88ab\u8d75\u5b5f\u534e\u62a2\u5148\uff0c\u53d1\u73b0\u9648\u96ef\u96ef\u559c\u6b22\u7684\u662f\u8d75\u5b5f\u534e\uff0c\u4e14\u6240\u6709\u4eba\u90fd\u77e5\u60c5\u552f\u72ec\u81ea\u5df1\u88ab\u8499\u5728\u9f13\u91cc\u3002",
-          "target_id": "char_020",
-          "trust": 0.5,
-          "type": "\u6697\u604b\u5bf9\u8c61\uff08\u5df2\u65e0\u671b\uff09"
-        },
-        {
-          "sentiment": "\u5acc\u5f03\u4e0e\u7d22\u53d6",
-          "shared_history_summary": "\u53d4\u53d4\u5a76\u5a76\u4e3b\u8981\u5173\u5fc3\u8def\u660e\u975e\u7236\u6bcd\u5bc4\u6765\u7684\u94b1\uff0c\u5bf9\u8def\u660e\u975e\u672c\u4eba\u6001\u5ea6\u51b7\u6de1\u4e14\u529f\u5229\u3002",
-          "target_id": "char_021",
-          "trust": 0.2,
-          "type": "\u4eb2\u5c5e\uff08\u5a76\u5a76\uff09"
-        },
-        {
-          "sentiment": "\u611f\u6fc0\u4e0e\u4f9d\u8d56",
-          "shared_history_summary": "\u8001\u5510\u867d\u8bed\u8a00\u8e69\u811a\u4e14\u7231\u5439\u725b\uff0c\u4f46\u5728\u8def\u660e\u975e\u65e0\u52a9\u65f6\u4e3b\u52a8\u63d0\u4f9b\u9762\u8bd5\u8f85\u5bfc\uff0c\u7ed9\u4e88\u4ed6\u4e49\u6c14\u4e0a\u7684\u652f\u6301\u3002",
-          "target_id": "char_014",
-          "trust": 0.7,
-          "type": "\u7f51\u53cb/\u5b66\u957f"
-        },
-        {
-          "sentiment": "\u4e45\u8fdd\u7684\u611f\u52a8\u4e0e\u786e\u8ba4",
-          "shared_history_summary": "\u6536\u5230\u7236\u6bcd\u4e54\u8587\u5c3c\u548c\u4e08\u592b\u7684\u4fe1\uff0c\u5f97\u77e5\u4ed6\u4eec\u4e00\u76f4\u7231\u7740\u81ea\u5df1\u5e76\u4e00\u76f4\u5728\u5fd9\u91cd\u8981\u8bfe\u9898\uff0c\u800c\u975e\u629b\u5f03\u81ea\u5df1\u3002",
-          "target_id": "char_parents",
-          "trust": 0.9,
-          "type": "\u7236\u6bcd"
-        },
-        {
-          "sentiment": "\u72b9\u8c6b\u4e0e\u51b3\u5fc3",
-          "shared_history_summary": "\u5bf9\u5361\u585e\u5c14\u5b66\u9662\u611f\u5230\u597d\u5947\u4f46\u672a\u51b3\u5b9a\u662f\u5426\u63a5\u53d7\u5165\u5b66",
-          "target_id": "char_003",
-          "trust": 0.8,
-          "type": "\u62db\u751f\u65b9"
-        },
-        {
-          "sentiment": "\u611f\u6fc0\u4e0e\u4f9d\u8d56",
-          "shared_history_summary": "\u8bfa\u8bfa\u4e0d\u4ec5\u89e3\u56f4\u8fd8\u4e3a\u4ed6\u6362\u88c5\uff0c\u6700\u540e\u966a\u4ed6\u5b8c\u6210\u5165\u5b66\u4eea\u5f0f\uff0c\u79f0\u4ed6\u4e3a'\u5c0f\u767d\u5154'\u548c'\u8c46\u8150\u5e72'\u3002",
+          "sentiment": "深切的爱护与愧疚",
+          "shared_history_summary": "在梦境中作为哥哥陪伴康斯坦丁，承诺带其君临世界，后在梦境结局目睹其被献祭而死。现实中似乎已分离或从未真正拥有过这位弟弟。",
           "target_id": "char_002",
           "trust": 1.0,
-          "type": "\u5e08\u59d0/\u5b88\u62a4\u8005"
-        },
-        {
-          "sentiment": "\u7ade\u4e89\u4e0e\u654c\u610f",
-          "shared_history_summary": "\u8d75\u5b5f\u534e\u5229\u7528\u8def\u660e\u975e\u4f5c\u4e3a'\u7fa4\u4f17\u6f14\u5458'\u6765\u886c\u6258\u81ea\u5df1\u7684\u6d6a\u6f2b\u544a\u767d\uff0c\u4e8b\u540e\u8fd8\u5bf9\u4ed6\u505a\u9b3c\u8138\u5632\u8bbd\u3002",
-          "target_id": "char_015",
-          "trust": 0.1,
-          "type": "\u60c5\u654c/\u5632\u7b11\u8005"
+          "type": "哥哥/守护者"
         }
       ]
     },
     {
       "aliases": [],
       "current_state": {
-        "emotional_state": "\u5f97\u610f\uff0c\u5bf9\u54e5\u54e5\u7684\u672a\u6765\u65e2\u5173\u5fc3\u53c8\u5e26\u6709\u4f18\u8d8a\u611f",
-        "goal_stack": [
-          "\u7ef4\u6301\u81ea\u5df1\u5728\u5b66\u6821\u7684\u9ad8\u8d35\u5f62\u8c61",
-          "\u5728QQ\u7a7a\u95f4\u5c55\u793a\u5fe7\u90c1\u5f62\u8c61\u4ee5\u5438\u5f15\u5f02\u6027"
-        ],
-        "location": "\u5bb6\u4e2d",
-        "physical_state": "\u8eab\u9ad8160\u5398\u7c73\uff0c\u4f53\u91cd160\u65a4"
-      },
-      "id": "char_013",
-      "identity": {
-        "role": "\u79c1\u7acb\u9ad8\u4e2d\u5b66\u751f\uff0c\u8def\u660e\u975e\u5802\u5f1f\uff0c\u7ef0\u53f7'\u6cfd\u592a\u5b50'"
-      },
-      "memory_seeds": [],
-      "name": "\u8def\u9e23\u6cfd",
-      "personality": {
-        "trait": "\u5916\u8868\u7cbe\u81f4\u3001\u6210\u7ee9\u4f18\u5f02\u4f46\u5185\u5fc3\u5e7c\u7a1a\uff0c\u559c\u6b22\u77eb\u60c5\u548c\u88c5\u6df1\u6c89"
-      },
-      "relationships": [
-        {
-          "sentiment": "\u4f9d\u8d56\u4e0e\u5d07\u62dc",
-          "shared_history_summary": "\u5c06\u695a\u5b50\u822a\u89c6\u4e3a\u5076\u50cf\uff0c\u5e0c\u671b\u6210\u4e3a\u50cf\u4ed6\u4e00\u6837\u7684\u4eba\u3002",
-          "target_id": "char_006",
-          "trust": 0.9,
-          "type": "\u5076\u50cf/\u5b66\u957f"
-        },
-        {
-          "sentiment": "\u620f\u5f04\u4e0e\u88ab\u620f\u5f04",
-          "shared_history_summary": "\u8def\u660e\u975e\u66fe\u5047\u626e\u5c11\u5973\u5728QQ\u4e0a\u620f\u5f04\u8def\u9e23\u6cfd\uff0c\u5bfc\u81f4\u5176\u7ea6\u4f1a\u5931\u8d25\u3002",
-          "target_id": "char_001",
-          "trust": 0.4,
-          "type": "\u5144\u5f1f/\u5802\u5144\u5f1f"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u5e73\u548c\u4e0e\u5076\u5c14\u7684\u597d\u5947",
+        "emotional_state": "不耐烦",
         "goal_stack": [],
-        "location": "\u6587\u5b66\u793e\u805a\u4f1a\u7684\u8ba1\u5212\u4e2d",
-        "physical_state": "\u7a7f\u7740\u767d\u68c9\u5e03\u88d9\u5b50"
-      },
-      "id": "char_020",
-      "identity": {
-        "role": "\u6587\u5b66\u793e\u793e\u957f\uff0c\u8def\u660e\u975e\u7684\u9ad8\u4e2d\u540c\u5b66"
-      },
-      "memory_seeds": [],
-      "name": "\u9648\u96ef\u96ef",
-      "personality": {
-        "trait": "\u4f4e\u8c03\u3001\u6587\u827a\u3001\u6c14\u8d28\u900f\u660e"
-      },
-      "relationships": [
-        {
-          "sentiment": "\u5f02\u6837\u7684\u597d\u5947",
-          "shared_history_summary": "\u8def\u660e\u975e\u66fe\u4e3a\u56e2\u5458\u7b56\u5212\u6d3b\u52a8\uff0c\u5bf9\u6587\u5b66\u793e\u7684\u6295\u5165\u8ba9\u9648\u96ef\u96ef\u611f\u5230\u6b23\u6170",
-          "target_id": "char_001",
-          "trust": 0.6,
-          "type": "\u540c\u5b66/\u6587\u5b66\u793e\u56e2\u957f"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u672a\u77e5",
-        "goal_stack": [],
-        "location": "\u7f8e\u56fd\uff08\u63a8\u6d4b\uff09",
-        "physical_state": "\u82f1\u4f26\u98ce\uff0c\u4f7f\u7528Burberry\u56f4\u5dfe"
-      },
-      "id": "char_006",
-      "identity": {
-        "role": "\u9ad8\u4e2d\u6bd5\u4e1a\u751f\uff0c\u8def\u9e23\u6cfd\u7684\u5076\u50cf"
-      },
-      "memory_seeds": [],
-      "name": "\u695a\u5b50\u822a",
-      "personality": {
-        "trait": "\u51b7\u5cfb\u3001\u9ad8\u51b7\u3001\u53d7\u4eba\u8ffd\u6367"
-      },
-      "relationships": []
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u9707\u60ca\u540e\u8f6c\u4e3a\u6b23\u6170\u548c\u5f97\u610f",
-        "goal_stack": [
-          "\u786e\u8ba4\u5956\u5b66\u91d1\u771f\u5b9e\u6027",
-          "\u7ef4\u62a4\u5bb6\u5ead\u9886\u8896\u5730\u4f4d"
-        ],
-        "location": "\u4e3d\u6676\u9152\u5e97\u884c\u653f\u5c42VIP\u9910\u5427",
-        "physical_state": "\u5934\u53d1\u6563\u4e71\uff0c\u76ee\u5149\u5446\u6ede\uff08\u521d\u63a5\u7535\u8bdd\u65f6\uff09\uff0c\u968f\u540e\u5567\u5567\u8d5e\u53f9"
-      },
-      "id": "char_021",
-      "identity": {
-        "role": "\u8def\u660e\u975e\u7684\u76d1\u62a4\u4eba\u4e4b\u4e00"
-      },
-      "memory_seeds": [],
-      "name": "\u5a76\u5a76",
-      "personality": {
-        "trait": "\u52bf\u5229\u3001\u5520\u53e8\u3001\u7cbe\u660e"
-      },
-      "relationships": [
-        {
-          "sentiment": "\u529f\u5229\u6027\u5173\u7231\u4e0e\u5931\u671b",
-          "shared_history_summary": "\u5bf9\u8def\u660e\u975e\u62d2\u7edd\u5f55\u53d6\u611f\u5230\u4e0d\u89e3\uff0c\u8ba4\u4e3a\u4ed6\u4e0d\u77e5\u597d\u6b79\uff0c\u4f46\u6b23\u6170\u4e8e\u4ed6\u6ca1\u6709\u8c08\u604b\u7231\u3002",
-          "target_id": "char_001",
-          "trust": 0.2,
-          "type": "\u4eb2\u5c5e\uff08\u5a76\u5a76\uff09"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u5174\u594b\uff0c\u4ee5\u5927\u54e5\u5fc3\u6001\u5bf9\u5f85\u8def\u660e\u975e",
-        "goal_stack": [
-          "\u8f85\u5bfc\u8def\u660e\u975e\u9762\u8bd5\u53d1\u97f3",
-          "\u7ef4\u62a4\u81ea\u5df1\u5728\u6e38\u620f\u5708\u7684\u7b2c\u4e00\u540d\u5730\u4f4d"
-        ],
-        "location": "\u7f8e\u56fd\u7ebd\u7ea6",
-        "physical_state": "\u6234\u7740\u8033\u673a\uff0c\u5403\u7740\u9178\u5976"
-      },
-      "id": "char_014",
-      "identity": {
-        "role": "\u534e\u88d4\u7559\u5b66\u751f\uff08\u81ea\u79f0\u9ad8\u4e2d\u6bd5\u4e1a\u5373\u5de5\u4f5c\uff09\uff0c\u5c45\u4f4f\u5728\u7ebd\u7ea6\uff0c\u8def\u660e\u975e\u7684QQ\u7f51\u53cb"
-      },
-      "memory_seeds": [],
-      "name": "\u8001\u5510",
-      "personality": {
-        "trait": "\u81ea\u6211\u611f\u89c9\u826f\u597d\uff0c\u70ed\u5fc3\u80a0\uff0c\u4e2d\u6587\u5e26\u6709\u53e3\u97f3\uff0c\u559c\u6b22\u88c5\u5927\u54e5"
-      },
-      "relationships": [
-        {
-          "sentiment": "\u7167\u987e\u4e0e\u620f\u8c11",
-          "shared_history_summary": "\u89c6\u8def\u660e\u975e\u4e3a\u9700\u8981\u7167\u987e\u7684\u5c0f\u5f1f\uff0c\u5c3d\u7ba1\u4e24\u4eba\u5e76\u4e0d\u719f\u7edc\u3002",
-          "target_id": "char_001",
-          "trust": 0.6,
-          "type": "\u7f51\u53cb/\u5927\u54e5"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u5e73\u9759\uff0c\u5e26\u7740\u65e5\u5f0f\u793c\u4eea\u7684\u5fae\u7b11",
-        "goal_stack": [
-          "\u6d4b\u8bd5\u8003\u751f\u7684\u771f\u5b9e\u4fe1\u5ff5\u4e0e\u6f5c\u610f\u8bc6"
-        ],
-        "location": "\u4e3d\u6676\u9152\u5e97\u9762\u8bd5\u5ba4",
-        "physical_state": "\u7a7f\u7740\u58a8\u7eff\u8272\u897f\u88c5\u5957\u88d9\uff0c\u9886\u53e3\u7cfb\u73ab\u7470\u7ea2\u857e\u4e1d\u9886\u5dfe"
-      },
-      "id": "char_007",
-      "identity": {
-        "role": "\u5361\u585e\u5c14\u5b66\u9662\u9762\u8bd5\u5b98\uff0c\u6267\u884c\u90e8\u6210\u5458"
-      },
-      "memory_seeds": [],
-      "name": "\u9152\u5fb7\u4e9a\u7eaa",
-      "personality": {
-        "trait": "\u5916\u8868\u751c\u7f8e\u4eb2\u5207\uff0c\u884c\u4e8b\u98ce\u683c\u795e\u79d8\uff0c\u64c5\u957f\u5f15\u5bfc\u5f0f\u63d0\u95ee"
-      },
-      "relationships": []
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u51b7\u9759\uff0c\u5e26\u6709\u4e00\u4e1d\u73a9\u5473",
-        "goal_stack": [
-          "\u534f\u52a9\u8bc4\u4f30\u8003\u751f"
-        ],
-        "location": "\u4e3d\u6676\u9152\u5e97\u9762\u8bd5\u5ba4",
-        "physical_state": "\u8eab\u6750\u7626\u9ad8\uff0c\u7a7f\u7740\u58a8\u7eff\u8272\u4fee\u8eab\u897f\u88c5\uff0c\u94f6\u8272\u7ec6\u8fb9\u9886\u53e3\uff0c\u91d1\u8272\u8863\u6263"
-      },
-      "id": "char_008",
-      "identity": {
-        "role": "\u5361\u585e\u5c14\u5b66\u9662\u9762\u8bd5\u5b98\uff0c\u6267\u884c\u90e8\u6210\u5458"
-      },
-      "memory_seeds": [],
-      "name": "\u53f6\u80dc",
-      "personality": {
-        "trait": "\u5916\u8868\u4e2d\u56fd\u9762\u5b54\uff0c\u4e3e\u6b62\u4f18\u96c5\uff0c\u5076\u5c14\u4f7f\u7528\u7f51\u7edc\u7528\u8bed"
-      },
-      "relationships": []
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u5f97\u610f\u3001\u6311\u8845",
-        "goal_stack": [],
-        "location": "\u4e07\u8fbe\u5f71\u57ce\u653e\u6620\u5385",
-        "physical_state": "\u624b\u6367\u73ab\u7470\u82b1\uff0c\u7a7f\u7740\u6b63\u5f0f"
-      },
-      "id": "char_015",
-      "identity": {
-        "role": "\u9ad8\u4e09\u5b66\u751f\uff0c\u6587\u5b66\u793e\u6210\u5458\uff0c\u8def\u660e\u975e\u7684\u60c5\u654c"
-      },
-      "memory_seeds": [
-        "\u7b56\u5212\u4e86\u5229\u7528\u8def\u660e\u975e\u7ad9\u6210\u5b57\u6bcd'i'\u7684'\u6211\u7231\u4f60'\u4eba\u8089\u62fc\u56fe",
-        "\u516c\u5f00\u5411\u9648\u96ef\u96ef\u8868\u767d\u5e76\u6210\u529f"
-      ],
-      "name": "\u8d75\u5b5f\u534e",
-      "personality": {},
-      "relationships": [
-        {
-          "sentiment": "\u620f\u5f04\u4e0e\u8f7b\u8511",
-          "shared_history_summary": "\u5229\u7528\u8def\u660e\u975e\u4f5c\u4e3a\u80cc\u666f\u677f\u5b8c\u6210\u544a\u767d\uff0c\u4e8b\u540e\u5bf9\u4ed6\u505a\u9b3c\u8138\u5632\u8bbd\u3002",
-          "target_id": "char_001",
-          "trust": 0.1,
-          "type": "\u60c5\u654c/\u5632\u5f04\u8005"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u6124\u6012\uff0c\u8dbe\u9ad8\u6c14\u626c",
-        "goal_stack": [
-          "\u7ef4\u6301\u9ad8\u50b2\u5f62\u8c61",
-          "\u5a01\u80c1\u53bb\u65af\u5766\u798f"
-        ],
-        "location": "\u4e3d\u6676\u9152\u5e97\u5019\u8003\u533a",
-        "physical_state": "\u65e0\u5177\u4f53\u63cf\u8ff0"
-      },
-      "id": "char_016",
-      "identity": {
-        "role": "\u9ad8\u4e09\u5b66\u751f\uff0c\u94a2\u7434\u7279\u957f\u751f\uff0c\u88ab\u79f0\u4e3a\u201c\u94a2\u7434\u5c0f\u7f8e\u5973\u201d"
-      },
-      "memory_seeds": [],
-      "name": "\u82cf\u6653\u6a2f",
-      "personality": {},
-      "relationships": [
-        {
-          "sentiment": "\u8f7b\u89c6",
-          "shared_history_summary": "\u770b\u4e0d\u8d77\u8def\u660e\u975e\uff0c\u8ba4\u4e3a\u4ed6\u662f\u6df7\u8fdb\u6765\u7684\u3002",
-          "target_id": "char_001",
-          "trust": 0.1,
-          "type": "\u540c\u5b66/\u9119\u89c6\u8005"
-        }
-      ]
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": "\u5931\u671b\uff0c\u773c\u7736\u6cdb\u7ea2",
-        "goal_stack": [],
-        "location": "\u4e3d\u6676\u9152\u5e97\u5019\u8003\u533a",
-        "physical_state": "\u65e0\u5177\u4f53\u63cf\u8ff0"
-      },
-      "id": "char_017",
-      "identity": {
-        "role": "\u9ad8\u4e09\u5b66\u751f\uff0c\u94a2\u7434\u7279\u957f\u751f"
-      },
-      "memory_seeds": [],
-      "name": "\u67f3\u6dfc\u6dfc",
-      "personality": {},
-      "relationships": []
-    },
-    {
-      "aliases": [
-        "\u8bfa\u8bfa",
-        "\u5e08\u59d0"
-      ],
-      "current_state": {
-        "emotional_state": "\u8f7b\u677e\u3001\u5f97\u610f\u3001\u671f\u5f85",
-        "goal_stack": [
-          "\u786e\u4fdd\u8def\u660e\u975e\u5b8c\u6210\u5165\u5b66\u624b\u7eed",
-          "\u4eab\u53d7\u4e3a\u8def\u660e\u975e\u505a\u51fa\u7684\u727a\u7272\uff08\u8131\u9ad8\u8ddf\u978b\uff09",
-          "\u5f15\u5bfc\u8def\u660e\u975e\u4f53\u9a8c\u65b0\u8eab\u4efd"
-        ],
-        "location": "\u5357\u65b9\u5c0f\u57ce\u8857\u9053",
-        "physical_state": "\u53ea\u7a7f\u889c\u5b50\u7ad9\u5728\u8857\u9762\u4e0a\uff0c\u811a\u90e8\u8212\u9002"
+        "location": "卧室",
+        "physical_state": "睡觉中，捂住耳朵翻身"
       },
       "id": "char_002",
       "identity": {
-        "role": "\u5361\u585e\u5c14\u5b66\u9662\u4e8c\u5e74\u7ea7\u5b66\u751f\uff0c\u534e\u88d4\uff0c\u672c\u6b21\u9762\u8bd5\u7684\u5b66\u751f\u8003\u5b98"
+        "note": "目前仅存在于路明非的梦境记忆中，现实中身份不明或为虚构投射",
+        "role": "路明非梦境中的弟弟/弃族成员"
       },
       "memory_seeds": [
-        "\u6628\u665a\u5403\u4e86\u5927\u6392\u6863\u5bfc\u81f4\u809a\u5b50\u4e0d\u8212\u670d",
-        "\u5728\u6d17\u624b\u95f4\u5076\u9047\u8d70\u9519\u623f\u95f4\u7684\u8def\u660e\u975e",
-        "\u770b\u7a7f\u8def\u660e\u975e\u56e0\u521d\u604b\u5973\u53cb\uff08\u9648\u96ef\u96ef\uff09\u800c\u72b9\u8c6b\u4e0d\u51b3",
-        "\u4e34\u65f6\u5f00\u8f66\u53bb\u4e70\u8863\u670d\u6362\u4e0a\u4ee5\u6551\u573a",
-        "\u901a\u8fc7\u7f8e\u8272\u4ece\u5f90\u5ca9\u5ca9\u53e3\u4e2d\u5957\u51fa\u8d75\u5b5f\u534e\u7684\u9634\u8c0b",
-        "\u900f\u9732\u8def\u660e\u975e\u662f\u6821\u957f\u4eb2\u81ea\u70b9\u540d\u62db\u5165"
+        "称呼路明非为哥哥",
+        "担心外面有很多人，害怕黑暗和牢笼般的死亡",
+        "询问哥哥是否会吃掉他，并期待那样能永远在一起"
       ],
-      "name": "\u9648\u58a8\u77b3",
+      "name": "路鸣泽",
       "personality": {
-        "trait": "\u9ad8\u50b2\u6bd2\u820c\u4f46\u91cd\u60c5\u91cd\u4e49\uff0c\u884c\u4e8b\u679c\u65ad\uff0c\u5584\u4e8e\u638c\u63a7\u5c40\u9762\uff0c\u5bf9\u5f31\u8005\u6709\u607b\u9690\u4e4b\u5fc3"
+        "trait": "纯真如幼兽，对哥哥极度依赖，视死亡为长眠而非终结"
       },
       "relationships": [
         {
-          "sentiment": "\u7167\u987e\u4e0e\u8c03\u620f",
-          "shared_history_summary": "\u966a\u8def\u660e\u975e\u8df3\u683c\u5b50\uff0c\u89e3\u91ca\u8bfa\u739b\u7684\u529f\u80fd\uff0c\u5f3a\u8c03\u8def\u660e\u975e\u7684\u7279\u6b8a\u6027\u3002",
+          "sentiment": "绝对信任与依恋",
+          "shared_history_summary": "在梦境中与路明非共同生活数千年，路明非是唯一陪伴他的存在。",
           "target_id": "char_001",
           "trust": 1.0,
-          "type": "\u5e08\u59d0/\u5f15\u8def\u4eba"
+          "type": "弟弟"
+        },
+        {
+          "sentiment": "复杂的亲情与恶作剧心态",
+          "shared_history_summary": "路明非的堂弟，两人同校但成绩悬殊，路明非曾伪装成女生捉弄他。",
+          "target_id": "char_003",
+          "trust": 0.8,
+          "type": "堂弟"
         }
       ]
     },
     {
-      "aliases": [
-        "\u53e4\u5fb7\u91cc\u5b89\u6559\u6388"
-      ],
+      "aliases": [],
       "current_state": {
-        "emotional_state": "\u6781\u5ea6\u6b23\u559c\u3001\u5982\u91ca\u91cd\u8d1f",
+        "emotional_state": "惊魂未定，感到命运转折的震撼与迷茫",
         "goal_stack": [
-          "\u786e\u8ba4\u8def\u660e\u975e\u6700\u7ec8\u51b3\u5b9a",
-          "\u5b89\u6392\u4ea4\u901a\u5de5\u5177\u63a5\u4eba"
+          "确认诺玛的身份与系统指令",
+          "等待古德里安教授的交通工具"
         ],
-        "location": "\u4e3d\u6676\u9152\u5e97\u884c\u653f\u5c42VIP\u9910\u5427",
-        "physical_state": "\u58f0\u97f3\u98a4\u6296\uff0c\u5145\u6ee1\u6fc0\u60c5"
+        "location": "南方小城某条阴暗小街",
+        "physical_state": "穿着普通衣物，刚经历情感波动，略显慌乱"
       },
       "id": "char_003",
       "identity": {
-        "role": "\u5361\u585e\u5c14\u5b66\u9662\u6559\u5e08\uff0c\u8def\u660e\u975e\u7684\u4e34\u65f6\u5bfc\u5e08"
+        "role": "卡塞尔学院S级新生，编号A.D.0013"
       },
       "memory_seeds": [
-        "\u4e70\u7ea2\u773c\u822a\u73ed\u7968\u76f4\u63a5\u8d76\u6765\u9762\u8bd5",
-        "\u8ba4\u4e3a\u8def\u660e\u975e\u7684\u2018\u6211\u4e0d\u77e5\u9053\u2019\u662f\u5b8c\u7f8e\u7b54\u6848",
-        "\u7528\u8e69\u811a\u7684\u4e2d\u6587\u6df1\u60c5\u8f6c\u8fbe\u8def\u660e\u975e\u7236\u6bcd\u7684\u7231"
+        "高中三年暗恋文学社社长陈雯雯",
+        "六年来父母失联，仅定期寄钱和写信",
+        "用假身份‘夕阳的刻痕’在QQ上捉弄堂弟路鸣泽",
+        "申请多所美国大学被拒，唯独收到卡塞尔学院的面试邀请",
+        "收到一部纯黑色N96手机，联系人显示为古德里安教授",
+        "在QQ上与网友诺诺进行星际争霸对战并惨败，被对方看穿战术",
+        "与网友老唐视频通话练习英语面试口语",
+        "在等待区观察陈雯雯、赵孟华、苏晓樯等人的表现及面试结果",
+        "面对考官提出的关于外星人、超能力和唯心唯物主义的非常规问题",
+        "在面试中因回答'我不知道'而弃权",
+        "得知父母与卡塞尔学院的关系，以及提供的奖学金",
+        "在电影院当众表白被拒，成为赵孟华求爱仪式中的'字母i'",
+        "被诺诺用法拉利接走，目睹法拉利抛锚在药店门口",
+        "得知入学决定权在校长而非古德里安教授",
+        "接受了卡塞尔学院的邀请，承诺不再回头",
+        "获得'李嘉图·M·路'的化名",
+        "被激活了隐藏的人生选择项",
+        "声纹签字完成，正式成为卡塞尔学院学生",
+        "得知自己出生日期为1992年02月14日",
+        "收到诺玛的系统欢迎信息，机票护照签证将在三周内送达",
+        "目睹黑色直升机在头顶飞过"
       ],
-      "name": "\u53e4\u5fb7\u91cc\u5b89",
-      "personality": {},
+      "name": "char_003",
+      "personality": {
+        "trait": "表面慵懒、缺乏存在感，内心戏丰富，渴望关注与奇迹，对孤独有深刻恐惧，具有阿Q精神"
+      },
       "relationships": [
         {
-          "sentiment": "\u70ed\u5207\u671f\u76fc",
-          "shared_history_summary": "\u89c6\u8def\u660e\u975e\u4e3a\u7edd\u4ee3\u98ce\u534e\u7684\u7f8e\u5973\u822c\u73cd\u8d35\uff0c\u4eb2\u81ea\u81f4\u7535\u786e\u8ba4\u610f\u5411\uff0c\u968f\u5373\u6d3e\u76f4\u5347\u673a\u63a5\u9001\u3002",
-          "target_id": "char_001",
-          "trust": 1.0,
-          "type": "\u5bfc\u5e08/\u62db\u751f\u5b98"
+          "sentiment": "深切的爱慕与崇拜",
+          "shared_history_summary": "陈雯雯是路明非生命中第一个女性偶像，邀请他加入文学社，但他从未表白。",
+          "target_id": "char_014",
+          "trust": 0.5,
+          "type": "暗恋对象"
+        },
+        {
+          "sentiment": "复杂的亲情与恶作剧心态",
+          "shared_history_summary": "路明非曾捉弄路鸣泽，虽然彼此成绩悬殊，但路鸣泽可能意图帮助路明非。",
+          "target_id": "char_002",
+          "trust": 0.8,
+          "type": "堂弟"
+        },
+        {
+          "sentiment": "怀疑与好奇",
+          "shared_history_summary": "尚未见面，仅通过信件和手机名片知晓其存在，对方自称卡塞尔学院秘书。",
+          "target_id": "char_018",
+          "trust": 0.1,
+          "type": "潜在导师/联络人"
+        },
+        {
+          "sentiment": "感激、依赖与些许困惑",
+          "shared_history_summary": "诺诺不仅带他离开尴尬境地，还引导他做出了改变人生的决定，视其为救命稻草和姐姐。",
+          "target_id": "char_019",
+          "trust": 0.95,
+          "type": "师姐/救命恩人"
+        },
+        {
+          "sentiment": "钦佩与畏惧",
+          "shared_history_summary": "被古德里安教授视为S级血统的候选人，并被给予特别待遇和期待。",
+          "target_id": "char_004",
+          "trust": 0.9,
+          "type": "潜在导师"
+        }
+      ]
+    },
+    {
+      "aliases": [
+        "小巫婆",
+        "御姐"
+      ],
+      "current_state": {
+        "emotional_state": "得意、调皮且充满保护欲",
+        "goal_stack": [
+          "确保路明非做出正确的选择（加入学院）",
+          "维护路明非的面子"
+        ],
+        "location": "万达影城外的小道",
+        "physical_state": "身穿深紫色套裙、月白色丝绸衬衣，脚踩十厘米高跟鞋，佩戴全套黄金嵌紫晶首饰"
+      },
+      "id": "char_019",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "卡塞尔学院四年级学生，路明非的师姐"
+      },
+      "memory_seeds": [
+        "主动邀请路明非进行星际争霸对战",
+        "轻松识破路明非的战术陷阱并展示压倒性兵力优势",
+        "在游戏结束后未留下任何个人资料信息",
+        "临时购买并换上正式服装去救场",
+        "通过美色从徐岩岩处套出赵孟华的阴谋",
+        "驾驶法拉利599 GTB Fiorano接走路明非",
+        "以'叫姐姐'为条件获取路明非对校长意图的信任"
+      ],
+      "name": "诺诺",
+      "personality": {
+        "trait": "凶狠狡猾，操作精湛，性格直率（发送狂笑表情）"
+      },
+      "relationships": [
+        {
+          "sentiment": "宠溺与戏谑",
+          "shared_history_summary": "将路明非视为需要拯救的'衰仔'，喜欢捏他的脸，对他有强烈的保护欲和责任感。",
+          "target_id": "char_003",
+          "trust": 0.8,
+          "type": "师姐"
         }
       ]
     },
     {
       "aliases": [],
       "current_state": {
-        "emotional_state": "\u9707\u60ca\u540e\u8f6c\u4e3a\u8b66\u60d5\u548c\u5f97\u610f",
-        "goal_stack": [
-          "\u786e\u8ba4\u662f\u5426\u6709\u9644\u52a0\u6761\u4ef6",
-          "\u5c55\u793a\u6c14\u6d3e"
-        ],
-        "location": "\u4e3d\u6676\u9152\u5e97\u884c\u653f\u5c42VIP\u9910\u5427",
-        "physical_state": "\u897f\u88c5\u7b14\u633a\uff0c\u8146\u7740\u809a\u5b50"
+        "emotional_state": "得意",
+        "goal_stack": [],
+        "location": "网络空间",
+        "physical_state": null
+      },
+      "id": "char_007",
+      "identity": {
+        "aliases": [],
+        "role": "路明非的网友，星际争霸高手"
+      },
+      "memory_seeds": [],
+      "name": "老唐",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "轻视与鼓励并存",
+          "shared_history_summary": "刚刚在游戏里击败路明非，称赞其战术意识好但微操差，随后下线。",
+          "target_id": "char_003",
+          "trust": 0.2,
+          "type": "游戏对手"
+        }
+      ]
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": null,
+        "goal_stack": [],
+        "location": "未知（已出国）",
+        "physical_state": null
+      },
+      "id": "char_008",
+      "identity": {
+        "aliases": [],
+        "role": "传奇学长，狮心会会长"
+      },
+      "memory_seeds": [],
+      "name": "楚子航",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "崇拜与模仿欲",
+          "shared_history_summary": "路鸣泽视其为偶像，希望成为像他一样的人；路明非则对其去向存疑。",
+          "target_id": "char_002",
+          "trust": 0.9,
+          "type": "偶像/榜样"
+        }
+      ]
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": null,
+        "goal_stack": [],
+        "location": null,
+        "physical_state": null
+      },
+      "id": "char_005",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "卡塞尔学院面试官，执行者"
+      },
+      "memory_seeds": [
+        "身穿墨绿色修身西装，佩戴银色细边领口和金色衣扣",
+        "负责面试柳淼淼、苏晓樯、赵孟华等学生，过程极快（几分钟内结束）",
+        "在路明非面试时作为考官之一，插话评价路明非的回答为'彪悍的人生不需要解释'"
+      ],
+      "name": "叶胜",
+      "personality": {},
+      "relationships": []
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": null,
+        "goal_stack": [],
+        "location": null,
+        "physical_state": null
+      },
+      "id": "char_006",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "卡塞尔学院面试官"
+      },
+      "memory_seeds": [
+        "身穿套裙，领口塞着玫瑰红蕾丝领巾",
+        "向路明非行日本式鞠躬礼，纠正其日语发音",
+        "提出三个非常规面试问题：是否相信外星人、是否相信超能力、人类生存基础是唯心还是唯物"
+      ],
+      "name": "酒德亚纪",
+      "personality": {
+        "trait": "外表甜美亲切，提问风格独特且深奥"
+      },
+      "relationships": []
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": "幸福、娇羞",
+        "goal_stack": [],
+        "location": "万达影城舞台",
+        "physical_state": "身穿白色透明感衣服，脸红"
+      },
+      "id": "char_014",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "文学社社长，路明非暗恋对象，赵孟华的女友"
+      },
+      "memory_seeds": [
+        "十五岁时邀请路明非加入文学社",
+        "面试前精心打扮，穿着深蓝色套裙和白蕾丝袜",
+        "面试持续了十五分钟，出来后神情平静无表情",
+        "提前知晓赵孟华的告白计划并配合演出",
+        "在众人面前答应赵孟华的告白",
+        "对路明非的付出完全不知情或故意忽视"
+      ],
+      "name": "陈雯雯",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "爱慕与依赖",
+          "shared_history_summary": "路明非视其为生命第一个女性偶像，渴望与其一起出国读书。",
+          "target_id": "char_003",
+          "trust": 0.7,
+          "type": "暗恋对象"
+        },
+        {
+          "sentiment": "恋爱关系",
+          "shared_history_summary": "与赵孟华确立恋人关系，共同策划了对路明非的公开羞辱。",
+          "target_id": "char_015",
+          "trust": 0.9,
+          "type": "恋人"
+        }
+      ]
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": "得意、挑衅",
+        "goal_stack": [],
+        "location": "万达影城舞台",
+        "physical_state": "身穿黑西装，手持玫瑰花"
+      },
+      "id": "char_015",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "路明非同学，陈雯雯的追求者"
+      },
+      "memory_seeds": [
+        "被称为学校里最可能成为'楚子航第二'的家伙",
+        "拥有美国籍家教，发音极佳",
+        "面试仅撑了三分钟，出来时目光茫然",
+        "策划了利用'Eve & Wall-E'电影片段和人体拼字（I Love You）的告白秀",
+        "故意让路明非穿上不合身的西装充当背景板",
+        "嘲笑路明非是'炮灰男配'"
+      ],
+      "name": "赵孟华",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "敌对与轻视",
+          "shared_history_summary": "视路明非为竞争对手和笑料，故意设计局让他出丑。",
+          "target_id": "char_003",
+          "trust": 0.1,
+          "type": "死对头"
+        }
+      ]
+    },
+    {
+      "aliases": [
+        "小天女"
+      ],
+      "current_state": {
+        "emotional_state": "被动与好胜",
+        "goal_stack": [],
+        "location": "学校",
+        "physical_state": "冷静"
+      },
+      "id": "char_016",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "路明非同学，外号'小天女'"
+      },
+      "memory_seeds": [
+        "初中曾在美国居住一年，口语优秀",
+        "面试仅撑了五分钟，出来后愤怒地称学院耍人并直接离开",
+        "父亲有朋友在斯坦福，态度趾高气扬"
+      ],
+      "name": "苏晓樯",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "竞争与友谊",
+          "shared_history_summary": "直言对赵孟华的追求，引发文学社内波澜。",
+          "target_id": "char_015",
+          "trust": 0.4,
+          "type": "同学"
+        }
+      ]
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": null,
+        "goal_stack": [],
+        "location": null,
+        "physical_state": null
+      },
+      "id": "char_017",
+      "identity": {
+        "first_appearance": "第一幕 卡塞尔之门",
+        "role": "路明非同学，钢琴小美女"
+      },
+      "memory_seeds": [
+        "面试不到十分钟便败下阵来，眼眶发红",
+        "强撑不想露出失望表情，最终失落离场"
+      ],
+      "name": "柳淼淼",
+      "personality": {},
+      "relationships": []
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": "兴奋又紧张",
+        "goal_stack": [],
+        "location": "丽晶酒店",
+        "physical_state": "略显邋遢但热情洋溢"
+      },
+      "id": "char_004",
+      "identity": {
+        "role": "卡塞尔学院教师，路明非的临时导师"
+      },
+      "memory_seeds": [],
+      "name": "char_004",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "欣赏与重视",
+          "shared_history_summary": "古德里安教授极力推崇路明非，给予特别的面试关注。",
+          "target_id": "char_003",
+          "trust": 0.9,
+          "type": "学生"
+        }
+      ]
+    },
+    {
+      "aliases": [
+        "双胞胎哥哥"
+      ],
+      "current_state": {
+        "emotional_state": "无辜、看热闹",
+        "goal_stack": [],
+        "location": "万达影城舞台",
+        "physical_state": "身穿黑西装，体型圆胖"
+      },
+      "id": "char_020",
+      "identity": {
+        "role": "文学社社员，徐氏双胞胎之一"
+      },
+      "memory_seeds": [
+        "作为'群众演员'被雇佣来凑成'I Love You'的人体字母",
+        "透露了赵孟华整蛊路明非的计划给诺诺"
+      ],
+      "name": "徐岩岩",
+      "personality": {},
+      "relationships": [
+        {
+          "sentiment": "同事/同谋",
+          "shared_history_summary": "与弟弟徐淼淼一起受雇参与告白恶作剧。",
+          "target_id": "char_021",
+          "trust": 0.9,
+          "type": "兄弟"
+        }
+      ]
+    },
+    {
+      "aliases": [
+        "双胞胎弟弟"
+      ],
+      "current_state": {
+        "emotional_state": "无辜、看热闹",
+        "goal_stack": [],
+        "location": "万达影城舞台",
+        "physical_state": "身穿黑西装，体型圆胖"
+      },
+      "id": "char_021",
+      "identity": {
+        "role": "文学社社员，徐氏双胞胎之一"
+      },
+      "memory_seeds": [
+        "作为'群众演员'被雇佣来凑成'I Love You'的人体字母"
+      ],
+      "name": "徐淼淼",
+      "personality": {},
+      "relationships": []
+    },
+    {
+      "aliases": [],
+      "current_state": {
+        "emotional_state": "自信、得意",
+        "goal_stack": [],
+        "location": "万达影城放映厅侧门",
+        "physical_state": "叼着假中华烟"
       },
       "id": "char_022",
-      "identity": {},
-      "memory_seeds": [],
-      "name": "\u53d4\u53d4",
+      "identity": {
+        "role": "电影院放映员"
+      },
+      "memory_seeds": [
+        "收了路明非的假烟，却误将时间切错，导致Wall-E片段在路明非表白前播放",
+        "事后竖起大拇指表示'搞定'，实则帮了倒忙"
+      ],
+      "name": "放映员大叔",
       "personality": {},
       "relationships": [
         {
-          "sentiment": "\u758f\u79bb\u4e0e\u529f\u5229",
-          "shared_history_summary": "\u8bb0\u4e0d\u4f4f\u53e4\u5fb7\u91cc\u5b89\u540d\u5b57\u7b80\u5316\u4e3a\u2018\u53e4\u6559\u6388\u2019\uff0c\u5077\u770b\u9648\u58a8\u77b3\u7684\u624b\u8868\uff0c\u5bf9\u8def\u660e\u975e\u6001\u5ea6\u51b7\u6de1\u3002",
-          "target_id": "char_001",
-          "trust": 0.2,
-          "type": "\u4eb2\u5c5e\uff08\u53d4\u53d4\uff09"
-        }
-      ]
-    },
-    {
-      "aliases": [
-        "\u4e54\u8587\u5c3c"
-      ],
-      "current_state": {
-        "emotional_state": "\u672a\u77e5\uff08\u63a8\u6d4b\u5fd9\u788c\u4e14\u5145\u6ee1\u7231\u610f\uff09",
-        "goal_stack": [],
-        "location": "\u4e16\u754c\u5404\u5730\u8fdb\u884c\u91cd\u8981\u8bfe\u9898\u7814\u7a76",
-        "physical_state": "\u65e0\u5177\u4f53\u63cf\u8ff0\uff0c\u7167\u7247\u663e\u793a\u5e74\u8f7b\u65f6\u7684\u4e54\u8587\u5c3c\u7a7f\u7eaf\u767d\u5c45\u5bb6\u68c9\u88d9"
-      },
-      "id": "char_parents",
-      "identity": {
-        "role": "\u5361\u585e\u5c14\u5b66\u9662\u540d\u8a89\u6821\u53cb\uff0c\u9f99\u65cf\u8840\u88d4\u7814\u7a76\u8005"
-      },
-      "memory_seeds": [
-        "\u957f\u671f\u5728\u5916\u65e0\u6cd5\u966a\u4f34\u8def\u660e\u975e",
-        "\u5199\u4fe1\u59d4\u6258\u6602\u70ed\u6821\u957f\u7167\u987e\u8def\u660e\u975e",
-        "\u575a\u4fe1\u8def\u660e\u975e\u4f1a\u5728\u5b66\u672f\u4e0a\u6709\u4f5c\u4e3a"
-      ],
-      "name": "\u8def\u660e\u975e\u7684\u7236\u6bcd",
-      "personality": {},
-      "relationships": []
-    },
-    {
-      "aliases": [],
-      "current_state": {
-        "emotional_state": null,
-        "goal_stack": [],
-        "location": null,
-        "physical_state": null
-      },
-      "id": "char_023",
-      "identity": {
-        "role": "\u4e07\u8fbe\u5f71\u57ce\u653e\u6620\u5458"
-      },
-      "memory_seeds": [
-        "\u6536\u53d7\u8def\u660e\u975e\u7684\u5047\u4e2d\u534e\u70df\uff0c\u627f\u8bfa\u64ad\u653eWall-E\u7247\u6bb5\u5374\u641e\u9519\u4e86\u65f6\u673a",
-        "\u4e8b\u540e\u7ad6\u8d77\u5927\u62c7\u6307\u8868\u793a'\u641e\u5b9a'"
-      ],
-      "name": "\u653e\u6620\u5458\u5927\u53d4",
-      "personality": {},
-      "relationships": [
-        {
-          "sentiment": "\u4ea4\u6613\u4e0e\u8bef\u89e3",
-          "shared_history_summary": "\u8def\u660e\u975e\u7528\u5047\u70df\u6362\u53d6\u7535\u5f71\u7247\u6bb5\u64ad\u653e\u673a\u4f1a\uff0c\u7ed3\u679c\u56e0\u65f6\u95f4\u914d\u5408\u5931\u8bef\u5bfc\u81f4\u8def\u660e\u975e\u5f53\u4f17\u51fa\u4e11\u3002",
-          "target_id": "char_001",
-          "trust": 0.6,
-          "type": "\u8def\u4eba/\u5408\u4f5c\u8005"
-        }
-      ]
-    },
-    {
-      "aliases": [
-        "\u53cc\u80de\u80ce\u54e5\u54e5"
-      ],
-      "current_state": {
-        "emotional_state": null,
-        "goal_stack": [],
-        "location": null,
-        "physical_state": null
-      },
-      "id": "char_024",
-      "identity": {
-        "role": "\u6587\u5b66\u793e\u793e\u5458\uff0c\u5b6a\u751f\u5144\u5f1f\u4e4b\u4e00"
-      },
-      "memory_seeds": [
-        "\u4f5c\u4e3a'\u7fa4\u4f17\u6f14\u5458'\u53c2\u4e0e\u8d75\u5b5f\u534e\u7684\u544a\u767d\u8ba1\u5212",
-        "\u626e\u6f14\u5b57\u6bcd'o'"
-      ],
-      "name": "\u5f90\u5ca9\u5ca9",
-      "personality": {},
-      "relationships": [
-        {
-          "sentiment": "\u5229\u7528",
-          "shared_history_summary": "\u53d7\u96c7\u4e8e\u8d75\u5b5f\u534e\uff0c\u7a7f\u7740\u9ed1\u897f\u88c5\u7ad9\u5728\u821e\u53f0\u4e0a\u5f53\u966a\u886c\u3002",
-          "target_id": "char_015",
-          "trust": 0.8,
-          "type": "\u96c7\u4f63\u5173\u7cfb"
-        }
-      ]
-    },
-    {
-      "aliases": [
-        "\u53cc\u80de\u80ce\u5f1f\u5f1f"
-      ],
-      "current_state": {
-        "emotional_state": null,
-        "goal_stack": [],
-        "location": null,
-        "physical_state": null
-      },
-      "id": "char_025",
-      "identity": {
-        "role": "\u6587\u5b66\u793e\u793e\u5458\uff0c\u5b6a\u751f\u5144\u5f1f\u4e4b\u4e00"
-      },
-      "memory_seeds": [
-        "\u4f5c\u4e3a'\u7fa4\u4f17\u6f14\u5458'\u53c2\u4e0e\u8d75\u5b5f\u534e\u7684\u544a\u767d\u8ba1\u5212",
-        "\u626e\u6f14\u5b57\u6bcd'o'"
-      ],
-      "name": "\u5f90\u6dfc\u6dfc",
-      "personality": {},
-      "relationships": [
-        {
-          "sentiment": "\u5229\u7528",
-          "shared_history_summary": "\u53d7\u96c7\u4e8e\u8d75\u5b5f\u534e\uff0c\u7a7f\u7740\u9ed1\u897f\u88c5\u7ad9\u5728\u821e\u53f0\u4e0a\u5f53\u966a\u886c\u3002",
-          "target_id": "char_015",
-          "trust": 0.8,
-          "type": "\u96c7\u4f63\u5173\u7cfb"
+          "sentiment": "交易关系",
+          "shared_history_summary": "收受路明非贿赂（假烟），承诺帮忙剪辑视频但操作失误。",
+          "target_id": "char_003",
+          "trust": 0.3,
+          "type": "交易对象"
         }
       ]
     },
@@ -634,20 +531,29 @@
         "location": null,
         "physical_state": null
       },
-      "id": "char_nuoma",
+      "id": "char_018",
       "identity": {
-        "role": "\u5361\u585e\u5c14\u5b66\u9662\u4e2d\u592e\u7535\u8111\uff0c\u62df\u4eba\u5316AI\u79d8\u4e66"
+        "role": "卡塞尔学院中央电脑（拟人化），负责数据库管理与招生流程自动化"
       },
       "memory_seeds": [
-        "\u9a8c\u8bc1\u8def\u660e\u975e\u58f0\u7eb9\u5e76\u5f00\u542fS\u7ea7\u6743\u9650",
-        "\u751f\u6210\u9009\u8bfe\u8868\u5e76\u5b89\u6392\u673a\u7968\u62a4\u7167\u7b7e\u8bc1",
-        "\u5411\u5168\u7403\u6570\u636e\u5e93\u53d1\u9001\u8def\u660e\u975e\u6570\u636e"
+        "路明非的声纹验证通过",
+        "激活了路明非的隐藏选项",
+        "生成了路明非的选课表并开启了账户权限",
+        "通知路明非其S级阶级身份及入学名单录入"
       ],
-      "name": "\u8bfa\u739b",
+      "name": "诺玛",
       "personality": {
-        "trait": "\u6c89\u7a33\u3001\u9ad8\u6548\u3001\u7edd\u5bf9\u4e00\u6d41\u7684\u670d\u52a1\u6001\u5ea6"
+        "trait": "沉稳、专业、高效，以拟人化声音提供服务"
       },
-      "relationships": []
+      "relationships": [
+        {
+          "sentiment": "服务与被服务",
+          "shared_history_summary": "作为学院AI处理路明非的入学注册流程，向其发送欢迎信息。",
+          "target_id": "char_003",
+          "trust": 0.0,
+          "type": "系统管理员/用户"
+        }
+      ]
     }
   ],
   "entities": [
@@ -657,54 +563,16 @@
         "most_present_in": [],
         "reason_absent": ""
       },
-      "agent_representations": [],
-      "concept_details": {
-        "authorial_stance": "",
-        "definitions_by_character": {},
-        "who_is_bound_by": [],
-        "who_weaponizes": []
-      },
-      "entity_id": "ent_white_dragon_city",
-      "name": "\u767d\u5e1d\u57ce",
-      "narrative_role": "\u5386\u53f2\u9057\u8ff9\u4e0e\u68a6\u5883\u6838\u5fc3\u573a\u666f",
-      "objective_facts": [
-        "\u4e00\u5ea7\u88ab\u70c8\u706b\u541e\u566c\u7684\u57ce\u5e02\uff0c\u66fe\u88ab\u79f0\u4e3a\u767d\u5e1d\u57ce",
-        "\u57ce\u5e02\u4e2d\u592e\u7acb\u6709\u9ad8\u6746\uff0c\u7528\u4e8e\u6267\u884c\u732e\u796d",
-        "\u724c\u533e\u4e0a\u5199\u7740\u201c\u767d\u5e1d\u201d\u4e8c\u5b57",
-        "\u5728\u68a6\u5883\u4e2d\u88ab\u63cf\u8ff0\u4e3a\u5730\u72f1\u822c\u7684\u666f\u8c61"
+      "agent_representations": [
+        {
+          "agent_id": "char_003",
+          "belief": "认为这是一封来自骗子的信，或者堂弟路鸣泽的恶作剧",
+          "confidence": "HIGH",
+          "emotional_charge": "skeptical",
+          "goal_relevance": "试图拒绝或忽视以维持现状",
+          "misunderstanding": "完全未意识到该学院涉及龙族与混血种的世界"
+        }
       ],
-      "type": "location"
-    },
-    {
-      "absent_figure_details": {
-        "counterfactual": "",
-        "most_present_in": [],
-        "reason_absent": ""
-      },
-      "agent_representations": [],
-      "concept_details": {
-        "authorial_stance": "",
-        "definitions_by_character": {},
-        "who_is_bound_by": [],
-        "who_weaponizes": []
-      },
-      "entity_id": "ent_sacrifice_pole",
-      "name": "\u732e\u796d\u9ad8\u6746",
-      "narrative_role": "\u60b2\u5267\u53d1\u751f\u7684\u7126\u70b9",
-      "objective_facts": [
-        "\u4f4d\u4e8e\u57ce\u5e02\u6b63\u4e2d\u592e",
-        "\u7528\u4e8e\u60ac\u6302\u5e76\u711a\u70e7\u6d3b\u4eba\uff08\u5eb7\u65af\u5766\u4e01\uff09",
-        "\u8c61\u5f81\u7740\u76db\u5927\u7684\u732e\u796d\u4eea\u5f0f"
-      ],
-      "type": "object"
-    },
-    {
-      "absent_figure_details": {
-        "counterfactual": "",
-        "most_present_in": [],
-        "reason_absent": ""
-      },
-      "agent_representations": [],
       "concept_details": {
         "authorial_stance": "",
         "definitions_by_character": {},
@@ -712,14 +580,17 @@
         "who_weaponizes": []
       },
       "entity_id": "ent_001",
-      "name": "\u5361\u585e\u5c14\u5b66\u9662",
-      "narrative_role": "\u795e\u79d8\u7ec4\u7ec7\uff0c\u8def\u660e\u975e\u547d\u8fd0\u7684\u8f6c\u6298\u70b9",
+      "name": "卡塞尔学院",
+      "narrative_role": "命运转折点",
       "objective_facts": [
-        "\u4f4d\u4e8e\u7f8e\u56fd\u4f0a\u5229\u8bfa\u4f0a\u5dde\u829d\u52a0\u54e5\u8fdc\u90ca\u7684\u79c1\u7acb\u5927\u5b66",
-        "\u4e0e\u829d\u52a0\u54e5\u5927\u5b66\u662f\u8054\u8c0a\u5b66\u6821",
-        "\u5165\u5b66\u6807\u51c6\u72ec\u7279\uff0c\u65e0\u9700\u7533\u8bf7\u8d39\u5373\u53ef\u63a5\u6536\u8d44\u6599\u8bc4\u4f30",
-        "\u7531\u53e4\u5fb7\u91cc\u5b89\u6559\u6388\u8d1f\u8d23\u4e2d\u56fd\u533a\u7684\u9762\u8bd5",
-        "\u5b66\u9662\u79d8\u4e66\u540d\u4e3a\u8bfa\u739b\u00b7\u52b3\u6069\u65af"
+        "在路明非的梦境中被烈火焚烧",
+        "城市中央立有高杆，用于献祭",
+        "牌匾上写着“白帝”二字",
+        "位于美国伊利诺伊州芝加哥远郊的私立大学",
+        "与芝加哥大学是联谊学校，有广泛学术交流",
+        "拥有独立的招生评估体系，可无视常规申请费",
+        "能直接派遣人员（如古德里安教授）在中国进行面试",
+        "入学标准似乎与常规学术成绩无关"
       ],
       "type": "organization"
     },
@@ -737,13 +608,16 @@
         "who_weaponizes": []
       },
       "entity_id": "ent_002",
-      "name": "N96\u624b\u673a",
-      "narrative_role": "\u5173\u952e\u9053\u5177\uff0c\u8fde\u63a5\u8def\u660e\u975e\u4e0e\u53e4\u5fb7\u91cc\u5b89\u6559\u6388\u7684\u5a92\u4ecb",
+      "name": "N96手机",
+      "narrative_role": "关键道具",
       "objective_facts": [
-        "\u7eaf\u9ed1\u8272",
-        "\u7535\u6c60\u7535\u91cf\u5145\u8db3",
-        "\u540d\u7247\u5939\u5185\u4ec5\u6709'\u53e4\u5fb7\u91cc\u5b89\u6559\u6388'\u4e00\u4e2a\u8054\u7cfb\u4eba",
-        "\u6c34\u8d27\u4ef7\u503c\u56db\u5343\u591a\uff0c\u884c\u8d27\u8d85\u4e94\u5343"
+        "命运定义为穿越荒原，竖起战旗，返回故乡",
+        "死不可怕，只是一场长眠",
+        "在吞噬世界之前，选择安然沉睡，等待醒来",
+        "纯黑色外观",
+        "电池电量充足",
+        "唯一联系人为'古德里安教授'",
+        "作为神秘包裹的一部分送达"
       ],
       "type": "object"
     },
@@ -761,11 +635,10 @@
         "who_weaponizes": []
       },
       "entity_id": "ent_003",
-      "name": "\u300a\u5c0f\u8bf4\u7ed8\u300b",
-      "narrative_role": "\u8c61\u5f81\u9752\u6625\u6587\u5b66\u4e0e\u5bb6\u5ead\u77db\u76fe\u7684\u9053\u5177",
+      "name": "汉堡",
+      "narrative_role": "路明非内心独白中的幽默元素，体现其现代人的思维习惯",
       "objective_facts": [
-        "\u8def\u9e23\u6cfd\u58f0\u79f0\u7528\u6765\u5b66\u4e60",
-        "\u8def\u660e\u975e\u4e70\u6765\u540e\u4e0d\u770b\uff0c\u8f6c\u624b\u7ed9\u62a5\u520a\u4ead\u5927\u7237\u770b\u6e38\u620f\u6742\u5fd7"
+        "路明非在梦中提到中午刚吃了一个汉堡"
       ],
       "type": "object"
     },
@@ -778,92 +651,24 @@
       "agent_representations": [],
       "concept_details": {
         "authorial_stance": "",
-        "definitions_by_character": {},
+        "definitions_by_character": {
+          "char_003": "认为这是普通大学的面试，准备了标准答案，结果发现完全无用"
+        },
         "who_is_bound_by": [],
-        "who_weaponizes": [
-          "char_015"
-        ]
+        "who_weaponizes": []
       },
       "entity_id": "ent_002_01",
-      "name": "I Love You \u4eba\u8089\u62fc\u56fe",
-      "narrative_role": "\u5173\u952e\u8f6c\u6298\u9053\u5177",
+      "name": "法拉利 599 GTB Fiorano",
+      "narrative_role": "象征诺诺的身份与力量，也是路明非脱离平凡生活的交通工具",
       "objective_facts": [
-        "\u9762\u8bd5\u5730\u70b9\u4f4d\u4e8e\u57ce\u5e02\u6700\u8c6a\u534e\u7684\u4e3d\u6676\u9152\u5e97\u884c\u653f\u5c42\u3002",
-        "\u9762\u8bd5\u5b98\u4e3a\u6267\u884c\u90e8\u6210\u5458\u53f6\u80dc\u548c\u9152\u5fb7\u4e9a\u7eaa\u3002",
-        "\u9762\u8bd5\u95ee\u9898\u4e0d\u6309\u5e38\u7406\u51fa\u724c\uff0c\u6d89\u53ca\u8d85\u81ea\u7136\u4fe1\u4ef0\u800c\u975e\u5b66\u672f\u77e5\u8bc6\u3002",
-        "\u9762\u8bd5\u8fc7\u7a0b\u6781\u5feb\uff0c\u591a\u540d\u4f18\u7b49\u751f\u5728\u4e09\u5206\u949f\u5185\u88ab\u201c\u65a9\u4e0b\u201d\u3002",
-        "\u7531\u8d75\u5b5f\u534e\uff08Y\uff09\u3001\u5f90\u6c0f\u5144\u5f1f\uff08o\uff09\u3001\u8def\u660e\u975e\uff08i\uff09\u548c\u9648\u96ef\u96ef\uff08U\uff09\u53ca\u5176\u4ed6\u4eba\u5171\u540c\u7ec4\u6210",
-        "\u5229\u7528\u8def\u660e\u975e\u4f5c\u4e3a\u5c0f\u5199\u5b57\u6bcd'i'\u7684\u4f4d\u7f6e\u8fdb\u884c\u89c6\u89c9\u6b3a\u9a97",
-        "\u76ee\u7684\u662f\u5236\u9020\u6d6a\u6f2b\u6c1b\u56f4\u5e76\u8ba9\u8def\u660e\u975e\u6210\u4e3a\u80cc\u666f\u677f"
-      ],
-      "type": "object"
-    },
-    {
-      "absent_figure_details": {
-        "counterfactual": "",
-        "most_present_in": [],
-        "reason_absent": ""
-      },
-      "agent_representations": [],
-      "concept_details": {
-        "authorial_stance": "",
-        "definitions_by_character": {},
-        "who_is_bound_by": [],
-        "who_weaponizes": []
-      },
-      "entity_id": "ent_scholarship",
-      "name": "\u8def\u660e\u975e\u4e13\u5c5e\u5956\u5b66\u91d1",
-      "narrative_role": "\u8bf1\u60d1\u4e0e\u62c9\u62e2\u5de5\u5177",
-      "objective_facts": [
-        "\u7531\u53e4\u5fb7\u91cc\u5b89\u6559\u6388\u4e2a\u4eba\u540d\u4e0b\u62e8\u51fa",
-        "\u91d1\u989d\u4e3a\u6bcf\u5e7436000\u7f8e\u91d1",
-        "\u8db3\u4ee5\u8986\u76d6\u8def\u660e\u975e\u56db\u5e74\u5927\u5b66\u8d39\u7528"
-      ],
-      "type": "object"
-    },
-    {
-      "absent_figure_details": {
-        "counterfactual": "",
-        "most_present_in": [],
-        "reason_absent": ""
-      },
-      "agent_representations": [],
-      "concept_details": {
-        "authorial_stance": "",
-        "definitions_by_character": {},
-        "who_is_bound_by": [],
-        "who_weaponizes": []
-      },
-      "entity_id": "ent_letter",
-      "name": "\u4e54\u8587\u5c3c\u7684\u4eb2\u7b14\u4fe1",
-      "narrative_role": "\u60c5\u611f\u8f6c\u6298\u70b9",
-      "objective_facts": [
-        "\u6253\u5370\u51fa\u6765\u7684\u7535\u5b50\u90ae\u4ef6\u683c\u5f0f",
-        "\u5185\u5bb9\u63d0\u53ca\u5b69\u5b50\u8def\u660e\u975e\u5e74\u6ee1\u5341\u516b\u5c81\uff0c\u8bf7\u6c42\u5b66\u9662\u63d0\u4f9b\u5e2e\u52a9",
-        "\u6838\u5fc3\u4fe1\u606f\uff1a\u7238\u7238\u548c\u5988\u5988\u7231\u4ed6"
-      ],
-      "type": "object"
-    },
-    {
-      "absent_figure_details": {
-        "counterfactual": "",
-        "most_present_in": [],
-        "reason_absent": ""
-      },
-      "agent_representations": [],
-      "concept_details": {
-        "authorial_stance": "",
-        "definitions_by_character": {},
-        "who_is_bound_by": [],
-        "who_weaponizes": []
-      },
-      "entity_id": "ent_photo",
-      "name": "\u8def\u660e\u975e\u7236\u6bcd\u7684\u7167\u7247",
-      "narrative_role": "\u63ed\u793a\u7236\u6bcd\u73b0\u72b6\u4e0e\u60c5\u611f\u9694\u9602",
-      "objective_facts": [
-        "\u62cd\u6444\u4e8e\u590f\u5929\u82b1\u56ed\uff0c\u80cc\u666f\u6709\u5915\u9633\u4e0b\u7684\u5361\u585e\u5c14\u5b66\u9662",
-        "\u663e\u793a\u4e00\u7537\u4e00\u5973\uff08\u4e54\u8587\u5c3c\u53ca\u5176\u4e08\u592b\uff09\u5728\u8513\u5899\u91cc\u6563\u6b65",
-        "\u5c55\u73b0\u4e86\u4e24\u4eba\u6069\u7231\u4f46\u4f3c\u4e4e\u5ffd\u7565\u4e86\u5b69\u5b50\u7684\u72b6\u6001"
+        "由卡塞尔学院执行者担任考官",
+        "面试地点设在豪华酒店",
+        "不遵循常规大学面试流程（如自我介绍、学术问答）",
+        "面试内容涉及超自然认知（外星人、超能力）和哲学思辨",
+        "面试时长极短，多数考生在几分钟内被淘汰",
+        "红色车身，价值约500万",
+        "在抛锚前由诺诺驾驶",
+        "停在一家24小时药店门前"
       ],
       "type": "object"
     },
@@ -881,12 +686,12 @@
         "who_weaponizes": []
       },
       "entity_id": "ent_002_02",
-      "name": "\u84b2\u516c\u82f1",
-      "narrative_role": "\u8c61\u5f81\u7269",
+      "name": "蒲公英",
+      "narrative_role": "象征路明非卑微而真挚的爱意",
       "objective_facts": [
-        "\u8def\u660e\u975e\u7279\u610f\u53bb\u6cb3\u8fb9\u91c7\u6458\uff0c\u8ba4\u4e3a\u6bd4\u73ab\u7470\u66f4\u6709\u98ce\u683c",
-        "\u6700\u7ec8\u56e0\u5954\u8dd1\u548c\u5c34\u5c2c\u800c\u96f6\u843d\u53ea\u5269\u5149\u79c3\u79c3\u7684\u6746\u513f",
-        "\u8c61\u5f81\u7740\u8def\u660e\u975e\u5351\u5fae\u4e14\u7834\u788e\u7684\u7231\u610f"
+        "路明非下午在河边采摘",
+        "因奔跑而零落只剩光秃秃的杆儿",
+        "被路明非放弃作为玫瑰的替代品送给陈雯雯"
       ],
       "type": "object"
     },
@@ -904,14 +709,14 @@
         "who_weaponizes": []
       },
       "entity_id": "ent_002_03",
-      "name": "\u6cd5\u62c9\u5229 599 GTB Fiorano",
-      "narrative_role": "\u6551\u8d4e\u8c61\u5f81",
+      "name": "假中华烟",
+      "narrative_role": "路明非的生财之道及导致悲剧的导火索",
       "objective_facts": [
-        "\u8bfa\u8bfa\u9a7e\u9a76\u7684\u8f66\u8f86\uff0c\u4ef7\u503c\u7ea6500\u4e07",
-        "\u5728\u5173\u952e\u65f6\u523b\u51fa\u73b0\uff0c\u5c06\u8def\u660e\u975e\u4ece\u7f9e\u8fb1\u4e2d\u5e26\u8d70",
-        "\u4e2d\u9014\u56e0\u6ca1\u6cb9\u629b\u951a\uff0c\u6697\u793a\u8def\u660e\u975e\u547d\u8fd0\u7684\u65e0\u5e38"
+        "路明非从叔叔抽屉偷真烟，去烟酒店换两包假的",
+        "一包放回，一包贿赂放映员",
+        "导致放映员误操作时间"
       ],
-      "type": "vehicle"
+      "type": "object"
     },
     {
       "absent_figure_details": {
@@ -922,18 +727,22 @@
       "agent_representations": [],
       "concept_details": {
         "authorial_stance": "",
-        "definitions_by_character": {},
-        "who_is_bound_by": [],
+        "definitions_by_character": {
+          "char_019": "我们总是说，永远有另一个选择，就看你想不想要。"
+        },
+        "who_is_bound_by": [
+          "char_003"
+        ],
         "who_weaponizes": []
       },
-      "entity_id": "ent_s_class_system",
-      "name": "S\u7ea7\u8840\u7edf\u5224\u5b9a\u7cfb\u7edf",
-      "narrative_role": "\u63ed\u793a\u4e3b\u89d2\u7279\u6b8a\u8eab\u4efd\u7684\u5173\u952e\u673a\u5236",
+      "entity_id": "ent_009",
+      "name": "隐藏的选择项",
+      "narrative_role": "核心剧情触发器",
       "objective_facts": [
-        "S\u7ea7\u662f\u5361\u585e\u5c14\u5b66\u9662\u8ba4\u5b9a\u7684\u6700\u9ad8\u8840\u7edf\u7eaf\u5ea6\u7b49\u7ea7",
-        "S\u7ea7\u5019\u9009\u4eba\u7684\u51fa\u751f\u65e5\u671f\u3001\u6027\u522b\u3001\u7f16\u53f7\u4f1a\u88ab\u5f55\u5165\u6838\u5fc3\u6570\u636e\u5e93",
-        "S\u7ea7\u8d44\u683c\u6fc0\u6d3b\u540e\uff0c\u6570\u5343\u4e2a\u5730\u7403\u79d8\u5bc6\u7f51\u5173\u5c06\u5bf9\u5176\u5f00\u653e",
-        "S\u7ea7\u5f55\u53d6\u7531\u6821\u957f\u76f4\u63a5\u70b9\u540d\uff0c\u5177\u6709\u6700\u9ad8\u4f18\u5148\u7ea7"
+        "存在于混血种人生中，平时不可见",
+        "需要特定条件（如电话确认）才能激活",
+        "激活后开启卡塞尔学院数据库访问权限",
+        "一旦激活，将永久改变持有者的人生轨迹"
       ],
       "type": "concept"
     },
@@ -947,175 +756,208 @@
       "concept_details": {
         "authorial_stance": "",
         "definitions_by_character": {},
-        "who_is_bound_by": [],
+        "who_is_bound_by": [
+          "char_003"
+        ],
         "who_weaponizes": []
       },
-      "entity_id": "ent_nuoma_ai",
-      "name": "\u8bfa\u739b",
-      "narrative_role": "",
+      "entity_id": "ent_010",
+      "name": "S级阶级",
+      "narrative_role": "身份标识与特权象征",
       "objective_facts": [
-        "\u8bfa\u739b\u662f\u5361\u585e\u5c14\u5b66\u9662\u7684\u4e2d\u592e\u7535\u8111\uff0c\u5177\u5907\u62df\u4eba\u5316\u8bed\u97f3\u4ea4\u4e92\u80fd\u529b",
-        "\u5979\u8d1f\u8d23\u5904\u7406\u6240\u6709\u884c\u653f\u4e8b\u52a1\uff0c\u5305\u62ec\u673a\u7968\u3001\u62a4\u7167\u3001\u7b7e\u8bc1\u53ca\u9009\u8bfe\u8868\u751f\u6210",
-        "\u5979\u62e5\u6709\u8bbf\u95ee\u5168\u7403\u79d8\u5bc6\u7f51\u5173\u7684\u6743\u9650"
+        "路明非被确认为S级，编号A.D.0013",
+        "S级是卡塞尔学院极高的血统等级",
+        "S级学生享有特殊的优先级和特权"
       ],
-      "type": "character_entity"
+      "type": "concept"
     }
   ],
   "events": [
     {
       "consequences": [
-        "\u8def\u660e\u975e\u9996\u6b21\u76f4\u9762\u6f5c\u610f\u8bc6\u7684\u75db\u82e6\u8bb0\u5fc6\u6216\u9884\u8a00",
-        "\u63ed\u793a\u4e86\u8def\u660e\u975e\u4e0e\u5eb7\u65af\u5766\u4e01\u4e4b\u95f4\u6df1\u539a\u7684\u7f81\u7eca",
-        "\u6697\u793a\u4e86\u767d\u5e1d\u57ce/\u9752\u94dc\u4e4b\u57ce\u7684\u5386\u53f2\u60b2\u5267"
+        "路明非确认了梦境是假的，但内心留下了深刻的痛楚和对未来的不安",
+        "揭示了路明非潜意识中对失去亲人的恐惧以及‘弃族’命运的共鸣",
+        "路明非开始考虑卡塞尔学院的邀请，在情感上受到冲击"
       ],
       "id": "evt_001",
-      "location": "\u8def\u660e\u975e\u7684\u5367\u5ba4\uff08\u73b0\u5b9e\uff09 / \u767d\u5e1d\u57ce\uff08\u68a6\u5883\uff09",
+      "location": "丽晶酒店",
       "participant_knowledge": {
-        "char_konstantine": "\u77e5\u6653\u81ea\u5df1\u662f\u2018\u5f03\u65cf\u2019\u7684\u547d\u8fd0\uff0c\u660e\u767d\u6b7b\u4ea1\u5982\u540c\u957f\u7720\uff0c\u671f\u5f85\u4e0e\u54e5\u54e5\u4e00\u540c\u541b\u4e34\u4e16\u754c\u3002",
-        "char_lu_mingfei": "\u5728\u68a6\u4e2d\u5f97\u77e5\u81ea\u5df1\u62e5\u6709\u2018\u54e5\u54e5\u2019\u7684\u8eab\u4efd\uff0c\u5e76\u9884\u89c1\u5230\u5eb7\u65af\u5766\u4e01\u7684\u6b7b\uff1b\u9192\u6765\u540e\u786e\u8ba4\u8fd9\u662f\u68a6\u5883\uff0c\u4f46\u5bf9\u68a6\u4e2d\u7684\u75db\u611f\u8bb0\u5fc6\u72b9\u65b0\u3002"
+        "char_001": "在梦中以为自己是康斯坦丁的哥哥，承诺守护他；醒来后意识到这是梦，但对梦中情感记忆清晰。",
+        "char_002": "仅在梦中存在，认为哥哥会吞噬世界，希望被哥哥吃掉以逃避死亡的孤独。",
+        "char_003": "知道自己被评为‘S’级候选人并获得奖学金。",
+        "char_004": "意识到路明非的弃权并非表现不佳，而是误解。"
       },
       "participants": [
-        "char_lu_mingfei",
-        "char_konstantine"
+        "char_001",
+        "char_002",
+        "char_003",
+        "char_004"
       ],
-      "summary": "\u8def\u660e\u975e\u5728\u68a6\u4e2d\u7ecf\u5386\u4e86\u4e00\u573a\u5173\u4e8e\u767d\u5e1d\u57ce\u7684\u732e\u796d\u5e7b\u8c61\uff0c\u76ee\u7779\u540d\u4e3a\u5eb7\u65af\u5766\u4e01\u7684\u5b69\u5b50\u88ab\u70c8\u706b\u711a\u70e7\u800c\u6b7b\uff0c\u968f\u540e\u60ca\u9192\u4e8e\u73b0\u5b9e\u3002",
-      "time": "\u516c\u51432009\u5e745\u6708\u67d0\u65e5\u4e0b\u5348"
+      "summary": "古德里安教授向路明非及其家庭解释入学资格和奖学金政策。",
+      "time": "次日上午"
     },
     {
       "consequences": [
-        "\u8def\u660e\u975e\u5b8c\u6210\u4e86\u5a76\u5a76\u4ea4\u4ee3\u7684\u8dd1\u817f\u4efb\u52a1",
-        "\u8def\u660e\u975e\u5728\u4e66\u644a\u5f97\u77e5\u81ea\u5df1\u7533\u8bf7\u4e86\u7f8e\u56fd\u5927\u5b66",
-        "\u8def\u660e\u975e\u83b7\u5f97\u4e86\u9762\u8bd5\u524d\u7684\u5fc3\u7406\u652f\u6301\u548c\u57fa\u7840\u53e3\u8bed\u8bad\u7ec3\uff0c\u589e\u5f3a\u4e86\u5bf9\u660e\u5929\u7684\u4fe1\u5fc3\u3002",
-        "\u8def\u660e\u975e\u5168\u5bb6\u6b21\u65e5\u524d\u5f80\u4e3d\u6676\u9152\u5e97\u53c2\u52a0\u6b63\u5f0f\u9762\u8c08",
-        "\u8def\u660e\u975e\u5bf9\u7236\u6bcd\u7684\u7231\u4ea7\u751f\u6000\u7591\u540e\u7684\u91cd\u65b0\u786e\u8ba4",
-        "\u8def\u660e\u975e\u5f7b\u5e95\u5931\u53bb\u9648\u96ef\u96ef\u7684\u597d\u611f\uff0c\u6ca6\u4e3a\u5168\u6821\u7b11\u67c4",
-        "\u8def\u660e\u975e\u9677\u5165\u7edd\u671b\uff0c\u8e72\u5728\u5c4f\u5e55\u524d\u81ea\u8ba4\u662f\u70ae\u7070\u7537\u914d",
-        "\u8def\u660e\u975e\u786e\u8ba4\u4e86\u81ea\u5df1\u5bf9\u9648\u96ef\u96ef\u7684\u5355\u76f8\u601d\u662f\u5355\u5411\u7684\u4e14\u88ab\u6240\u6709\u4eba\u9690\u7792"
+        "路明非的生活即将发生剧变，面临未知的面试",
+        "叔叔婶婶和路鸣泽对信件真伪产生激烈争论",
+        "路明非首次接触到超脱常规认知的世界入口",
+        "路明非决定在毕业前向陈雯雯表白，同时认真对待卡塞尔学院的录取通知。"
+      ],
+      "id": "evt_002",
+      "location": "沿河路上",
+      "participant_knowledge": {
+        "char_003": "决定在毕业前向陈雯雯表白，然而可能失去卡塞尔学院的机会。"
+      },
+      "participants": [
+        "char_003",
+        "char_018",
+        "门卫",
+        "char_014",
+        "char_019"
+      ],
+      "summary": "路明非与陈雯雯和诺诺在沿河路上走，诺诺促使路明非考虑公开表白。",
+      "time": "毕业前"
+    },
+    {
+      "consequences": [
+        "路明非感到被边缘化，独自离开房间",
+        "家人内部对于是否相信此事产生分歧",
+        "路明非对卡塞尔学院的怀疑加深，但最终决定赌上表白。"
+      ],
+      "id": "evt_003",
+      "location": "天台",
+      "participant_knowledge": {
+        "char_003": "感受到卡塞尔学院一系列事件的异常，怀疑学院目的复杂。"
+      },
+      "participants": [
+        "char_003",
+        "叔叔",
+        "婶婶",
+        "char_002"
+      ],
+      "summary": "路明非在天台思索卡塞尔学院的录取机会和陈雯雯的表白计划。",
+      "time": "晚上"
+    },
+    {
+      "consequences": [
+        "路明非首次感到被陌生人完全看透",
+        "路明非决定放弃对诺诺身份的探究",
+        "路明非彻底失去陈雯雯，自尊心受挫",
+        "路明非被孤立，成为全校笑柄",
+        "路明非意识到自己从未被重视"
       ],
       "id": "evt_002_01",
-      "location": "\u4e07\u8fbe\u5f71\u57ce\u653e\u6620\u5385",
+      "location": "万达影城放映厅",
       "participant_knowledge": {
-        "char_001": "\u610f\u8bc6\u5230\u81ea\u5df1\u64cd\u4f5c\u5176\u5b9e\u5f88\u5f3a\uff0c\u53ea\u662f\u61d2\u5f97\u89e3\u91ca\uff1b\u5bf9\u9648\u96ef\u96ef\u4ecd\u62b1\u6709\u5e7b\u60f3\u3002"
+        "char_003": "完全被蒙在鼓里，以为这是自己的主场，直到最后才发现自己是'字母i'。",
+        "char_014": "全程知情，配合赵孟华演戏，对路明非的真心毫不在意。",
+        "char_015": "精心策划了整个事件，目的是彻底击垮路明非。",
+        "char_020": "知情并受雇参与，认为只是拿工资干活。"
       },
       "participants": [
-        "char_001",
-        "char_013",
-        "char_014",
         "char_003",
+        "char_019",
+        "char_014",
+        "char_015",
+        "char_020",
         "char_021",
         "char_022",
-        "char_020",
-        "char_015",
-        "char_023",
-        "char_024",
-        "char_025"
+        "char_016"
       ],
-      "summary": "\u8def\u660e\u975e\u5728\u4e07\u8fbe\u5f71\u57ce\u6587\u5b66\u793e\u805a\u4f1a\u4e0a\u51c6\u5907\u8868\u767d\uff0c\u5374\u88ab\u8d75\u5b5f\u534e\u5229\u7528\u5176\u7ad9\u6210\u5b57\u6bcd'i'\u7ec4\u6210'I Love You'\u7684\u4eba\u8089\u62fc\u56fe\u5f53\u4f17\u7f9e\u8fb1\uff0c\u9648\u96ef\u96ef\u9009\u62e9\u63a5\u53d7\u8d75\u5b5f\u534e\u7684\u8868\u767d\u3002",
-      "time": "2009\u5e745\u6708\uff0c\u9ad8\u8003\u524d\u5915\u7684\u591c\u665a"
+      "summary": "路明非试图在文学社聚会上向陈雯雯表白，但赵孟华抢先策划了一场盛大的告白仪式，利用人体拼字（I Love You）和电影片段公开羞辱路明非，陈雯雯当场答应赵孟华。",
+      "time": "2009年某周五晚"
     },
     {
       "consequences": [
-        "\u8def\u660e\u975e\u7684\u751f\u6d3b\u5e73\u9759\u88ab\u6253\u7834\uff0c\u9762\u4e34\u672a\u77e5\u7684\u9762\u8bd5\u673a\u4f1a",
-        "\u5bb6\u4eba\u5f00\u59cb\u4e89\u8bba\u4fe1\u4ef6\u7684\u771f\u4f2a",
-        "\u5019\u9009\u4eba\u540d\u5355\u7f29\u51cf\uff0c\u4ec5\u5269\u8def\u660e\u975e\u548c\u9648\u96ef\u96ef\u672a\u7ed3\u675f\u9762\u8bd5\uff08\u9648\u96ef\u96ef\u521a\u7ed3\u675f\uff09\u3002",
-        "\u8def\u660e\u975e\u610f\u8bc6\u5230\u5361\u585e\u5c14\u5b66\u9662\u7684\u9762\u8bd5\u5e76\u975e\u5e38\u89c4\u5b66\u672f\u8003\u6838\uff0c\u800c\u662f\u9488\u5bf9\u7279\u6b8a\u7d20\u8d28\u7684\u7b5b\u9009\u3002",
-        "\u8def\u660e\u975e\u786e\u8ba4\u4e86\u7236\u6bcd\u7684\u7231\uff0c\u60c5\u7eea\u5d29\u6e83\u540e\u6062\u590d\u5e73\u9759",
-        "\u8def\u660e\u975e\u8868\u793a\u9700\u8981\u65f6\u95f4\u8003\u8651\u662f\u5426\u5165\u5b66",
-        "\u9648\u58a8\u77b3\u770b\u7a7f\u8def\u660e\u975e\u5fc3\u601d\uff0c\u6c14\u6c1b\u5fae\u5999",
-        "\u53d4\u53d4\u5a76\u5a76\u5bf9\u5b66\u9662\u4ea7\u751f\u656c\u754f\uff0c\u4f46\u4e5f\u5bf9\u8def\u660e\u975e\u7684\u72b9\u8c6b\u611f\u5230\u4e0d\u6ee1",
-        "\u8def\u660e\u975e\u83b7\u5f97\u65b0\u7684\u8eab\u4efd\u8ba4\u540c\uff08\u674e\u5609\u56fe\u00b7M\u00b7\u8def\uff09",
-        "\u8def\u660e\u975e\u51b3\u5b9a\u653e\u5f03\u9ad8\u8003\uff0c\u52a0\u5165\u5361\u585e\u5c14\u5b66\u9662",
-        "\u8def\u660e\u975e\u5f97\u77e5\u81ea\u5df1\u662f\u6821\u957f\u4eb2\u81ea\u9009\u4e2d\u7684\u7279\u6b8a\u4eba\u624d"
+        "路明非开始为面试做准备",
+        "路明非正式接受卡塞尔学院邀请",
+        "路明非获得新身份'李嘉图·M·路'",
+        "路明非与过去的高中生活彻底决裂"
       ],
       "id": "evt_002_02",
-      "location": "\u4e07\u8fbe\u5f71\u57ce\u5916\u8857\u9053\uff08\u6cd5\u62c9\u5229\u629b\u951a\u5904\uff09",
+      "location": "万达影城外小道",
       "participant_knowledge": {
-        "char_001": "\u53d1\u73b0\u4fe1\u4ef6\u5185\u5bb9\u7a81\u53d8\uff0c\u4ece\u62d2\u4fe1\u53d8\u4e3a\u5361\u585e\u5c14\u5b66\u9662\u7684\u9762\u8bd5\u9080\u8bf7\uff1b\u6536\u5230\u964c\u751f\u624b\u673a\u3002"
+        "char_003": "得知父母失踪可能与学院有关，但具体原因仍未知；确定自己是被校长选中。",
+        "char_019": "清楚校长的意图，但无法透露更多细节，只强调路明非的重要性。"
       },
       "participants": [
-        "char_001",
-        "\u95e8\u536b",
-        "char_020",
+        "char_003",
+        "char_002",
+        "char_019"
+      ],
+      "summary": "诺诺驾驶法拉利现身，强行带走路明非。车在半路抛锚，两人在路边交谈，诺诺揭露了部分真相（校长决定录取路明非），路明非最终同意加入卡塞尔学院。",
+      "time": "2009年某周五晚"
+    },
+    {
+      "consequences": [
+        "路明非掌握了基本的面试开场白模板"
+      ],
+      "id": "evt_002_03",
+      "location": "网络空间/路明非家中",
+      "participant_knowledge": {},
+      "participants": [
+        "char_003",
+        "char_007"
+      ],
+      "summary": "路明非与网友老唐进行视频语音通话，老唐辅导其英语面试口语，包括自我介绍和申请理由。",
+      "time": "面试前一晚"
+    },
+    {
+      "consequences": [
+        "陈雯雯面试成功（至少坚持了15分钟）",
+        "路明非对面试难度产生恐惧"
+      ],
+      "id": "evt_002_04",
+      "location": "丽晶酒店行政层会议厅",
+      "participant_knowledge": {},
+      "participants": [
+        "char_003",
+        "char_014",
         "char_015",
         "char_016",
         "char_017",
-        "char_008",
-        "char_007",
-        "char_002",
+        "char_005"
+      ],
+      "summary": "众考生等待面试，柳淼淼、苏晓樯、赵孟华依次进入面试，均在短时间内失败退出。",
+      "time": "第三天早晨"
+    },
+    {
+      "consequences": [
+        "路明非完成了面试，但对问题的荒谬性感到震惊"
+      ],
+      "id": "evt_002_05",
+      "location": "丽晶酒店行政层会议室",
+      "participant_knowledge": {},
+      "participants": [
         "char_003",
-        "char_021",
-        "char_022",
-        "char_013"
+        "char_005",
+        "char_006"
       ],
-      "summary": "\u8bfa\u8bfa\u9a7e\u9a76\u6cd5\u62c9\u5229\u95ef\u5165\u73b0\u573a\uff0c\u5f3a\u884c\u5e26\u8d70\u8def\u660e\u975e\uff0c\u4e3a\u5176\u66f4\u6362\u884c\u5934\u5e76\u63ed\u9732\u8d75\u5b5f\u534e\u7684\u9634\u8c0b\uff0c\u6700\u7ec8\u8bf4\u670d\u8def\u660e\u975e\u63a5\u53d7\u5361\u585e\u5c14\u5b66\u9662\u7684\u5165\u5b66\u9080\u8bf7\u3002",
-      "time": "2009\u5e745\u6708\uff0c\u544a\u767d\u4e8b\u4ef6\u540e\u7acb\u5373"
+      "summary": "路明非进入面试房间，面对考官叶胜和酒德亚纪。酒德亚纪连续抛出关于外星人、超能力及哲学观的非常规问题，路明非凭借直觉和动漫知识作答。",
+      "time": "第三天上午"
     },
     {
       "consequences": [
-        "\u8def\u660e\u975e\u518d\u6b21\u9677\u5165\u5bf9\u9648\u96ef\u96ef\u7684\u7b49\u5f85\u4e2d",
-        "\u8bfa\u8bfa\u4e3b\u52a8\u53d1\u8d77\u6e38\u620f\u9080\u8bf7",
-        "\u8def\u660e\u975e\u5b8c\u6210\u4e86\u770b\u4f3c\u8352\u8bde\u7684\u9762\u8bd5\u73af\u8282\uff0c\u5176\u56de\u7b54\u88ab\u8003\u5b98\u8ba4\u771f\u8bb0\u5f55\u3002",
-        "\u8def\u660e\u975e\u5bf9\u5361\u585e\u5c14\u5b66\u9662\u7684\u9009\u62d4\u6807\u51c6\u4ea7\u751f\u4e86\u66f4\u6df1\u7684\u56f0\u60d1\u3002",
-        "\u8def\u660e\u975e\u6700\u7ec8\u51b3\u5b9a\u6682\u4e0d\u63a5\u53d7\u5f55\u53d6\uff0c\u7b49\u5f85\u9648\u96ef\u96ef\u7684\u6d88\u606f\u6216\u505a\u51fa\u5176\u4ed6\u9009\u62e9"
+        "路明非正式成为卡塞尔学院S级学生",
+        "全球数千个秘密网关对路明非开放",
+        "路明非的人生轨迹发生根本性转变，隐藏的世界向他敞开",
+        "路明非与陈雯雯等普通人生活的彻底割裂"
       ],
-      "id": "evt_002_03",
-      "location": "\u8def\u660e\u975e\u5bb6\u4e2d",
+      "id": "evt_006",
+      "location": "南方小城某条阴暗小街",
       "participant_knowledge": {
-        "char_001": "\u51b3\u5b9a\u6682\u65f6\u4e0d\u53c2\u4e0e\u4e89\u8bba\uff0c\u72ec\u81ea\u9762\u5bf9\u73b0\u5b9e\u3002",
-        "char_021": "\u8ba4\u4e3a\u8fd9\u662f\u9a97\u5c40\uff0c\u62c5\u5fc3\u88ab\u9a97\u94b1\u3002"
+        "char_003": "意识到自己拥有隐藏的选择权，接受了命运的改变，但对即将发生的全球性数据变动一无所知",
+        "char_004": "确认路明非的选择，准备派遣交通工具，知晓剩余手续由诺玛处理",
+        "char_019": "清楚整个流程，知道路明非的选择已生效，正在引导他适应新身份"
       },
       "participants": [
-        "char_001",
-        "char_013",
-        "char_021",
-        "char_007",
-        "char_008"
-      ],
-      "summary": "\u8def\u660e\u975e\u56e0\u9648\u96ef\u96ef\u4e4b\u4e8b\u62d2\u7edd\u7acb\u5373\u63a5\u53d7\u5f55\u53d6\uff0c\u88ab\u5bb6\u4eba\u57cb\u6028\u3002\u4ed6\u5728\u7535\u8111\u524d\u6302\u8d77QQ\u548c\u661f\u9645\u4e89\u9738\uff0c\u56de\u5fc6\u8d77\u5c0f\u8bf4\u300a\u8840\u67d3\u7684\u56fe\u817e\u300b\u4e2d\u54e5\u65af\u62c9\u4e0e\u5c0f\u5973\u5b69\u7684\u6545\u4e8b\u3002",
-      "time": "\u6df1\u591c"
-    },
-    {
-      "consequences": [
-        "\u8def\u660e\u975e\u4ea7\u751f\u4e86\u5411\u9648\u96ef\u96ef\u8868\u767d\u7684\u5f3a\u70c8\u51b2\u52a8",
-        "\u8bfa\u8bfa\u5728\u5f15\u5bfc\u8def\u660e\u975e\u8868\u767d\u8fc7\u7a0b\u4e2d\u900f\u9732\u51fa\u5bf9\u5361\u585e\u5c14\u5b66\u9662\u9009\u62e9\u7684\u8003\u91cf"
-      ],
-      "id": "evt_002",
-      "location": "\u57ce\u5e02\u4e2d\u7684\u6b65\u884c\u8857\u548c\u6cb3\u8fb9",
-      "participant_knowledge": {
-        "char_001": "\u77e5\u9053\u5373\u5c06\u505a\u51fa\u4eba\u751f\u7684\u91cd\u5927\u51b3\u5b9a",
-        "char_002": "\u7528\u8bdd\u8bed\u6d4b\u8bd5\u5e76\u5f71\u54cd\u8def\u660e\u975e\u7684\u9009\u62e9"
-      },
-      "participants": [
-        "char_001",
-        "char_002",
-        "char_020"
-      ],
-      "summary": "\u8def\u660e\u975e\u4e0e\u9648\u96ef\u96ef\u5728\u6cb3\u8fb9\u6f2b\u6b65\uff0c\u4e0e\u8bfa\u8bfa\u7684\u5076\u7136\u76f8\u9047\u6fc0\u53d1\u4e86\u81ea\u6211\u5b9e\u73b0\u548c\u60c5\u611f\u7684\u6289\u62e9\u3002",
-      "time": "\u9ec4\u660f\u65f6\u5206"
-    },
-    {
-      "consequences": [
-        "\u8def\u660e\u975e\u88ab\u6b63\u5f0f\u5217\u4e3a\u5361\u585e\u5c14\u5b66\u9662S\u7ea7\u65b0\u751f\uff08\u7f16\u53f7A.D.0013\uff09",
-        "\u8def\u660e\u975e\u7684\u4eba\u751f\u4e2d\u9690\u85cf\u7684'\u9009\u62e9\u9879'\u88ab\u6fc0\u6d3b",
-        "\u5168\u7403\u8303\u56f4\u5185\u6570\u5343\u4eba\u77e5\u6653\u8def\u660e\u975e\u7684\u5b58\u5728\uff0c\u6570\u5343\u4e2a\u79d8\u5bc6\u7f51\u5173\u5411\u5176\u5f00\u653e",
-        "\u53e4\u5fb7\u91cc\u5b89\u6559\u6388\u6d3e\u9063\u76f4\u5347\u673a\u524d\u5f80\u63a5\u5e94",
-        "\u8def\u660e\u975e\u6b63\u5f0f\u653e\u5f03\u9ad8\u8003\uff0c\u8fdb\u5165\u9f99\u65cf\u4e16\u754c"
-      ],
-      "id": "evt_002_acceptance",
-      "location": "\u5357\u65b9\u5c0f\u57ce\u8857\u9053",
-      "participant_knowledge": {
-        "char_001": "\u610f\u8bc6\u5230\u81ea\u5df1\u5e76\u975e\u666e\u901a\u4eba\uff0c\u4eba\u751f\u6709\u4e86\u53e6\u4e00\u4e2a\u9009\u62e9\uff0c\u5373\u5c06\u5f00\u59cb\u65b0\u751f\u6d3b",
-        "char_002": "\u6210\u529f\u5f15\u5bfc\u8def\u660e\u975e\u505a\u51fa\u51b3\u5b9a\uff0c\u51c6\u5907\u5e26\u4ed6\u79bb\u5f00",
-        "char_003": "\u7ec8\u4e8e\u786e\u8ba4S\u7ea7\u5019\u9009\u4eba\u5230\u4f4d\uff0c\u4efb\u52a1\u5706\u6ee1\u5b8c\u6210"
-      },
-      "participants": [
-        "char_001",
-        "char_002",
         "char_003",
-        "char_nuoma"
+        "char_019",
+        "char_004",
+        "char_018"
       ],
-      "summary": "\u8def\u660e\u975e\u5728\u8bfa\u8bfa\u7684\u966a\u4f34\u4e0b\uff0c\u901a\u8fc7\u7535\u8bdd\u6b63\u5f0f\u786e\u8ba4\u63a5\u53d7\u5361\u585e\u5c14\u5b66\u9662\u7684\u5165\u5b66\u9080\u8bf7\uff0c\u5b8c\u6210\u4e86\u58f0\u7eb9\u7b7e\u5b57\u3002",
-      "time": "\u516c\u51432009\u5e745\u670815\u65e5\uff0c\u661f\u671f\u4e94"
+      "summary": "路明非在诺诺的引导下，通过电话向古德里安教授确认接受卡塞尔学院的邀请。诺玛系统验证通过，激活路明非的隐藏选项，将其列为S级新生（编号A.D.0013），并启动入学程序（生成选课表、安排证件）。随后，古德里安教授派遣直升机前往接应。",
+      "time": "公元2009年5月15日，星期五"
     }
   ],
   "meta": {
@@ -1127,28 +969,7 @@
       "symbolic_motifs": [],
       "themes": []
     },
-    "character_voices": [
-      {
-        "character_id": "character_001",
-        "emotional_register": "",
-        "gravitates_toward": [],
-        "rhetorical_tendencies": "",
-        "sample_dialogues": [],
-        "speech_patterns": [],
-        "vocabulary_register": "",
-        "what_they_never_say": ""
-      },
-      {
-        "character_id": "character_002",
-        "emotional_register": "",
-        "gravitates_toward": [],
-        "rhetorical_tendencies": "",
-        "sample_dialogues": [],
-        "speech_patterns": [],
-        "vocabulary_register": "",
-        "what_they_never_say": ""
-      }
-    ],
+    "character_voices": [],
     "language_context": {
       "author_style": "",
       "dialogue_style": "",
@@ -1178,56 +999,46 @@
   },
   "world": {
     "factions": [
-      "\u5361\u585e\u5c14\u5b66\u9662",
-      "\u5b66\u751f\u4f1a",
-      "\u72ee\u5fc3\u4f1a",
-      "\u829d\u52a0\u54e5\u5927\u5b66",
-      "\u6267\u884c\u90e8",
-      "\u5361\u585e\u5c14\u5b66\u9662\u6267\u884c\u90e8",
-      "\u5361\u585e\u5c14\u5b66\u9662\u5b66\u751f\u4f1a"
+      "弃族",
+      "卡塞尔学院"
     ],
     "locations": [
-      "\u767d\u5e1d\u57ce",
-      "\u7f8e\u56fd\u4f0a\u5229\u8bfa\u4f0a\u5dde\u829d\u52a0\u54e5\u8fdc\u90ca",
-      "\u8def\u660e\u975e\u5bb6\u4e61",
-      "\u79c1\u7acb\u8d35\u65cf\u9ad8\u4e2d",
-      "\u4e3d\u6676\u9152\u5e97",
-      "\u4e3d\u6676\u9152\u5e97\u884c\u653f\u5c42VIP\u9910\u5427",
-      "\u8def\u660e\u975e\u5bb6\u7684\u8d70\u9053",
-      "\u6cbf\u6cb3\u6b65\u884c\u8857",
-      "\u57ce\u5e02\u7684\u6b65\u884c\u8857\u548c\u6cb3\u8fb9",
-      "\u9ad8\u697c\u7684\u5929\u53f0",
-      "\u4e07\u8fbe\u5f71\u57ce",
-      "\u57ce\u5e02\u9ad8\u67b6\u8def",
-      "24\u5c0f\u65f6\u836f\u5e97\u95e8\u524d",
-      "\u5357\u65b9\u5c0f\u57ce",
-      "\u5361\u585e\u5c14\u5b66\u9662"
+      "白帝城",
+      "芝加哥远郊",
+      "伊利诺伊州",
+      "美国",
+      "丽晶酒店",
+      "天台",
+      "沿河路",
+      "万达影城",
+      "24小时药店",
+      "南方小城",
+      "卡塞尔学院数据库"
     ],
     "rules_and_constraints": [
-      "\u5f03\u65cf\u7684\u547d\u8fd0\u662f\u7a7f\u8d8a\u8352\u539f\uff0c\u7ad6\u8d77\u6218\u65d7\uff0c\u8fd4\u56de\u6545\u4e61\u3002",
-      "\u9f99\u65cf\u7684\u6b7b\u4ea1\u88ab\u89c6\u4e3a\u4e00\u573a\u957f\u7720\uff0c\u800c\u975e\u7ec8\u7ed3\u3002",
-      "\u9ad8\u7eaf\u5ea6\u7684\u9f99\u65cf\u8840\u8109\u53ef\u80fd\u5f15\u53d1\u5f3a\u70c8\u7684\u7cbe\u795e\u5171\u9e23\u6216\u68a6\u5883\u4f53\u9a8c\u3002",
-      "\u5361\u585e\u5c14\u5b66\u9662\u62e5\u6709\u72ec\u7acb\u7684\u62db\u751f\u8bc4\u4f30\u4f53\u7cfb\uff0c\u53ef\u7ed5\u8fc7\u5e38\u89c4\u7533\u8bf7\u6d41\u7a0b",
-      "\u9f99\u65cf\u6df7\u8840\u79cd\u53ef\u80fd\u62e5\u6709\u7279\u6b8a\u7684\u68a6\u5883\u4f53\u9a8c\u6216\u6f5c\u610f\u8bc6\u8054\u7cfb",
-      "\u5361\u585e\u5c14\u5b66\u9662\u62e5\u6709\u72ec\u7acb\u4e8e\u5e38\u89c4\u5927\u5b66\u7533\u8bf7\u7684\u62db\u751f\u4f53\u7cfb\uff0c\u53ef\u76f4\u63a5\u53d1\u653e\u9762\u8bd5\u901a\u77e5\u4e66\u3002",
-      "\u9762\u8bd5\u5185\u5bb9\u53ef\u80fd\u5305\u542b\u975e\u5e38\u89c4\u7684\u54f2\u5b66\u6216\u5fc3\u7406\u5b66\u6d4b\u8bd5\uff0c\u65e8\u5728\u8003\u5bdf\u5019\u9009\u4eba\u7684\u7cbe\u795e\u7279\u8d28\u3002",
-      "\u9762\u8bd5\u8fc7\u7a0b\u5177\u6709\u6781\u9ad8\u7684\u7b5b\u9009\u6548\u7387\uff0c\u751a\u81f3\u4e0d\u9700\u8981\u7533\u8bf7\u8005\u5177\u5907\u76f8\u5173\u80cc\u666f\u77e5\u8bc6\u3002",
-      "\u5361\u585e\u5c14\u5b66\u9662\u53ef\u7ed5\u8fc7\u5e38\u89c4\u6559\u80b2\u4f53\u7cfb\u76f4\u63a5\u53d1\u653e\u5f55\u53d6\u901a\u77e5\u4e66\u548c\u63d0\u4f9b\u9ad8\u989d\u5956\u5b66\u91d1",
-      "S\u7ea7\u5019\u9009\u4eba\u7684\u9762\u8bd5\u7ed3\u679c\u5177\u6709\u6700\u9ad8\u4f18\u5148\u7ea7\uff0c\u751a\u81f3\u53ef\u80fd\u6539\u53d8\u9762\u8bd5\u5b98\u7684\u8bc4\u5224\u6807\u51c6",
-      "\u5b66\u9662\u62e5\u6709\u72ec\u7acb\u4e8e\u666e\u901a\u5927\u5b66\u7684\u62db\u751f\u8bc4\u4f30\u4f53\u7cfb\uff0c\u53ef\u9488\u5bf9\u7279\u5b9a\u8840\u7edf\u5019\u9009\u4eba\u5b9a\u5236\u9762\u8bd5",
-      "\u5b66\u9662\u5185\u90e8\u5b58\u5728\u4e25\u683c\u7684\u4fdd\u5bc6\u5236\u5ea6\uff0cS\u7ea7\u5019\u9009\u4eba\u7684\u5b58\u5728\u5c5e\u4e8e\u6700\u9ad8\u673a\u5bc6",
-      "\u5361\u585e\u5c14\u5b66\u9662\u7684\u5f55\u53d6\u673a\u4f1a\u4ec5\u9650\u4e00\u6b21\uff0c\u72b9\u8c6b\u5c06\u5bfc\u81f4\u540d\u989d\u5931\u53bb",
-      "\u5361\u585e\u5c14\u5b66\u9662\u7684\u5f55\u53d6\u673a\u4f1a\u901a\u5e38\u53ea\u6709\u4e00\u6b21\uff0c\u72b9\u8c6b\u5373\u5931\u53bb\u8d44\u683c",
-      "S\u7ea7\u5019\u9009\u4eba\u7684\u62db\u751f\u7531\u6821\u957f\u76f4\u63a5\u51b3\u5b9a\uff0c\u5177\u6709\u6700\u9ad8\u4f18\u5148\u7ea7",
-      "\u5361\u585e\u5c14\u5b66\u9662\u63d0\u4f9b\u6bcf\u5e7436000\u7f8e\u5143\u7684\u5956\u5b66\u91d1",
-      "\u5361\u585e\u5c14\u5b66\u9662\u62e5\u6709\u72ec\u7acb\u4e8e\u666e\u901a\u6559\u80b2\u4f53\u7cfb\u7684\u62db\u751f\u6743",
-      "S\u7ea7\u5019\u9009\u4eba\u7684\u5b58\u5728\u5c5e\u4e8e\u6700\u9ad8\u673a\u5bc6\uff0c\u4f46\u4e00\u65e6\u6fc0\u6d3b\uff0c\u5168\u7403\u79d8\u5bc6\u7f51\u5173\u5c06\u5bf9\u5176\u5f00\u653e",
-      "\u5361\u585e\u5c14\u5b66\u9662\u62e5\u6709\u72ec\u7acb\u4e8e\u666e\u901a\u6559\u80b2\u4f53\u7cfb\u7684\u62db\u751f\u6743\uff0c\u53ef\u76f4\u63a5\u53d1\u653e\u5f55\u53d6\u901a\u77e5\u4e66",
-      "\u8fdb\u5165\u5361\u585e\u5c14\u5b66\u9662\u9700\u7b7e\u7f72\u4fdd\u5bc6\u534f\u8bae\uff0c\u9000\u5b66\u5c06\u9762\u4e34\u8bb0\u5fc6\u6e05\u6d17",
-      "\u9f99\u65cf\u6df7\u8840\u79cd\u82e5\u8840\u7edf\u7eaf\u5ea6\u8d85\u8fc750%\u4f1a\u88ab\u540c\u5316\u4e3a\u9f99\u65cf\u8ffd\u968f\u8005\uff0c\u65e0\u6cd5\u88ab\u5f55\u53d6",
-      "\u9ad8\u7eaf\u5ea6\u7684\u9f99\u65cf\u8840\u8109\u53ef\u80fd\u5f15\u53d1\u5f3a\u70c8\u7684\u7cbe\u795e\u5171\u9e23\u6216\u68a6\u5883\u4f53\u9a8c"
+      "弃族的命运包含穿越荒原、竖旗返乡及沉睡等待觉醒的循环",
+      "龙类混血种可能拥有深层的潜意识记忆或预言性梦境",
+      "卡塞尔学院拥有独立于普通大学体系的招生权，可无视常规流程",
+      "S级血统的识别可能不需要传统的考试成绩或申请费",
+      "卡塞尔学院的面试不考察传统学科知识或语言能力，而是考察候选人对超自然现象的接受度和世界观",
+      "面试过程极其迅速，通常几分钟内即可判定结果",
+      "S级血统持有者可能被赋予特殊的面试待遇或问题",
+      "S级血统学生可能即便在面试表现普通，仍会被给予录取机会与奖学金",
+      "卡塞尔学院的招生名额有限，对优秀血统学生采取特殊录取方法。",
+      "一次决定可能导致永久失去卡塞尔学院的入学机会。",
+      "S级学生拥有极高的优先级和特权，但也面临巨大风险。",
+      "退学需签署记忆清洗协议，否则无法保留关于龙族的记忆。",
+      "只有特定血统的人才能看见并理解龙文。",
+      "卡塞尔学院学位虽正规但专业特殊，难以在其他领域通用。",
+      "每年36000美元的奖学金是极具吸引力的诱惑。",
+      "校长的决定高于教授的决定，具有最终裁决权。",
+      "混血种人生中存在隐藏的'选择项'，需主动确认才能激活卡塞尔学院入学资格",
+      "S级血统的识别与录取由学院最高权限直接操作，无需传统面试流程",
+      "诺玛作为中央电脑可自动处理新学生的签证、机票及选课表生成",
+      "S级新生入学会触发全球范围内的数据锁解除与秘密网关开放",
+      "S级新生拥有唯一的编号格式（A.D. + 四位数字）"
     ],
-    "setting": "\u73b0\u4ee3\u90fd\u5e02\u80cc\u666f\u4e0b\uff0c\u4e3b\u89d2\u6b63\u5f0f\u8e0f\u5165\u9690\u85cf\u7684\u9f99\u65cf\u4e16\u754c",
-    "time_period": "\u516c\u51432009\u5e745\u670815\u65e5"
+    "setting": "现代都市中的隐藏世界",
+    "time_period": "公元2009年"
   }
 }
