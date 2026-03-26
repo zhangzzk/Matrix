@@ -161,12 +161,9 @@ class PostgresRepositoryTests(unittest.TestCase):
                         "goals": [
                             {
                                 "priority": 1,
-                                "goal": "escape",
-                                "motivation": "survival",
-                                "obstacle": "guards",
+                                "description": "escape; survival; urgent",
+                                "challenge": "guards; caught",
                                 "time_horizon": "immediate",
-                                "emotional_charge": "urgent",
-                                "abandon_condition": "caught",
                             }
                         ],
                         "actively_avoiding": "the courtyard",
@@ -180,7 +177,7 @@ class PostgresRepositoryTests(unittest.TestCase):
         snapshot = repo.latest_at_or_before("arya", 20)
 
         self.assertIsNotNone(snapshot)
-        self.assertEqual(snapshot.goals[0].goal, "escape")
+        self.assertIn("escape", snapshot.goals[0].description)
         self.assertEqual(snapshot.actively_avoiding, "the courtyard")
         self.assertIn("ORDER BY timeline_index DESC", factory.executed[0][0])
 

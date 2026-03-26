@@ -146,7 +146,6 @@ class LLMExtractionBackendTests(unittest.TestCase):
                 },
             ],
             "events": [],
-            "entities": [],
             "world": {"locations": ["步行街"], "rules_and_constraints": [], "factions": []},
             "meta": {
                 "language_context": {"primary_language": "Chinese"},
@@ -191,7 +190,6 @@ class LLMExtractionBackendTests(unittest.TestCase):
                 },
             ],
             "events": [],
-            "entities": [],
             "world": {"locations": ["步行街"], "rules_and_constraints": [], "factions": []},
             "meta": {
                 "language_context": {"primary_language": "Chinese"},
@@ -326,149 +324,6 @@ class LLMExtractionBackendTests(unittest.TestCase):
         self.assertIn("Primary language: English", transport.prompts[0].user)
         self.assertIn("Do not translate source material into English.", transport.prompts[0].user)
         self.assertIn("OUTPUT CONTRACT:", transport.prompts[0].user)
-
-    def test_entity_backend_builds_prompt_and_parses_response(self) -> None:
-        payload = {
-            "entities": [
-                {
-                    "entity_id": "ent_001",
-                    "name": "The Letter",
-                    "type": "object",
-                    "objective_facts": ["hidden in the wall"],
-                    "narrative_role": "goal",
-                    "absent_figure_details": {
-                        "reason_absent": "",
-                        "most_present_in": [],
-                        "counterfactual": "",
-                    },
-                    "concept_details": {
-                        "definitions_by_character": {},
-                        "who_weaponizes": [],
-                        "who_is_bound_by": [],
-                        "authorial_stance": "",
-                    },
-                    "agent_representations": [
-                        {
-                            "agent_id": "arya",
-                            "belief": "proof of danger",
-                            "emotional_charge": "fear",
-                            "goal_relevance": "must recover it",
-                            "misunderstanding": "",
-                            "confidence": "EXPLICIT",
-                        }
-                    ],
-                }
-            ]
-        }
-        client = self.build_client([json.dumps(payload)])
-        backend = LLMExtractionBackend(client)
-
-        accumulated = AccumulatedExtraction.model_validate(
-            {
-                "characters": [
-                    {
-                        "id": "arya",
-                        "name": "Arya",
-                        "memory_seeds": ["Long private history that should not be resent"],
-                        "current_state": {
-                            "location": "Winterfell",
-                            "emotional_state": "focused",
-                            "goal_stack": ["recover Needle"],
-                        },
-                    }
-                ],
-                "events": [
-                    {
-                        "id": "evt_001",
-                        "time": "Dawn",
-                        "location": "crypts",
-                        "participants": ["arya"],
-                        "summary": "Arya hides a letter in the crypts.",
-                        "consequences": ["The letter may become evidence later."],
-                        "participant_knowledge": {"arya": "She knows the hiding place."},
-                    }
-                ],
-            }
-        )
-
-        result = backend.run_entity_pass(accumulated)
-
-        self.assertEqual(result["entities"][0]["entity_id"], "ent_001")
-        transport = client.transport
-        self.assertEqual(transport.prompts[0].metadata["prompt_name"], "p1_5_entity_extraction")
-        self.assertIn("ENTITY EXTRACTION CONTEXT", transport.prompts[0].user)
-        self.assertIn('"event_spine"', transport.prompts[0].user)
-        self.assertNotIn("participant_knowledge", transport.prompts[0].user)
-        self.assertNotIn("memory_seeds", transport.prompts[0].user)
-        self.assertIn("Primary language: English", transport.prompts[0].user)
-        self.assertIn("Keep all free-text fields in the same language as the source text.", transport.prompts[0].user)
-        self.assertIn("OUTPUT CONTRACT:", transport.prompts[0].user)
-
-    def test_entity_backend_batches_large_context_and_merges_duplicates(self) -> None:
-        payload = {
-            "entities": [
-                {
-                    "entity_id": "ent_001",
-                    "name": "青铜之城",
-                    "type": "place",
-                    "objective_facts": ["位于水下裂缝深处"],
-                    "narrative_role": "destination",
-                    "absent_figure_details": {
-                        "reason_absent": "",
-                        "most_present_in": [],
-                        "counterfactual": "",
-                    },
-                    "concept_details": {
-                        "definitions_by_character": {},
-                        "who_weaponizes": [],
-                        "who_is_bound_by": [],
-                        "authorial_stance": "",
-                    },
-                    "agent_representations": [
-                        {
-                            "agent_id": "char_001",
-                            "belief": "通往龙族秘密的入口",
-                            "emotional_charge": "敬畏",
-                            "goal_relevance": "必须找到入口",
-                            "misunderstanding": "",
-                            "confidence": "EXPLICIT",
-                        }
-                    ],
-                }
-            ]
-        }
-        responses = [json.dumps(payload) for _ in range(20)]
-        client = self.build_client(responses)
-        backend = LLMExtractionBackend(client)
-        accumulated = AccumulatedExtraction.model_validate(
-            {
-                "characters": [
-                    {
-                        "id": "char_001",
-                        "name": "路明非",
-                        "current_state": {"location": "江边"},
-                    }
-                ],
-                "events": [
-                    {
-                        "id": f"evt_{index:03d}",
-                        "time": "夜晚",
-                        "location": "长江",
-                        "participants": ["char_001"],
-                        "summary": "龙" * 5000,
-                        "consequences": ["裂缝出现", "探索继续"],
-                        "participant_knowledge": {},
-                    }
-                    for index in range(6)
-                ],
-            }
-        )
-
-        result = backend.run_entity_pass(accumulated)
-
-        self.assertEqual(result["entities"][0]["entity_id"], "ent_001")
-        self.assertGreater(client.transport.calls, 1)
-        self.assertEqual(len(result["entities"]), 1)
 
     def test_chapter_backend_wraps_llm_validation_failure_with_chapter_context(self) -> None:
         client = self.build_client(["{not valid json}"])

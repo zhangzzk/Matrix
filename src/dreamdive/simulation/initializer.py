@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Callable, List, Optional, Protocol, Sequence
 
 from dreamdive.schemas import (
+    BatchedUnifiedInitPayload,
     CharacterIdentity,
     CharacterSnapshot,
     EpisodicMemory,
@@ -15,11 +16,14 @@ from dreamdive.schemas import (
     ReplayKey,
     SnapshotInference,
     StateChangeLogEntry,
+    UnifiedInitPayload,
 )
 from dreamdive.simulation.bootstrap import SnapshotBootstrapper
 from dreamdive.simulation.prompts import (
+    build_batched_unified_init_prompt,
     build_goal_seed_prompt,
     build_snapshot_inference_prompt,
+    build_unified_init_prompt,
 )
 from dreamdive.simulation.state_normalization import normalize_current_state
 
@@ -147,6 +151,206 @@ class SnapshotInitializer:
             }
         )
 
+    def initialize_unified(
+        self,
+        payload: SnapshotInitializationInput,
+        *,
+        progress_callback: Callable[[dict[str, object]], None] | None = None,
+    ) -> CharacterSnapshot:
+        """Initialize a character with a single LLM call (snapshot inference + goal seeding).
+
+        Falls back to the two-call ``initialize()`` path if the unified call fails.
+        """
+        goal_hints = list(payload.goal_hints or [])
+        base_snapshot = self.bootstrapper.build_snapshot(
+            identity=payload.identity,
+            replay_key=payload.replay_key,
+            state_entries=payload.state_entries,
+            goal_stack=None,
+            memories=payload.memories,
+            relationships=payload.relationships,
+            default_state=payload.default_state,
+        )
+        location = str(base_snapshot.current_state.get("location", ""))
+
+        unified_prompt = build_unified_init_prompt(
+            identity=payload.identity,
+            text_excerpt=payload.text_excerpt,
+            event_summary_up_to_t=payload.event_summary_up_to_t,
+            location=location,
+            nearby_characters=payload.nearby_characters,
+            relationships=list(payload.relationships),
+            language_guidance=payload.language_guidance,
+        )
+
+        self._emit_progress(
+            progress_callback,
+            stage="unified_init",
+            character_id=payload.identity.character_id,
+            character_name=payload.identity.name,
+        )
+
+        try:
+            unified = asyncio.run(
+                self.llm_client.call_json(unified_prompt, UnifiedInitPayload)
+            )
+            inferred_state = unified.to_snapshot_inference()
+            goal_seed = unified.to_goal_seed()
+        except Exception:
+            self._emit_progress(
+                progress_callback,
+                stage="unified_init_fallback",
+                character_id=payload.identity.character_id,
+                character_name=payload.identity.name,
+            )
+            # Fall back to two-call path
+            return self.initialize(payload, progress_callback=progress_callback)
+
+        goal_stack = GoalStackSnapshot(
+            character_id=payload.identity.character_id,
+            replay_key=payload.replay_key,
+            goals=goal_seed.goal_stack,
+            actively_avoiding=goal_seed.actively_avoiding,
+            most_uncertain_relationship=goal_seed.most_uncertain_relationship,
+        )
+        snapshot = self.bootstrapper.build_snapshot(
+            identity=payload.identity,
+            replay_key=payload.replay_key,
+            state_entries=payload.state_entries,
+            goal_stack=goal_stack,
+            memories=payload.memories,
+            relationships=payload.relationships,
+            inferred_state=inferred_state,
+            default_state=payload.default_state,
+        )
+        return snapshot.model_copy(
+            update={
+                "current_state": normalize_current_state(
+                    snapshot.current_state,
+                    inferred_state,
+                )
+            }
+        )
+
+    def initialize_batch(
+        self,
+        payloads: List[SnapshotInitializationInput],
+        *,
+        progress_callback: Callable[[dict[str, object]], None] | None = None,
+    ) -> List[CharacterSnapshot]:
+        """Initialize multiple characters in a single batched LLM call.
+
+        If the batched call fails, falls back to per-character ``initialize_unified()``
+        calls. If a character is missing from the batch result, that character is
+        initialized individually via ``initialize_unified()``.
+        """
+        if not payloads:
+            return []
+
+        # Build base snapshots to extract locations
+        base_snapshots = {}
+        for payload in payloads:
+            base_snapshots[payload.identity.character_id] = self.bootstrapper.build_snapshot(
+                identity=payload.identity,
+                replay_key=payload.replay_key,
+                state_entries=payload.state_entries,
+                goal_stack=None,
+                memories=payload.memories,
+                relationships=payload.relationships,
+                default_state=payload.default_state,
+            )
+
+        character_blocks = []
+        for payload in payloads:
+            base = base_snapshots[payload.identity.character_id]
+            location = str(base.current_state.get("location", ""))
+            relationship_summary = [
+                {
+                    "target_id": item.to_character_id,
+                    "summary": item.summary,
+                    "reason": item.reason,
+                }
+                for item in payload.relationships
+            ]
+            character_blocks.append({
+                "character_id": payload.identity.character_id,
+                "identity": payload.identity.model_dump(mode="json"),
+                "text_excerpt": payload.text_excerpt,
+                "event_summary": payload.event_summary_up_to_t,
+                "location": location,
+                "nearby_characters": payload.nearby_characters,
+                "relationships": relationship_summary,
+            })
+
+        self._emit_progress(
+            progress_callback,
+            stage="batched_unified_init",
+            character_count=len(payloads),
+        )
+
+        batch_prompt = build_batched_unified_init_prompt(
+            character_blocks=character_blocks,
+            language_guidance=payloads[0].language_guidance if payloads else "",
+        )
+
+        try:
+            batch_result = asyncio.run(
+                self.llm_client.call_json(batch_prompt, BatchedUnifiedInitPayload)
+            )
+        except Exception:
+            self._emit_progress(
+                progress_callback,
+                stage="batched_unified_init_fallback",
+                character_count=len(payloads),
+            )
+            # Fall back to per-character unified calls
+            return [
+                self.initialize_unified(p, progress_callback=progress_callback)
+                for p in payloads
+            ]
+
+        # Assemble snapshots from batch result, falling back per-character on missing keys
+        results: List[CharacterSnapshot] = []
+        for payload in payloads:
+            cid = payload.identity.character_id
+            unified = batch_result.characters.get(cid)
+            if unified is None:
+                results.append(
+                    self.initialize_unified(payload, progress_callback=progress_callback)
+                )
+                continue
+
+            inferred_state = unified.to_snapshot_inference()
+            goal_seed = unified.to_goal_seed()
+            goal_stack = GoalStackSnapshot(
+                character_id=cid,
+                replay_key=payload.replay_key,
+                goals=goal_seed.goal_stack,
+                actively_avoiding=goal_seed.actively_avoiding,
+                most_uncertain_relationship=goal_seed.most_uncertain_relationship,
+            )
+            snapshot = self.bootstrapper.build_snapshot(
+                identity=payload.identity,
+                replay_key=payload.replay_key,
+                state_entries=payload.state_entries,
+                goal_stack=goal_stack,
+                memories=payload.memories,
+                relationships=payload.relationships,
+                inferred_state=inferred_state,
+                default_state=payload.default_state,
+            )
+            results.append(
+                snapshot.model_copy(
+                    update={
+                        "current_state": normalize_current_state(
+                            snapshot.current_state,
+                            inferred_state,
+                        )
+                    }
+                )
+            )
+        return results
+
     @staticmethod
     def _emit_progress(
         progress_callback: Callable[[dict[str, object]], None] | None,
@@ -198,26 +402,13 @@ class SnapshotInitializer:
         )
         physical_state = str(current_state.get("physical_state", "") or "").strip()
         location = str(current_state.get("location", "") or "").strip()
-        return SnapshotInference.model_validate(
-            {
-                "emotional_state": {
-                    "dominant": dominant,
-                    "secondary": [],
-                    "confidence": 0.15,
-                },
-                "immediate_tension": immediate_tension,
-                "unspoken_subtext": unspoken_subtext,
-                "physical_state": {
-                    "energy": 0.5,
-                    "injuries_or_constraints": physical_state,
-                    "location": location,
-                    "current_activity": "",
-                },
-                "knowledge_state": {
-                    "new_knowledge": [latest_event] if latest_event else [],
-                    "active_misbeliefs": [],
-                },
-            }
+        return SnapshotInference(
+            emotional_summary=dominant,
+            immediate_tension=immediate_tension,
+            unspoken_subtext=unspoken_subtext,
+            physical_status=physical_state,
+            location=location,
+            knowledge=[latest_event] if latest_event else [],
         )
 
     @staticmethod
@@ -263,11 +454,6 @@ class SnapshotInitializer:
             zh="局势不明",
             en="the situation remains unclear",
         )
-        abandon_condition = SnapshotInitializer._localized_default(
-            payload.language_guidance,
-            zh="确认已有更稳妥的替代办法时",
-            en="once a safer alternative becomes clear",
-        )
         actively_avoiding = next(
             (
                 item.strip()
@@ -288,12 +474,9 @@ class SnapshotInitializer:
                 "goal_stack": [
                     {
                         "priority": 1,
-                        "goal": goal_text,
-                        "motivation": motivation,
-                        "obstacle": obstacle,
+                        "description": f"{goal_text}; {motivation}; {inferred_state.emotional_summary}".strip("; "),
+                        "challenge": obstacle,
                         "time_horizon": "immediate" if inferred_state.immediate_tension else "today",
-                        "emotional_charge": inferred_state.emotional_state.dominant,
-                        "abandon_condition": abandon_condition,
                     }
                 ],
                 "actively_avoiding": actively_avoiding,

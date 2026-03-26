@@ -9,13 +9,16 @@ from dreamdive.schemas import (
     AgentContextPacket,
     BatchedTrajectoryProjectionPayload,
     CharacterSnapshot,
+    GoalCollisionBatchPayload,
     PromptRequest,
     TrajectoryProjectionPayload,
+    UnifiedProjectionPayload,
 )
 from dreamdive.simulation.context import ContextAssembler
 from dreamdive.simulation.prompts import (
     build_batched_trajectory_projection_prompt,
     build_trajectory_projection_prompt,
+    build_unified_projection_and_collision_prompt,
 )
 
 
@@ -135,14 +138,70 @@ class TrajectoryProjector:
 
         return projections
 
+    def project_and_detect_collisions(
+        self,
+        *,
+        snapshots: Sequence[CharacterSnapshot],
+        current_time: str,
+        tick_minutes: int,
+        context_packets: Dict[str, AgentContextPacket],
+        world_state_summary: Dict[str, object],
+        tension_level: float,
+        language_guidance: str = "",
+    ) -> tuple[Dict[str, TrajectoryProjectionPayload], GoalCollisionBatchPayload]:
+        """Project trajectories and detect goal collisions in a single LLM call.
+
+        Returns a tuple of (trajectories_dict, collision_payload) so that
+        downstream code can consume them without changes.
+        """
+        if not snapshots:
+            return {}, GoalCollisionBatchPayload()
+
+        agent_contexts = []
+        for snapshot in snapshots:
+            character_id = snapshot.identity.character_id
+            packet = context_packets.get(character_id) or self.context_assembler.assemble(
+                snapshot=snapshot,
+                scene_description="trajectory projection",
+                scene_participants=[],
+                time_label=current_time,
+            )
+            horizon = self._estimate_horizon(snapshot, tick_minutes)
+            agent_contexts.append(
+                {
+                    "identity": packet.identity,
+                    "current_state": packet.current_state,
+                    "working_memory": packet.working_memory,
+                    "relationships": packet.relationship_context,
+                    "planning_horizon": horizon,
+                }
+            )
+
+        prompt = build_unified_projection_and_collision_prompt(
+            agent_contexts=agent_contexts,
+            current_time=current_time,
+            tension_level=tension_level,
+            world_state_summary=world_state_summary,
+            language_guidance=language_guidance,
+        )
+
+        payload = asyncio.run(
+            self.llm_client.call_json(prompt, UnifiedProjectionPayload)
+        )
+
+        trajectories = dict(payload.trajectories)
+        collision_payload = GoalCollisionBatchPayload(
+            goal_tensions=payload.goal_tensions,
+            solo_seeds=payload.solo_seeds,
+            world_events=payload.world_events,
+        )
+        return trajectories, collision_payload
+
     def _estimate_horizon(self, snapshot: CharacterSnapshot, tick_minutes: int) -> str:
         horizon_ticks = 4
         if snapshot.inferred_state is not None:
-            confidence = snapshot.inferred_state.emotional_state.confidence
-            if confidence >= 0.8 and snapshot.inferred_state.immediate_tension:
+            if snapshot.inferred_state.immediate_tension:
                 horizon_ticks = 2
-            elif confidence <= 0.4:
-                horizon_ticks = 5
         horizon_ticks = min(self.max_horizon_ticks, max(1, horizon_ticks))
         horizon_minutes = int(horizon_ticks * tick_minutes * self.horizon_multiplier)
         return f"{horizon_ticks} ticks (~{horizon_minutes} minutes)"

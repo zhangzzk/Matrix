@@ -53,7 +53,7 @@ class CliHelpersTests(unittest.TestCase):
         self.assertIn("Available session IDs: default", message)
         self.assertIn("without --session-id", message)
 
-    def test_format_session_not_found_message_suggests_init_snapshot_when_empty(self) -> None:
+    def test_format_session_not_found_message_suggests_init_when_empty(self) -> None:
         workspace = Path(".dreamdive")
         expected_path = workspace / "simulation_session.alpha.json"
 
@@ -65,10 +65,10 @@ class CliHelpersTests(unittest.TestCase):
             available_session_ids=[],
         )
 
-        self.assertIn("Initialize one first with `init-snapshot`", message)
+        self.assertIn("Initialize one first with `init`", message)
         self.assertIn("workspace `.dreamdive`", message)
 
-    def test_validate_command_args_allows_config_backed_init_snapshot_values(self) -> None:
+    def test_validate_command_args_allows_config_backed_init_values(self) -> None:
         class FakeParser:
             def error(self, message):
                 raise AssertionError(message)
@@ -77,7 +77,7 @@ class CliHelpersTests(unittest.TestCase):
             "Args",
             (),
             {
-                "command": "init-snapshot",
+                "command": "init",
                 "source": "resources/redcliff.txt",
                 "chapter_id": "001",
             },
@@ -312,19 +312,17 @@ class CliHelpersTests(unittest.TestCase):
                 "--rerun-structural-scan",
                 "--rerun-chapters",
                 "--rerun-meta-layer",
-                "--rerun-entities",
             ]
         )
 
         self.assertTrue(args.rerun_structural_scan)
         self.assertTrue(args.rerun_chapters)
         self.assertTrue(args.rerun_meta_layer)
-        self.assertTrue(args.rerun_entities)
 
-    def test_parser_accepts_overwrite_for_init_snapshot_and_branch(self) -> None:
+    def test_parser_accepts_overwrite_for_init_and_branch(self) -> None:
         parser = build_parser()
 
-        init_args = parser.parse_args(["init-snapshot", "resources/redcliff.txt", "--chapter-id", "001", "--overwrite"])
+        init_args = parser.parse_args(["init", "resources/redcliff.txt", "--chapter-id", "001", "--overwrite"])
         branch_args = parser.parse_args(["branch", "--timeline-index", "10", "--overwrite"])
         run_args = parser.parse_args(["run", "--ticks", "5", "--overwrite"])
 
@@ -346,7 +344,7 @@ class CliHelpersTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 _ensure_target_not_exists(
                     store,
-                    command="init-snapshot",
+                    command="init",
                     session_id="main",
                     overwrite=False,
                 )
@@ -364,7 +362,7 @@ class CliHelpersTests(unittest.TestCase):
 
             _ensure_target_not_exists(
                 store,
-                command="init-snapshot",
+                command="init",
                 session_id="main",
                 overwrite=True,
             )

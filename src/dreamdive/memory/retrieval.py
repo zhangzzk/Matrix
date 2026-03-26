@@ -261,7 +261,7 @@ def _state_terms(current_state: Optional[dict]) -> set[str]:
     if isinstance(active_goals, Sequence):
         for goal in active_goals:
             if isinstance(goal, dict):
-                for field in ("goal", "motivation", "obstacle", "emotional_charge"):
+                for field in ("description", "challenge"):
                     value = goal.get(field)
                     if isinstance(value, str):
                         values.append(value)

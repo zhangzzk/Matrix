@@ -169,6 +169,79 @@ def _parse_chinese_number(value: str) -> int:
     return total + section + number
 
 
+def looks_like_chapter_heading(line: str) -> bool:
+    """Return True if *line* looks like a chapter heading (Chinese or English)."""
+    stripped = line.strip()
+    if not stripped:
+        return False
+    return CHAPTER_HEADING_RE.match(stripped) is not None
+
+
+def format_synthesized_chapter_heading(
+    chapter_number: int,
+    source_heading_examples: List[str],
+) -> str:
+    """Synthesize a chapter heading that matches the source style.
+
+    Examines *source_heading_examples* to detect whether the source uses
+    Chinese numbered headings (第N章) or English ones (Chapter N) and
+    returns a heading string in the same style.  Returns ``""`` if the
+    style cannot be determined.
+    """
+    if not source_heading_examples:
+        return ""
+
+    # Detect dominant style from examples
+    chinese_count = 0
+    english_count = 0
+    chinese_kind = "章"
+    for example in source_heading_examples:
+        stripped = example.strip().lstrip("#").strip()
+        cn_match = _CHINESE_HEADING_DETAIL_RE.match(stripped)
+        if cn_match:
+            chinese_count += 1
+            chinese_kind = cn_match.group("kind") or "章"
+            continue
+        if _ENGLISH_CHAPTER_RE.match(stripped):
+            english_count += 1
+
+    if chinese_count >= english_count and chinese_count > 0:
+        # Build Chinese-style heading: 第N章
+        from dreamdive.ingestion.source_loader import _int_to_chinese_number
+        return f"第{_int_to_chinese_number(chapter_number)}{chinese_kind}"
+    if english_count > 0:
+        return f"Chapter {chapter_number}"
+    return ""
+
+
+def _int_to_chinese_number(n: int) -> str:
+    """Convert a positive integer to Chinese numeral string (up to 9999)."""
+    if n <= 0:
+        return "零"
+    _digits = "零一二三四五六七八九"
+    if n < 10:
+        return _digits[n]
+    if n < 100:
+        tens, ones = divmod(n, 10)
+        result = ("" if tens == 1 else _digits[tens]) + "十"
+        return result + (_digits[ones] if ones else "")
+    if n < 1000:
+        hundreds, remainder = divmod(n, 100)
+        result = _digits[hundreds] + "百"
+        if remainder == 0:
+            return result
+        if remainder < 10:
+            return result + "零" + _digits[remainder]
+        return result + _int_to_chinese_number(remainder)
+    thousands, remainder = divmod(n, 1000)
+    result = _digits[thousands] + "千"
+    if remainder == 0:
+        return result
+    if remainder < 100:
+        return result + "零" + _int_to_chinese_number(remainder)
+    return result + _int_to_chinese_number(remainder)
+
+
 def load_chapters(path: Path) -> List[ChapterSource]:
     return split_into_chapters(load_text(path))
 

@@ -106,6 +106,8 @@ class SimulationTickRunner:
         world_event_scheduler: Optional[WorldEventScheduler] = None,
         background_job_planner: Optional[BackgroundJobPlanner] = None,
         retrieved_memory_candidates: int = 20,
+        max_spotlight_beats: int = 8,
+        max_foreground_beats: int = 4,
         write_retry_attempts: int = 3,
         write_retry_base_delay_seconds: float = 0.05,
         sleep_fn: Optional[Callable[[float], None]] = None,
@@ -127,6 +129,8 @@ class SimulationTickRunner:
         self.world_event_scheduler = world_event_scheduler
         self.background_job_planner = background_job_planner or BackgroundJobPlanner()
         self.retrieved_memory_candidates = max(1, retrieved_memory_candidates)
+        self.max_spotlight_beats = max(1, max_spotlight_beats)
+        self.max_foreground_beats = max(1, max_foreground_beats)
         self.write_retry_attempts = max(1, write_retry_attempts)
         self.write_retry_base_delay_seconds = max(0.0, write_retry_base_delay_seconds)
         self.sleep_fn = sleep_fn or time.sleep
@@ -206,6 +210,13 @@ class SimulationTickRunner:
                 location=str(runtime.snapshot.current_state.get("location", "")),
                 current_state=runtime.snapshot.current_state,
             )
+            # Recent chronological memories for temporal continuity
+            recent_memories = self.memory_repo.list_recent_for_character(
+                character_id,
+                limit=5,
+                timeline_index=current_timeline_index,
+            )
+            recent_event_summaries = [m.summary for m in recent_memories]
             context_packet = self.context_assembler.assemble(
                 snapshot=runtime.snapshot,
                 scene_description="trajectory projection",
@@ -221,6 +232,7 @@ class SimulationTickRunner:
                     current_timeline_index=current_timeline_index,
                     query_text=query_text,
                 ),
+                recent_events=recent_event_summaries,
             )
             return character_id, context_packet, list(context_packet.world_entities)
 
@@ -235,77 +247,19 @@ class SimulationTickRunner:
                 except Exception:
                     pass
         
-        self._emit_progress(progress_callback, stage="projection", message=f"starting projection for {len(active_agent_ids)} agents")
-
-
-        high_priority_targets = [
-            runtime
-            for runtime in agent_runtimes
-            if runtime.snapshot.identity.character_id in high_priority_agent_ids
-            and (runtime.needs_reprojection or runtime.trajectory is None)
-        ]
-        high_priority_batch_threshold = max(
-            5,
-            int(getattr(self.trajectory_projector, "batch_size", 5)),
-        )
-        self._project_targets(
-            targets=high_priority_targets,
-            contexts=contexts,
-            current_tick_label=current_tick_label,
-            tick_minutes=tick_minutes,
-            language_guidance=language_guidance,
-            event_failures=event_failures,
-            batch_threshold=high_priority_batch_threshold,
-            progress_callback=progress_callback,
-            group_label="high-priority",
-        )
-
-        low_priority_targets = [
-            runtime
-            for runtime in agent_runtimes
-            if runtime.snapshot.identity.character_id in low_priority_agent_ids
-            and (runtime.needs_reprojection or runtime.trajectory is None)
-        ]
-        self._project_targets(
-            targets=low_priority_targets,
-            contexts=contexts,
-            current_tick_label=current_tick_label,
-            tick_minutes=tick_minutes,
-            language_guidance=language_guidance,
-            event_failures=event_failures,
-            batch_threshold=1,
-            progress_callback=progress_callback,
-            group_label="low-priority",
-        )
+        self._emit_progress(progress_callback, stage="projection", message=f"starting unified projection + collision detection for {len(active_agent_ids)} agents")
 
         active_snapshots = [
             runtime.snapshot
             for runtime in agent_runtimes
             if runtime.snapshot.identity.character_id in active_agent_ids
         ]
-        self._emit_progress(
-            progress_callback,
-            stage="seed_detection",
-            message="detecting collisions and narrative seeds",
-            active_agents=len(active_snapshots),
-        )
-        detected = []
-        detected.extend(self.seed_detector.detect_spatial_collisions(snapshots))
         try:
-            collision_batch = self.seed_detector.detect_goal_collisions(
-                current_time=current_tick_label,
+            unified_trajectories, collision_batch = self.trajectory_projector.project_and_detect_collisions(
                 snapshots=active_snapshots,
-                trajectories={
-                    runtime.snapshot.identity.character_id: runtime.trajectory
-                    for runtime in agent_runtimes
-                    if runtime.snapshot.identity.character_id in active_agent_ids
-                    and runtime.trajectory is not None
-                },
-                contexts={
-                    character_id: context
-                    for character_id, context in contexts.items()
-                    if character_id in active_agent_ids
-                },
+                current_time=current_tick_label,
+                tick_minutes=tick_minutes,
+                context_packets=contexts,
                 world_state_summary={
                     "locations": {
                         runtime.snapshot.identity.character_id: runtime.snapshot.current_state.get("location", "")
@@ -316,17 +270,32 @@ class SimulationTickRunner:
                 tension_level=arc_state.tension_level,
                 language_guidance=language_guidance,
             )
+            for runtime in agent_runtimes:
+                character_id = runtime.snapshot.identity.character_id
+                trajectory = unified_trajectories.get(character_id)
+                if trajectory is not None:
+                    runtime.trajectory = trajectory
+                    runtime.needs_reprojection = False
         except Exception as exc:
             collision_batch = GoalCollisionBatchPayload()
             event_failures.append(
                 TickEventFailure(
                     event_id="",
-                    seed_id="goal_collision_detection",
-                    seed_type="goal_collision",
-                    stage="goal_collision_detection",
+                    seed_id="unified_projection_and_collision",
+                    seed_type="unified_projection",
+                    stage="unified_projection_and_collision",
                     error_message=str(exc),
                 )
             )
+
+        self._emit_progress(
+            progress_callback,
+            stage="seed_detection",
+            message="detecting collisions and narrative seeds",
+            active_agents=len(active_snapshots),
+        )
+        detected = []
+        detected.extend(self.seed_detector.detect_spatial_collisions(snapshots))
         detected.extend(GoalCollisionDetector.tensions_to_seeds(collision_batch))
         llm_solo_ids = {
             seed.participants[0]
@@ -350,6 +319,7 @@ class SimulationTickRunner:
         if world_seeds:
             detected.extend(world_seeds)
         ranked = rank_seeds(detected, narrative_tension=arc_state.tension_level)
+        ranked = self.world_manager.filter_below_minimum_salience(ranked)
         location_threads = self.world_manager.build_location_threads(ranked)
         queued_seeds = self.world_manager.interleave_location_threads(location_threads)
         self._emit_progress(
@@ -413,11 +383,8 @@ class SimulationTickRunner:
                             runtime.snapshot.identity.character_id: runtime.voice_samples
                             for runtime in agent_runtimes
                         },
-                        world_entities_by_agent={
-                            runtime.snapshot.identity.character_id: runtime.world_entities
-                            for runtime in agent_runtimes
-                        },
-                        max_beats=8 if mode == "spotlight" else 4,
+                        world_entities_by_agent={},  # Entity system disabled.
+                        max_beats=self.max_spotlight_beats if mode == "spotlight" else self.max_foreground_beats,
                         language_guidance=language_guidance,
                     )
 
@@ -764,16 +731,8 @@ class SimulationTickRunner:
         fallback_entities: List[Dict[str, object]],
         limit: int = 5,
     ) -> List[Dict[str, object]]:
-        if self.entity_repo is None:
-            return list(fallback_entities)
-        candidates = self.entity_repo.search_for_agent(
-            character_id,
-            query_embedding=embed_text(query_text),
-            limit=limit,
-        )
-        if candidates:
-            return [entity.model_dump(mode="json") for entity in candidates]
-        return list(fallback_entities)
+        # Entity system disabled — return empty list immediately.
+        return []
 
     def _prepare_background_outcome(
         self,
@@ -785,12 +744,46 @@ class SimulationTickRunner:
         runtime_by_id: Dict[str, AgentRuntime],
         language_guidance: str = "",
     ) -> List[PreparedAgentUpdate]:
-        prepared: List[PreparedAgentUpdate] = []
-        for agent_outcome in outcome.outcomes:
-            runtime = runtime_by_id.get(agent_outcome.agent_id)
-            if runtime is None:
-                continue
-            update = self.state_updater.update_after_event(
+        valid_outcomes = [
+            ao for ao in outcome.outcomes if ao.agent_id in runtime_by_id
+        ]
+        if len(valid_outcomes) <= 1:
+            # Single agent — no parallelization needed.
+            prepared: List[PreparedAgentUpdate] = []
+            for agent_outcome in valid_outcomes:
+                runtime = runtime_by_id[agent_outcome.agent_id]
+                update = self.state_updater.update_after_event(
+                    snapshot=runtime.snapshot,
+                    event_id=event_id,
+                    replay_key=replay_key,
+                    event_outcome_from_agent_perspective=outcome.narrative_summary,
+                    new_knowledge=[agent_outcome.new_knowledge] if agent_outcome.new_knowledge else [],
+                    language_guidance=language_guidance,
+                )
+                prepared.append(
+                    PreparedAgentUpdate(
+                        runtime=runtime,
+                        update=update,
+                        memory=self.memory_writer.build_memory(
+                            character_id=runtime.snapshot.identity.character_id,
+                            replay_key=replay_key,
+                            event_id=event_id,
+                            participants=seed.participants,
+                            location=seed.location,
+                            summary=outcome.narrative_summary,
+                            emotional_tag=update.raw_update.emotional_delta.dominant_now,
+                            salience=seed.salience,
+                            pinned=modeled_pinned(seed),
+                        ),
+                    )
+                )
+            return prepared
+
+        # Multiple agents — parallelize state updates (each is an independent LLM call).
+        def _update_agent(agent_outcome, client_clone):
+            runtime = runtime_by_id[agent_outcome.agent_id]
+            updater = EventStateUpdater(client_clone)
+            update = updater.update_after_event(
                 snapshot=runtime.snapshot,
                 event_id=event_id,
                 replay_key=replay_key,
@@ -798,23 +791,31 @@ class SimulationTickRunner:
                 new_knowledge=[agent_outcome.new_knowledge] if agent_outcome.new_knowledge else [],
                 language_guidance=language_guidance,
             )
-            prepared.append(
-                PreparedAgentUpdate(
-                    runtime=runtime,
-                    update=update,
-                    memory=self.memory_writer.build_memory(
-                        character_id=runtime.snapshot.identity.character_id,
-                        replay_key=replay_key,
-                        event_id=event_id,
-                        participants=seed.participants,
-                        location=seed.location,
-                        summary=outcome.narrative_summary,
-                        emotional_tag=update.raw_update.emotional_delta.dominant_now,
-                        salience=seed.salience,
-                        pinned=modeled_pinned(seed),
-                    ),
-                )
+            return PreparedAgentUpdate(
+                runtime=runtime,
+                update=update,
+                memory=self.memory_writer.build_memory(
+                    character_id=runtime.snapshot.identity.character_id,
+                    replay_key=replay_key,
+                    event_id=event_id,
+                    participants=seed.participants,
+                    location=seed.location,
+                    summary=outcome.narrative_summary,
+                    emotional_tag=update.raw_update.emotional_delta.dominant_now,
+                    salience=seed.salience,
+                    pinned=modeled_pinned(seed),
+                ),
             )
+
+        prepared = []
+        with ThreadPoolExecutor(max_workers=min(len(valid_outcomes), 8)) as pool:
+            futures = []
+            for agent_outcome in valid_outcomes:
+                clone = self.state_updater.llm_client.clone()
+                futures.append((pool.submit(_update_agent, agent_outcome, clone), clone))
+            for future, clone in futures:
+                self.state_updater.llm_client.merge_records(clone)
+                prepared.append(future.result())
         return prepared
 
     def _prepare_spotlight_outcome(
@@ -831,17 +832,57 @@ class SimulationTickRunner:
             turn.external.get("dialogue", "") or turn.external.get("physical_action", "")
             for turn in outcome.transcript
         ).strip() or outcome.resolution.scene_outcome
-        prepared: List[PreparedAgentUpdate] = []
-        for agent_id, runtime in runtime_by_id.items():
-            if agent_id not in outcome.private_state_by_agent:
-                continue
+
+        participating_agents = [
+            (agent_id, runtime)
+            for agent_id, runtime in runtime_by_id.items()
+            if agent_id in outcome.private_state_by_agent
+        ]
+
+        def _build_perspective(agent_id):
             private_bits = outcome.private_state_by_agent[agent_id]
-            perspective = public_summary
             if private_bits:
-                perspective = (
+                return (
                     f"{public_summary} Internal shift: {private_bits[-1].get('goal_update', '')}"
                 ).strip()
-            update = self.state_updater.update_after_event(
+            return public_summary
+
+        if len(participating_agents) <= 1:
+            prepared: List[PreparedAgentUpdate] = []
+            for agent_id, runtime in participating_agents:
+                perspective = _build_perspective(agent_id)
+                update = self.state_updater.update_after_event(
+                    snapshot=runtime.snapshot,
+                    event_id=event_id,
+                    replay_key=replay_key,
+                    event_outcome_from_agent_perspective=perspective,
+                    new_knowledge=[],
+                    language_guidance=language_guidance,
+                )
+                prepared.append(
+                    PreparedAgentUpdate(
+                        runtime=runtime,
+                        update=update,
+                        memory=self.memory_writer.build_memory(
+                            character_id=agent_id,
+                            replay_key=replay_key,
+                            event_id=event_id,
+                            participants=seed.participants,
+                            location=seed.location,
+                            summary=perspective,
+                            emotional_tag=update.raw_update.emotional_delta.dominant_now,
+                            salience=seed.salience,
+                            pinned=modeled_pinned(seed),
+                        ),
+                    )
+                )
+            return prepared
+
+        # Multiple agents — parallelize state updates.
+        def _update_agent(agent_id, runtime, client_clone):
+            perspective = _build_perspective(agent_id)
+            updater = EventStateUpdater(client_clone)
+            update = updater.update_after_event(
                 snapshot=runtime.snapshot,
                 event_id=event_id,
                 replay_key=replay_key,
@@ -849,23 +890,31 @@ class SimulationTickRunner:
                 new_knowledge=[],
                 language_guidance=language_guidance,
             )
-            prepared.append(
-                PreparedAgentUpdate(
-                    runtime=runtime,
-                    update=update,
-                    memory=self.memory_writer.build_memory(
-                        character_id=agent_id,
-                        replay_key=replay_key,
-                        event_id=event_id,
-                        participants=seed.participants,
-                        location=seed.location,
-                        summary=perspective,
-                        emotional_tag=update.raw_update.emotional_delta.dominant_now,
-                        salience=seed.salience,
-                        pinned=modeled_pinned(seed),
-                    ),
-                )
+            return PreparedAgentUpdate(
+                runtime=runtime,
+                update=update,
+                memory=self.memory_writer.build_memory(
+                    character_id=agent_id,
+                    replay_key=replay_key,
+                    event_id=event_id,
+                    participants=seed.participants,
+                    location=seed.location,
+                    summary=perspective,
+                    emotional_tag=update.raw_update.emotional_delta.dominant_now,
+                    salience=seed.salience,
+                    pinned=modeled_pinned(seed),
+                ),
             )
+
+        prepared = []
+        with ThreadPoolExecutor(max_workers=min(len(participating_agents), 8)) as pool:
+            futures = []
+            for agent_id, runtime in participating_agents:
+                clone = self.state_updater.llm_client.clone()
+                futures.append((pool.submit(_update_agent, agent_id, runtime, clone), clone))
+            for future, clone in futures:
+                self.state_updater.llm_client.merge_records(clone)
+                prepared.append(future.result())
         return prepared
 
     def _commit_prepared_updates(self, prepared_updates: List[PreparedAgentUpdate]) -> None:

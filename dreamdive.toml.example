@@ -10,8 +10,10 @@ rerun_structural_scan = false
 rerun_chapters = false
 rerun_meta_layer = false
 rerun_entities = false
+max_workers = 4
+section_max_workers = 4
 
-[init-snapshot]
+[init]
 source = "resources/dragonraja1_demo.txt"
 chapter_id = "001"
 tick_label = "snapshot"
@@ -24,6 +26,7 @@ overwrite = true
 
 [background]
 max_jobs = 20
+max_workers = 4
 
 [branch]
 overwrite = false

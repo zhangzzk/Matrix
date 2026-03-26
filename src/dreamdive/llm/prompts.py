@@ -619,7 +619,7 @@ def build_meta_layer_prompt(
         user=(
             "NOVEL EXCERPTS (representative samples from across the novel):\n"
             f"{excerpt_block}\n\n"
-            f"MAJOR CHARACTER IDS TO COVER: {json.dumps(major_character_ids)}\n\n"
+            f"MAJOR CHARACTER IDS TO COVER: {json.dumps(major_character_ids, ensure_ascii=False)}\n\n"
             "Extract:\n"
             "1. AUTHORIAL LAYER: thesis, recurring themes, dominant tone, beliefs about power/love/morality/fate, motifs, perspective.\n"
             "2. WRITING STYLE: concrete prose description, rhythm, description density, dialogue/narration balance, stylistic signatures, representative sample passages.\n"

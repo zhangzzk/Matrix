@@ -185,9 +185,7 @@ class RelationshipRepository:
             timeline_index=entry.replay_key.timeline_index,
             event_sequence=entry.replay_key.event_sequence,
             event_id=entry.event_id,
-            trust_delta=entry.trust_delta,
-            trust_value=entry.trust_value,
-            sentiment_shift=entry.sentiment_shift,
+            summary=entry.summary,
             reason=entry.reason,
             pinned=entry.pinned,
         )
@@ -239,9 +237,7 @@ class RelationshipRepository:
                     event_sequence=row.event_sequence,
                 ),
                 event_id=row.event_id,
-                trust_delta=row.trust_delta,
-                trust_value=row.trust_value,
-                sentiment_shift=row.sentiment_shift,
+                summary=row.summary,
                 reason=row.reason,
                 pinned=row.pinned,
             )
@@ -524,6 +520,18 @@ class EpisodicMemoryRepository:
             )
             for row in rows
         ]
+
+    def list_recent_for_character(
+        self,
+        character_id: str,
+        *,
+        limit: int = 5,
+        timeline_index: Optional[int] = None,
+    ) -> Sequence[EpisodicMemory]:
+        """Return the most recent memories for a character, ordered chronologically."""
+        all_memories = self.list_for_character(character_id, timeline_index=timeline_index)
+        # list_for_character already sorts ascending; take the last N
+        return list(all_memories[-limit:]) if all_memories else []
 
     def list_pinned_for_character(
         self,

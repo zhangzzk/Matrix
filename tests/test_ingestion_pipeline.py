@@ -18,7 +18,6 @@ class FakeBackend:
         self.structural_calls = 0
         self.chapter_calls = []
         self.meta_calls = 0
-        self.entity_calls = 0
 
     def run_structural_scan(self, chunks):
         self.structural_calls += 1
@@ -95,31 +94,6 @@ class FakeBackend:
             },
         }
 
-    def run_entity_pass(self, accumulated):
-        self.entity_calls += 1
-        return {
-            "entities": [
-                {
-                    "entity_id": "ent_001",
-                    "name": "Gate",
-                    "type": "place",
-                    "objective_facts": ["north side"],
-                    "narrative_role": "constraint",
-                    "absent_figure_details": {
-                        "reason_absent": "",
-                        "most_present_in": [],
-                        "counterfactual": "",
-                    },
-                    "concept_details": {
-                        "definitions_by_character": {},
-                        "who_weaponizes": [],
-                        "who_is_bound_by": [],
-                        "authorial_stance": "",
-                    },
-                    "agent_representations": [],
-                }
-            ]
-        }
 
 
 class DeltaBackend(FakeBackend):
@@ -467,27 +441,21 @@ class IngestionPipelineTests(unittest.TestCase):
 
             self.assertEqual(backend.structural_calls, 2)
 
-    def test_pipeline_caches_meta_and_entity_passes(self) -> None:
+    def test_pipeline_caches_meta_pass(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             manifest_store = ManifestStore(root / "manifest.json")
             artifact_store = ArtifactStore(root / "artifacts")
             pipeline = IngestionPipeline(manifest_store, artifact_store=artifact_store)
             backend = FakeBackend()
-            accumulated = AccumulatedExtraction()
 
             meta_first = pipeline.run_meta_layer(["[001]\nOpening"], backend, major_character_ids=["arya"])
             meta_second = pipeline.run_meta_layer(["[001]\nOpening"], backend, major_character_ids=["arya"])
-            entities_first = pipeline.run_entity_extraction(accumulated, backend)
-            entities_second = pipeline.run_entity_extraction(accumulated, backend)
 
             self.assertEqual(meta_first.writing_style.prose_description, "lean")
             self.assertEqual(meta_first.language_context.primary_language, "English")
             self.assertEqual(meta_second.writing_style.prose_description, "lean")
-            self.assertEqual(entities_first.entities[0].entity_id, "ent_001")
-            self.assertEqual(entities_second.entities[0].entity_id, "ent_001")
             self.assertEqual(backend.meta_calls, 1)
-            self.assertEqual(backend.entity_calls, 1)
 
     def test_force_rerun_chapters_reprocesses_completed_snapshots(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -510,14 +478,13 @@ class IngestionPipelineTests(unittest.TestCase):
             self.assertEqual([event.id for event in first.events], ["evt_001"])
             self.assertEqual([event.id for event in second.events], ["evt_001"])
 
-    def test_force_rerun_meta_and_entities_ignore_cache(self) -> None:
+    def test_force_rerun_meta_ignores_cache(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             manifest_store = ManifestStore(root / "manifest.json")
             artifact_store = ArtifactStore(root / "artifacts")
             pipeline = IngestionPipeline(manifest_store, artifact_store=artifact_store)
             backend = FakeBackend()
-            accumulated = AccumulatedExtraction()
 
             pipeline.run_meta_layer(["[001]\nOpening"], backend, major_character_ids=["arya"])
             pipeline.run_meta_layer(
@@ -526,11 +493,8 @@ class IngestionPipelineTests(unittest.TestCase):
                 major_character_ids=["arya"],
                 force_rerun=True,
             )
-            pipeline.run_entity_extraction(accumulated, backend)
-            pipeline.run_entity_extraction(accumulated, backend, force_rerun=True)
 
             self.assertEqual(backend.meta_calls, 2)
-            self.assertEqual(backend.entity_calls, 2)
 
 
 if __name__ == "__main__":

@@ -116,8 +116,7 @@ def relationship_idempotency_key(entry: RelationshipLogEntry) -> str:
             str(entry.replay_key.timeline_index),
             str(entry.replay_key.event_sequence),
             entry.event_id or "",
-            str(entry.trust_value),
-            entry.sentiment_shift,
+            entry.summary,
         ]
     )
 
@@ -400,17 +399,14 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
             """
             INSERT INTO relationship_log (
                 idempotency_key, from_character_id, to_character_id, tick, timeline_index, event_sequence,
-                event_id, trust_delta, trust_value, sentiment_shift, reason, pinned
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                event_id, summary, reason, pinned
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (idempotency_key) DO UPDATE SET
-                trust_delta = EXCLUDED.trust_delta,
-                trust_value = EXCLUDED.trust_value,
-                sentiment_shift = EXCLUDED.sentiment_shift,
+                summary = EXCLUDED.summary,
                 reason = EXCLUDED.reason,
                 pinned = EXCLUDED.pinned
             RETURNING id, from_character_id, to_character_id, tick, timeline_index,
-                      event_sequence, event_id, trust_delta, trust_value,
-                      sentiment_shift, reason, pinned
+                      event_sequence, event_id, summary, reason, pinned
             """,
             (
                 relationship_idempotency_key(entry),
@@ -420,9 +416,7 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
                 entry.replay_key.timeline_index,
                 entry.replay_key.event_sequence,
                 entry.event_id,
-                entry.trust_delta,
-                entry.trust_value,
-                entry.sentiment_shift,
+                entry.summary,
                 entry.reason,
                 entry.pinned,
             ),
@@ -435,9 +429,7 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
             timeline_index=int(row["timeline_index"]),
             event_sequence=int(row["event_sequence"]),
             event_id=row.get("event_id"),
-            trust_delta=float(row["trust_delta"]),
-            trust_value=float(row["trust_value"]),
-            sentiment_shift=str(row["sentiment_shift"]),
+            summary=str(row["summary"]),
             reason=str(row["reason"]),
             pinned=bool(row["pinned"]),
         )
@@ -454,7 +446,7 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
             """
             SELECT DISTINCT ON (to_character_id)
                    id, from_character_id, to_character_id, tick, timeline_index, event_sequence,
-                   event_id, trust_delta, trust_value, sentiment_shift, reason, pinned
+                   event_id, summary, reason, pinned
             FROM relationship_log
             WHERE from_character_id = %s
               AND to_character_id = ANY(%s)
@@ -472,9 +464,7 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
                 timeline_index=int(row["timeline_index"]),
                 event_sequence=int(row["event_sequence"]),
                 event_id=row.get("event_id"),
-                trust_delta=float(row["trust_delta"]),
-                trust_value=float(row["trust_value"]),
-                sentiment_shift=str(row["sentiment_shift"]),
+                summary=str(row["summary"]),
                 reason=str(row["reason"]),
                 pinned=bool(row["pinned"]),
             )
@@ -489,7 +479,7 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
         rows = self._execute_fetch_all(
             """
             SELECT from_character_id, to_character_id, tick, timeline_index, event_sequence,
-                   event_id, trust_delta, trust_value, sentiment_shift, reason, pinned
+                   event_id, summary, reason, pinned
             FROM relationship_log
             WHERE from_character_id = %s
               AND timeline_index <= %s
@@ -507,9 +497,7 @@ class PostgresRelationshipRepository(PostgresRepositoryBase):
                     event_sequence=int(row["event_sequence"]),
                 ),
                 event_id=row.get("event_id"),
-                trust_delta=float(row["trust_delta"]),
-                trust_value=float(row["trust_value"]),
-                sentiment_shift=str(row["sentiment_shift"]),
+                summary=str(row["summary"]),
                 reason=str(row["reason"]),
                 pinned=bool(row["pinned"]),
             )

@@ -58,7 +58,7 @@ class SeedDetector:
             if activation < threshold:
                 continue
             character_id = snapshot.identity.character_id
-            top_goal = snapshot.goals[0].goal if snapshot.goals else "act on internal tension"
+            top_goal = snapshot.goals[0].description if snapshot.goals else "act on internal tension"
             seeds.append(
                 SimulationSeed(
                     seed_id="solo_{}_{}".format(character_id, snapshot.replay_key.timeline_index),
@@ -108,7 +108,7 @@ class SeedDetector:
         relationship_tensions = []
         for snapshot in snapshots:
             for relationship in snapshot.relationships:
-                relationship_tensions.append(abs(relationship.trust_delta))
+                relationship_tensions.append(0.5 if relationship.summary else 0.2)
         if not relationship_tensions:
             return 0.4
         return min(1.0, sum(relationship_tensions) / len(relationship_tensions) + 0.3)
@@ -118,7 +118,7 @@ class SeedDetector:
         emotional_states = 0.0
         for snapshot in snapshots:
             if snapshot.inferred_state is not None:
-                emotional_states += snapshot.inferred_state.emotional_state.confidence
+                emotional_states += 0.6  # has inferred emotional state
             elif snapshot.current_state.get("emotional_state"):
                 emotional_states += 0.4
         return min(1.0, emotional_states / max(1, len(snapshots)))
@@ -129,7 +129,6 @@ class SeedDetector:
         if snapshot.goals:
             score += 0.35
         if snapshot.inferred_state is not None:
-            score += max(0.0, min(1.0, snapshot.inferred_state.emotional_state.confidence)) * 0.35
             if snapshot.inferred_state.immediate_tension:
                 score += 0.2
             if snapshot.inferred_state.unspoken_subtext:

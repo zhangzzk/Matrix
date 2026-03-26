@@ -7,9 +7,10 @@ source = "resources/dragonraja1_demo.txt"
 rerun_structural_scan = false
 rerun_chapters = false
 rerun_meta_layer = false
-rerun_entities = false
+max_workers = 16
+section_max_workers = 8
 
-[init-snapshot]
+[init]
 source = "resources/dragonraja1_demo.txt"
 chapter_id = "002"
 tick_label = "snapshot"
@@ -20,7 +21,14 @@ max_workers = 16
 [run]
 ticks = 5
 overwrite = true
-tick_max_events = 15
+tick_max_events = 6
+max_spotlight_beats = 14
+max_foreground_beats = 8
+salience_spotlight_threshold = 0.75
+salience_foreground_threshold = 0.35
+salience_minimum = 0.25
+activation_threshold = 0.4
+batched_projection_threshold = 0.6
 
 [branch]
 overwrite = false

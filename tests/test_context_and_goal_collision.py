@@ -62,12 +62,9 @@ def make_snapshot(character_id, name, location, target_id):
         goals=[
             Goal(
                 priority=1,
-                goal="secure the letter",
-                motivation="survival",
-                obstacle="rival claim",
+                description="secure the letter; survival; urgent",
+                challenge="rival claim; letter is gone",
                 time_horizon="immediate",
-                emotional_charge="urgent",
-                abandon_condition="letter is gone",
             )
         ],
         working_memory=[
@@ -85,32 +82,17 @@ def make_snapshot(character_id, name, location, target_id):
                 from_character_id=character_id,
                 to_character_id=target_id,
                 replay_key=ReplayKey(tick="chapter_04", timeline_index=4),
-                trust_value=-0.2,
-                trust_delta=-0.1,
-                sentiment_shift="suspicion",
+                summary="suspicion",
                 reason="competing interests",
             )
         ],
-        inferred_state=SnapshotInference.model_validate(
-            {
-                "emotional_state": {
-                    "dominant": "tense",
-                    "secondary": ["focused"],
-                    "confidence": 0.8,
-                },
-                "immediate_tension": "Get there first",
-                "unspoken_subtext": "The rival cannot be trusted",
-                "physical_state": {
-                    "energy": 0.8,
-                    "injuries_or_constraints": "",
-                    "location": location,
-                    "current_activity": "moving",
-                },
-                "knowledge_state": {
-                    "new_knowledge": [],
-                    "active_misbeliefs": [],
-                },
-            }
+        inferred_state=SnapshotInference(
+            emotional_summary="tense",
+            immediate_tension="Get there first",
+            unspoken_subtext="The rival cannot be trusted",
+            physical_status="moving",
+            location=location,
+            knowledge=[],
         ),
     )
 
@@ -250,39 +232,27 @@ class ContextAndGoalCollisionTests(unittest.TestCase):
                 "goals": [
                     Goal(
                         priority=1,
-                        goal="secure the letter",
-                        motivation="survival",
-                        obstacle="sansa",
+                        description="secure the letter; survival; urgent",
+                        challenge="sansa; letter is gone",
                         time_horizon="immediate",
-                        emotional_charge="urgent",
-                        abandon_condition="letter is gone",
                     ),
                     Goal(
                         priority=2,
-                        goal="reach the gate",
-                        motivation="escape",
-                        obstacle="guards",
+                        description="reach the gate; escape; tense",
+                        challenge="guards; the yard is sealed",
                         time_horizon="today",
-                        emotional_charge="tense",
-                        abandon_condition="the yard is sealed",
                     ),
                     Goal(
                         priority=3,
-                        goal="find gendry",
-                        motivation="alliance",
-                        obstacle="distance",
+                        description="find gendry; alliance; hope",
+                        challenge="distance; he already fled",
                         time_horizon="today",
-                        emotional_charge="hope",
-                        abandon_condition="he already fled",
                     ),
                     Goal(
                         priority=4,
-                        goal="sleep",
-                        motivation="rest",
-                        obstacle="danger",
+                        description="sleep; rest; exhausted",
+                        challenge="danger; danger passes",
                         time_horizon="today",
-                        emotional_charge="exhausted",
-                        abandon_condition="danger passes",
                     ),
                 ]
             }
@@ -316,9 +286,10 @@ class ContextAndGoalCollisionTests(unittest.TestCase):
         )
 
         self.assertEqual(len(packet.current_state["active_goals"]), 3)
-        self.assertEqual(packet.current_state["active_goals"][0]["goal"], "secure the letter")
-        self.assertEqual(packet.current_state["active_goals"][-1]["goal"], "find gendry")
-        self.assertEqual([entity["entity_id"] for entity in packet.world_entities], ["ent_gate"])
+        self.assertEqual(packet.current_state["active_goals"][0]["description"], "secure the letter; survival; urgent")
+        self.assertEqual(packet.current_state["active_goals"][-1]["description"], "find gendry; alliance; hope")
+        # Entity system disabled — world_entities always empty.
+        self.assertEqual(packet.world_entities, [])
 
     def test_context_assembler_uses_entity_embeddings_without_leaking_internal_fields(self) -> None:
         snapshot = make_snapshot("arya", "Arya", "yard", "sansa")
@@ -354,9 +325,8 @@ class ContextAndGoalCollisionTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual([entity["entity_id"] for entity in packet.world_entities], ["ent_hidden_exit"])
-        self.assertNotIn("semantic_embedding", packet.world_entities[0])
-        self.assertNotIn("semantic_text", packet.world_entities[0])
+        # Entity system disabled — world_entities always empty.
+        self.assertEqual(packet.world_entities, [])
 
     def test_goal_collision_detector_parses_batched_tensions(self) -> None:
         response = {
@@ -369,7 +339,7 @@ class ContextAndGoalCollisionTests(unittest.TestCase):
                     "description": "Both are moving toward the same letter for opposite reasons.",
                     "information_asymmetry": {"arya": "knows it's hidden", "sansa": "does not"},
                     "stakes": {"arya": "survival", "sansa": "family standing"},
-                    "emergence_probability": 0.9,
+                    "likelihood": "very likely",
                     "salience_factors": ["proximity", "information_asymmetry"],
                 }
             ],
@@ -393,23 +363,13 @@ class ContextAndGoalCollisionTests(unittest.TestCase):
         }
         trajectories = {
             "arya": {
-                "primary_intention": "secure the letter",
-                "motivation": "survival",
-                "immediate_next_action": "reach the tower first",
-                "contingencies": [],
-                "greatest_fear_this_horizon": "being caught",
-                "abandon_condition": "letter destroyed",
-                "held_back_impulse": "attack immediately",
+                "intention": "secure the letter; survival; being caught; letter destroyed; attack immediately",
+                "next_steps": "reach the tower first",
                 "projection_horizon": "4 ticks",
             },
             "sansa": {
-                "primary_intention": "secure the letter",
-                "motivation": "family duty",
-                "immediate_next_action": "ask the steward for access",
-                "contingencies": [],
-                "greatest_fear_this_horizon": "being too late",
-                "abandon_condition": "proof disappears",
-                "held_back_impulse": "accuse Arya",
+                "intention": "secure the letter; family duty; being too late; proof disappears; accuse Arya",
+                "next_steps": "ask the steward for access",
                 "projection_horizon": "4 ticks",
             },
         }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 import sys
@@ -20,6 +21,10 @@ from dreamdive.llm.client import StructuredLLMClient
 from dreamdive.llm.openai_transport import build_transport
 from dreamdive.simulation.background_runner import BackgroundMaintenanceRunner
 from dreamdive.simulation.runtime_store import SimulationRuntimeStore, build_runtime_store
+from dreamdive.architecture_integration import (
+    run_architecture_design_phase,
+    load_architecture_from_workspace,
+)
 from dreamdive.simulation.workflow import (
     advance_session,
     branch_session,
@@ -27,6 +32,17 @@ from dreamdive.simulation.workflow import (
     run_session_tick,
     session_report,
 )
+from dreamdive.event_window_selector import (
+    calculate_chapter_boundaries_from_session,
+    extract_voice_samples,
+    select_chapter_window_from_session,
+)
+from dreamdive.narrative_synthesis import (
+    CharacterStateSummary,
+    ChapterSummary,
+    NarrativeSynthesisBackend,
+)
+from dreamdive.user_config import UserMeta
 from dreamdive.visualization_server import (
     build_visualization_url,
     start_visualization_server,
@@ -77,16 +93,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Force rerunning the meta-layer extraction pass even if cached.",
     )
     ingest.add_argument(
-        "--skip-entities",
+        "--skip-fate",
         action="store_true",
         default=argparse.SUPPRESS,
-        help="Skip the entity extraction pass.",
+        help="Skip the dramatic blueprint (fate layer) extraction.",
     )
     ingest.add_argument(
-        "--rerun-entities",
+        "--rerun-fate",
         action="store_true",
         default=argparse.SUPPRESS,
-        help="Force rerunning entity extraction even if cached.",
+        help="Force rerunning dramatic blueprint extraction even if cached.",
     )
     ingest.add_argument(
         "--max-workers",
@@ -94,17 +110,29 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Max parallel LLM workers for chapter extraction (default: 4).",
     )
+    ingest.add_argument(
+        "--section-max-workers",
+        type=int,
+        default=None,
+        help="Max parallel LLM workers for section extraction within each chapter (default: 4).",
+    )
 
-    init_snapshot = subparsers.add_parser("init-snapshot", help="Initialize a simulation session.")
-    init_snapshot.add_argument("source", nargs="?", help="Path to the novel text or markdown file.")
-    init_snapshot.add_argument("--workspace")
-    init_snapshot.add_argument("--chapter-id")
-    init_snapshot.add_argument("--tick-label")
-    init_snapshot.add_argument("--timeline-index", type=int)
-    init_snapshot.add_argument("--character-id", action="append", dest="character_ids")
-    init_snapshot.add_argument("--session-id")
-    init_snapshot.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
-    init_snapshot.add_argument("--max-workers", type=int, default=None, help="Max parallel LLM workers for agent initialization (default: 4).")
+    design = subparsers.add_parser("design", help="Design narrative architecture (story arc, character arcs, world expansion, chapter roadmap).")
+    design.add_argument("--workspace")
+    design.add_argument("--session-id")
+    design.add_argument("--continuation-goal", default="", help="High-level goal for the story continuation.")
+    design.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
+
+    init_cmd = subparsers.add_parser("init", aliases=["init-snapshot"], help="Initialize a simulation session.")
+    init_cmd.add_argument("source", nargs="?", help="Path to the novel text or markdown file.")
+    init_cmd.add_argument("--workspace")
+    init_cmd.add_argument("--chapter-id")
+    init_cmd.add_argument("--tick-label")
+    init_cmd.add_argument("--timeline-index", type=int)
+    init_cmd.add_argument("--character-id", action="append", dest="character_ids")
+    init_cmd.add_argument("--session-id")
+    init_cmd.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
+    init_cmd.add_argument("--max-workers", type=int, default=None, help="Max parallel LLM workers for agent initialization (default: 4).")
 
     tick = subparsers.add_parser("tick", help="Advance an existing simulation session by one tick.")
     tick.add_argument("--workspace")
@@ -122,6 +150,7 @@ def build_parser() -> argparse.ArgumentParser:
     background = subparsers.add_parser("background", help="Run due background maintenance jobs.")
     background.add_argument("--workspace")
     background.add_argument("--max-jobs", type=int)
+    background.add_argument("--max-workers", type=int, default=None, help="Max parallel workers for background maintenance jobs (default: 4).")
     background.add_argument("--session-id")
     background.add_argument("--overwrite", action="store_true", default=argparse.SUPPRESS)
 
@@ -138,17 +167,26 @@ def build_parser() -> argparse.ArgumentParser:
     migrate = subparsers.add_parser("migrate", help="Apply the PostgreSQL schema migration.")
     migrate.add_argument("--database-url")
 
+    synthesize = subparsers.add_parser("synthesize", help="Synthesize simulation events into novel-style prose chapters.")
+    synthesize.add_argument("--workspace")
+    synthesize.add_argument("--session-id")
+    synthesize.add_argument("--start-tick", type=int, default=None, help="Starting tick index (default: 0).")
+    synthesize.add_argument("--end-tick", type=int, default=None, help="Ending tick index (default: latest).")
+    synthesize.add_argument("--output-dir", default=None, help="Directory to write chapter files (default: workspace/chapters).")
+    synthesize.add_argument("--chapter-number", type=int, default=None, help="Synthesize only this chapter number (1-indexed).")
+
     visualize = subparsers.add_parser("visualize", help="Serve the visualization web app.")
     visualize.add_argument("--workspace")
     visualize.add_argument("--session-id")
     visualize.add_argument("--host")
     visualize.add_argument("--port", type=int)
-    for subparser in [ingest, init_snapshot, tick, run, background, branch, migrate, visualize]:
+    all_subparsers = [ingest, design, init_cmd, tick, run, background, branch, synthesize, migrate, visualize]
+    for subparser in all_subparsers:
         subparser.add_argument("--debug", action="store_true", default=argparse.SUPPRESS)
         subparser.add_argument("--debug-dir")
         subparser.add_argument("--config")
         subparser.add_argument("--profile")
-    for subparser in [ingest, init_snapshot, tick, run, background, branch, migrate, visualize]:
+    for subparser in all_subparsers:
         subparser.add_argument(
             "--json",
             action="store_true",
@@ -562,8 +600,8 @@ def _format_ingest_progress(stage: str, payload: dict[str, object]) -> str:
         if bool(payload.get("cached", False)):
             detail = f"{detail} · cached"
         return detail
-    if stage == "entity_extraction":
-        detail = "entity extraction"
+    if stage == "dramatic_blueprint":
+        detail = "dramatic blueprint"
         if bool(payload.get("cached", False)):
             detail = f"{detail} · cached"
         return detail
@@ -658,7 +696,7 @@ def _format_session_not_found_message(
             message += ". Try rerunning without --session-id, or use --session-id default"
     else:
         message += (
-            f". Initialize one first with `init-snapshot` in workspace "
+            f". Initialize one first with `init` in workspace "
             f"`{workspace_dir}`"
         )
     return message
@@ -725,14 +763,14 @@ def _ensure_existing_session_can_be_modified(
 def _validate_command_args(parser: argparse.ArgumentParser, args) -> None:
     if args.command == "ingest" and not getattr(args, "source", ""):
         parser.error("`ingest` requires `source`, either on the command line or in dreamdive.toml")
-    if args.command == "init-snapshot":
+    if args.command in ("init", "init-snapshot"):
         if not getattr(args, "source", ""):
             parser.error(
-                "`init-snapshot` requires `source`, either on the command line or in dreamdive.toml"
+                "`init` requires `source`, either on the command line or in dreamdive.toml"
             )
         if not getattr(args, "chapter_id", ""):
             parser.error(
-                "`init-snapshot` requires `chapter_id`, either on the command line or in dreamdive.toml"
+                "`init` requires `chapter_id`, either on the command line or in dreamdive.toml"
             )
     if args.command == "branch":
         if getattr(args, "timeline_index", None) is None and not getattr(args, "before_event_id", ""):
@@ -801,6 +839,7 @@ def main() -> int:
                 force_rerun=bool(getattr(args, "rerun_chapters", False)),
                 progress_callback=ingest_progress,
                 max_workers=int(getattr(args, "max_workers", 0) or 4),
+                section_max_workers=int(getattr(args, "section_max_workers", 0) or 4),
             )
             if not args.skip_meta_layer:
                 meta = pipeline.run_meta_layer(
@@ -810,15 +849,24 @@ def main() -> int:
                     force_rerun=bool(getattr(args, "rerun_meta_layer", False)),
                     progress_callback=ingest_progress,
                 )
-                accumulated = accumulated.model_copy(update={"meta": meta})
-            if not args.skip_entities:
-                entities = pipeline.run_entity_extraction(
-                    accumulated,
-                    backend,
-                    force_rerun=bool(getattr(args, "rerun_entities", False)),
+                # Enrich with genre taste benchmark (web/LLM search for genre masters)
+                from dreamdive.ingestion.author_research import LLMKnowledgeSearcher
+
+                meta = pipeline.run_genre_taste(
+                    meta,
+                    web_searcher=LLMKnowledgeSearcher(client),
+                    llm_client=client,
                     progress_callback=ingest_progress,
                 )
-                accumulated = accumulated.model_copy(update={"entities": entities.entities})
+                accumulated = accumulated.model_copy(update={"meta": meta})
+            if not getattr(args, "skip_fate", False):
+                fate = pipeline.run_dramatic_blueprint(
+                    accumulated,
+                    backend,
+                    force_rerun=bool(getattr(args, "rerun_fate", False)),
+                    progress_callback=ingest_progress,
+                )
+                accumulated = accumulated.model_copy(update={"fate": fate})
             if emit_json:
                 print(json.dumps(accumulated.model_dump(mode="json"), indent=2, ensure_ascii=False))
             else:
@@ -838,7 +886,51 @@ def main() -> int:
                 )
         return 0
 
-    if args.command == "init-snapshot":
+    if args.command == "design":
+        client = build_llm_client(settings, debug_session)
+        workspace_dir = Path(args.workspace)
+        emit_json = bool(getattr(args, "json", False))
+        continuation_goal = getattr(args, "continuation_goal", "") or ""
+
+        # Check if architecture already exists
+        existing = load_architecture_from_workspace(workspace_dir)
+        if existing and not getattr(args, "overwrite", False):
+            raise FileExistsError(
+                f"Narrative architecture already exists at {workspace_dir}/narrative_architecture.json. "
+                "Use --overwrite to regenerate."
+            )
+
+        with _CliStatusLine(
+            "Designing narrative architecture...",
+            enabled=not emit_json,
+        ) as status:
+            architecture = asyncio.run(
+                run_architecture_design_phase(
+                    workspace_path=workspace_dir,
+                    continuation_goal=continuation_goal,
+                    client=client,
+                )
+            )
+            if emit_json:
+                print(json.dumps(architecture.model_dump(mode="json"), indent=2, ensure_ascii=False))
+            else:
+                node_count = len(architecture.story_arc.narrative_nodes) if architecture.story_arc else 0
+                char_count = len(architecture.character_arcs)
+                chapter_count = len(architecture.chapter_plans)
+                inferred_count = len(architecture.hidden_worldbuilding.character_attributes) if architecture.hidden_worldbuilding else 0
+                summary_parts = [
+                    f"{node_count} narrative nodes, {char_count} character arcs, {chapter_count} chapters",
+                ]
+                if inferred_count:
+                    summary_parts[0] += f", {inferred_count} inferred attributes"
+                summary_parts.append(_format_provider_usage(client))
+                status.finish(
+                    "Architecture designed",
+                    " · ".join(part for part in summary_parts if part),
+                )
+        return 0
+
+    if args.command in ("init", "init-snapshot"):
         client = build_llm_client(settings, debug_session)
         emit_json = bool(getattr(args, "json", False))
         source_path = Path(args.source)
@@ -894,7 +986,7 @@ def main() -> int:
             )
             _ensure_target_not_exists(
                 store,
-                command="init-snapshot",
+                command="init",
                 session_id=args.session_id,
                 overwrite=bool(getattr(args, "overwrite", False)),
             )
@@ -1099,7 +1191,11 @@ def main() -> int:
             session_id=args.session_id,
         )
         emit_json = bool(getattr(args, "json", False))
-        runner = BackgroundMaintenanceRunner(client, debug_session=debug_session)
+        runner = BackgroundMaintenanceRunner(
+            client,
+            debug_session=debug_session,
+            max_workers=int(getattr(args, "max_workers", 0) or 4),
+        )
         with _CliStatusLine(
             "Maintaining world...",
             enabled=not emit_json,
@@ -1196,6 +1292,167 @@ def main() -> int:
                 status.finish(
                     "Migration complete",
                     f"{len(applied_sql)} bytes applied",
+                )
+        return 0
+
+    if args.command == "synthesize":
+        client = build_llm_client(settings, debug_session)
+        workspace_dir = Path(args.workspace)
+        store = build_runtime_store(
+            workspace_dir,
+            settings=settings,
+            session_id=args.session_id,
+        )
+        session = load_required_session(
+            store,
+            command="synthesize",
+            workspace_dir=workspace_dir,
+            session_id=args.session_id,
+        )
+        emit_json = bool(getattr(args, "json", False))
+
+        # Determine tick range
+        start_tick = int(getattr(args, "start_tick", None) or 0)
+        end_tick = int(
+            getattr(args, "end_tick", None)
+            or session.current_timeline_index
+        )
+
+        # Load meta layer for style reference
+        artifact_store = ArtifactStore(workspace_dir / "artifacts")
+        novel_meta = artifact_store.load_meta_layer()
+        if novel_meta is None:
+            raise FileNotFoundError(
+                "No meta layer found. Run `ingest` first to extract the novel's style and voice."
+            )
+
+        # Extract voice samples and heading examples from source
+        voice_samples = extract_voice_samples(novel_meta, max_samples=3)
+        source_heading_examples: list[str] = []
+        source_path = Path(session.source_path)
+        if source_path.exists():
+            from dreamdive.ingestion.source_loader import load_chapters as _load_ch
+            for ch in _load_ch(source_path):
+                if ch.title:
+                    source_heading_examples.append(ch.title)
+                if len(source_heading_examples) >= 5:
+                    break
+
+        # Calculate chapter boundaries
+        boundaries = calculate_chapter_boundaries_from_session(
+            session,
+            start_tick_index=start_tick,
+            end_tick_index=end_tick,
+        )
+
+        # Filter to single chapter if requested
+        requested_chapter = getattr(args, "chapter_number", None)
+        if requested_chapter is not None:
+            idx = int(requested_chapter) - 1
+            if idx < 0 or idx >= len(boundaries):
+                raise ValueError(
+                    f"Chapter {requested_chapter} is out of range "
+                    f"(1-{len(boundaries)} available)."
+                )
+            boundaries = [boundaries[idx]]
+            chapter_offset = idx
+        else:
+            chapter_offset = 0
+
+        # Prepare output directory
+        output_dir = Path(
+            getattr(args, "output_dir", None)
+            or (workspace_dir / "chapters")
+        )
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Build character states for continuity
+        character_states = [
+            CharacterStateSummary(
+                name=agent.snapshot.identity.name,
+                location=agent.snapshot.current_state.get("location", ""),
+                emotional_state=(
+                    agent.snapshot.inferred_state.emotional_summary
+                    if agent.snapshot.inferred_state
+                    else agent.snapshot.current_state.get("emotional_state", "")
+                ),
+                active_goals=[
+                    g.description for g in agent.snapshot.goals[:3]
+                ],
+            )
+            for agent in session.agents.values()
+        ]
+
+        # Synthesize chapters
+        backend = NarrativeSynthesisBackend(client)
+        user_meta = UserMeta()
+        previous_summary: ChapterSummary | None = None
+        unresolved = list(session.arc_state.unresolved_threads)
+        written_chapters: list[dict] = []
+
+        with _CliStatusLine(
+            "Synthesizing...",
+            f"{len(boundaries)} chapter{'s' if len(boundaries) != 1 else ''}",
+            enabled=not emit_json,
+        ) as status:
+            for i, (b_start, b_end) in enumerate(boundaries):
+                chapter_num = chapter_offset + i + 1
+                status.update(
+                    detail=f"chapter {chapter_num}/{chapter_offset + len(boundaries)} · ticks {b_start}-{b_end}"
+                )
+
+                # Build event window
+                window = select_chapter_window_from_session(
+                    session,
+                    start_tick_index=b_start,
+                    end_tick_index=b_end,
+                    user_meta=user_meta,
+                )
+
+                # Synthesize + summarize in one LLM call
+                chapter_text, summary_text = backend.synthesize_and_summarize(
+                    event_window=window,
+                    novel_meta=novel_meta,
+                    user_meta=user_meta,
+                    chapter_number=chapter_num,
+                    previous_chapter_summary=previous_summary,
+                    narrative_arc_unresolved_threads=unresolved,
+                    character_states=character_states,
+                    author="",
+                    voice_samples=voice_samples,
+                    source_heading_examples=source_heading_examples,
+                )
+
+                # Save chapter file
+                chapter_path = output_dir / f"chapter_{chapter_num:03d}.txt"
+                chapter_path.write_text(chapter_text, encoding="utf-8")
+
+                # Track for continuity
+                previous_summary = ChapterSummary(
+                    chapter_number=chapter_num,
+                    summary=summary_text,
+                )
+                written_chapters.append({
+                    "chapter": chapter_num,
+                    "ticks": f"{b_start}-{b_end}",
+                    "events": len(window.events),
+                    "path": str(chapter_path),
+                })
+
+            if emit_json:
+                print(json.dumps({"chapters": written_chapters}, indent=2, ensure_ascii=False))
+            else:
+                total = len(written_chapters)
+                status.finish(
+                    "Synthesis complete",
+                    " · ".join(
+                        part
+                        for part in [
+                            f"{total} chapter{'s' if total != 1 else ''} written to {output_dir}",
+                            _format_provider_usage(client),
+                        ]
+                        if part
+                    ),
                 )
         return 0
 

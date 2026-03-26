@@ -19,7 +19,6 @@ from dreamdive.ingestion.extractor import ArtifactStore, ChapterSource
 from dreamdive.ingestion.models import AccumulatedExtraction, CharacterExtractionRecord
 from dreamdive.ingestion.source_loader import load_chapters
 from dreamdive.memory.retrieval import (
-    build_entity_semantic_text,
     build_memory_semantic_text,
     embed_text,
     rank_memories,
@@ -62,6 +61,9 @@ def build_world_manager(settings: SimulationSettings) -> WorldManager:
         background_max_minutes=settings.tick_background_max_minutes,
         spotlight_threshold=settings.salience_spotlight_threshold,
         foreground_threshold=settings.salience_foreground_threshold,
+        minimum_salience=settings.salience_minimum,
+        activation_threshold=settings.activation_threshold,
+        batched_projection_threshold=settings.batched_projection_threshold,
         max_events_per_tick=settings.tick_max_events,
     )
 
@@ -97,12 +99,9 @@ def merge_derived_artifacts(
     artifact_store: ArtifactStore,
 ) -> AccumulatedExtraction:
     meta = artifact_store.load_meta_layer()
-    entities = artifact_store.load_entity_extraction()
     updates = {}
     if meta is not None:
         updates["meta"] = meta
-    if entities is not None:
-        updates["entities"] = entities.entities
     if not updates:
         return accumulated
     return accumulated.model_copy(update=updates)
@@ -112,9 +111,17 @@ def chapter_lookup(source_path: Path) -> Dict[str, ChapterSource]:
     return {chapter.chapter_id: chapter for chapter in load_chapters(source_path)}
 
 
-def build_character_identity(record: CharacterExtractionRecord) -> CharacterIdentity:
+def build_character_identity(
+    record: CharacterExtractionRecord,
+    inferred_attributes: Optional[Dict[str, Dict]] = None,
+) -> CharacterIdentity:
     personality = record.personality or {}
     identity = record.identity or {}
+    domain_attrs = dict(identity)
+    # Merge inferred attributes from hidden worldbuilding (if any)
+    if inferred_attributes:
+        domain_attrs.setdefault("inferred", {})
+        domain_attrs["inferred"].update(inferred_attributes)
     return CharacterIdentity(
         character_id=record.id,
         name=record.name,
@@ -123,7 +130,7 @@ def build_character_identity(record: CharacterExtractionRecord) -> CharacterIden
         values=list(personality.get("values", [])),
         fears=list(personality.get("fears", [])),
         desires=list(personality.get("desires", [])),
-        domain_attributes=dict(identity),
+        domain_attributes=domain_attrs,
     )
 
 
@@ -154,35 +161,8 @@ def subjective_entities_for_character(
     *,
     limit: int = 5,
 ) -> List[SubjectiveEntityRepresentation]:
-    relevant: List[SubjectiveEntityRepresentation] = []
-    for entity in accumulated.entities:
-        for representation in entity.agent_representations:
-            if representation.agent_id != character_id:
-                continue
-            item = SubjectiveEntityRepresentation(
-                agent_id=character_id,
-                entity_id=entity.entity_id,
-                name=entity.name,
-                type=entity.type,
-                narrative_role=entity.narrative_role,
-                objective_facts=list(entity.objective_facts),
-                belief=representation.belief,
-                emotional_charge=representation.emotional_charge,
-                goal_relevance=representation.goal_relevance,
-                misunderstanding=representation.misunderstanding,
-                confidence=representation.confidence,
-            )
-            item = item.model_copy(
-                update={
-                    "semantic_text": build_entity_semantic_text(item.model_dump(mode="json")),
-                }
-            )
-            item = item.model_copy(
-                update={"semantic_embedding": embed_text(item.semantic_text)}
-            )
-            relevant.append(item)
-            break
-    return relevant[:limit]
+    # Entity system disabled — return empty list.
+    return []
 
 
 def writing_style_note(accumulated: AccumulatedExtraction) -> str:
@@ -239,9 +219,7 @@ def build_relationship_entries(
                 from_character_id=record.id,
                 to_character_id=relation.target_id,
                 replay_key=replay_key,
-                trust_delta=0.0,
-                trust_value=relation.trust or 0.0,
-                sentiment_shift=relation.sentiment or "",
+                summary=relation.summary or "",
                 reason=relation.shared_history_summary or "",
             )
         )
@@ -426,9 +404,7 @@ def serialize_store(store: InMemoryStore) -> Dict[str, List[dict]]:
                     event_sequence=record.event_sequence,
                 ),
                 event_id=record.event_id,
-                trust_delta=record.trust_delta,
-                trust_value=record.trust_value,
-                sentiment_shift=record.sentiment_shift,
+                summary=record.summary,
                 reason=record.reason,
                 pinned=record.pinned,
             ).model_dump(mode="json")
@@ -679,6 +655,23 @@ def initialize_session(
         if not requested_ids or record.id in requested_ids
     ]
     replay_key = ReplayKey(tick=tick_label, timeline_index=timeline_index)
+
+    # Load inferred attributes from hidden worldbuilding (if architecture exists)
+    inferred_attrs_by_character: Dict[str, Dict] = {}
+    try:
+        from dreamdive.architecture_integration import load_architecture_from_workspace
+        architecture = load_architecture_from_workspace(workspace_dir)
+        if architecture and architecture.hidden_worldbuilding:
+            for attr in architecture.hidden_worldbuilding.character_attributes:
+                char_attrs = inferred_attrs_by_character.setdefault(attr.character_id, {})
+                char_attrs[attr.attribute_key] = {
+                    "value": attr.attribute_value,
+                    "visibility": attr.visibility,
+                    "can_evolve": attr.can_evolve,
+                    "reasoning": attr.reasoning,
+                }
+    except Exception:
+        pass  # Architecture may not exist yet; that's fine
     agents: Dict[str, AgentRuntimeState] = {}
     initial_append_only_log: Dict[str, List[dict]] = _empty_append_only_log()
     language_guidance = require_language_guidance(
@@ -719,7 +712,10 @@ def initialize_session(
             _AgentInitInput(
                 index=index,
                 record=record,
-                identity=build_character_identity(record),
+                identity=build_character_identity(
+                    record,
+                    inferred_attributes=inferred_attrs_by_character.get(record.id),
+                ),
                 state_entries=build_state_entries(record, replay_key),
                 relationships=build_relationship_entries(record, replay_key),
                 memories=[], # Will be populated in parallel inside _run_agent
@@ -759,7 +755,7 @@ def initialize_session(
         # Move heavy memory embedding to parallel threads
         memories = build_initial_memories(accumulated, inp.record, replay_key)
         
-        snapshot = initializer.initialize(
+        snapshot = initializer.initialize_unified(
             SnapshotInitializationInput(
                 identity=inp.identity,
                 replay_key=replay_key,
@@ -975,6 +971,8 @@ def run_session_tick(
         event_log_repo=bundle.event_log_repo,
         world_event_scheduler=scheduler,
         retrieved_memory_candidates=active_settings.retrieved_memory_candidates,
+        max_spotlight_beats=active_settings.max_spotlight_beats,
+        max_foreground_beats=active_settings.max_foreground_beats,
     )
     runtimes = [
         AgentRuntime(
@@ -1126,7 +1124,7 @@ def session_report(session: SimulationSessionState) -> Dict[str, object]:
         "agents": {
             agent_id: {
                 "location": runtime.snapshot.current_state.get("location", ""),
-                "top_goal": runtime.snapshot.goals[0].goal if runtime.snapshot.goals else "",
+                "top_goal": runtime.snapshot.goals[0].description if runtime.snapshot.goals else "",
                 "needs_reprojection": runtime.needs_reprojection,
             }
             for agent_id, runtime in sorted(session.agents.items())
@@ -1153,13 +1151,31 @@ def branch_session(
     arc_state = _arc_state_at_timeline(session, target_timeline)
 
     branched_agents: Dict[str, AgentRuntimeState] = {}
-    for agent_id, runtime in session.agents.items():
-        branched_agents[agent_id] = _reconstruct_agent_runtime(
-            runtime=runtime,
-            append_only_log=branch_log,
-            suppressed_memory_ids=suppressed.get(agent_id, set()),
-            replay_key=ReplayKey(tick=branch_tick_label, timeline_index=target_timeline),
-        )
+    agent_items = list(session.agents.items())
+    if len(agent_items) > 1:
+        from concurrent.futures import ThreadPoolExecutor as _BranchPool, as_completed as _branch_done
+
+        def _reconstruct(agent_id, runtime):
+            return agent_id, _reconstruct_agent_runtime(
+                runtime=runtime,
+                append_only_log=branch_log,
+                suppressed_memory_ids=suppressed.get(agent_id, set()),
+                replay_key=ReplayKey(tick=branch_tick_label, timeline_index=target_timeline),
+            )
+
+        with _BranchPool(max_workers=min(len(agent_items), 8)) as pool:
+            futures = [pool.submit(_reconstruct, aid, rt) for aid, rt in agent_items]
+            for future in _branch_done(futures):
+                aid, reconstructed = future.result()
+                branched_agents[aid] = reconstructed
+    else:
+        for agent_id, runtime in agent_items:
+            branched_agents[agent_id] = _reconstruct_agent_runtime(
+                runtime=runtime,
+                append_only_log=branch_log,
+                suppressed_memory_ids=suppressed.get(agent_id, set()),
+                replay_key=ReplayKey(tick=branch_tick_label, timeline_index=target_timeline),
+            )
 
     metadata = {
         **session.metadata,

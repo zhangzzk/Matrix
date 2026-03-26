@@ -64,36 +64,20 @@ def make_snapshot(character_id, name, location, goal_text):
         goals=[
             Goal(
                 priority=1,
-                goal=goal_text,
-                motivation="duty",
-                obstacle="conflict",
+                description=f"{goal_text}; duty; tense",
+                challenge="conflict; safety restored",
                 time_horizon="immediate",
-                emotional_charge="tense",
-                abandon_condition="safety restored",
             )
         ],
         working_memory=[],
         relationships=[],
-        inferred_state=SnapshotInference.model_validate(
-            {
-                "emotional_state": {
-                    "dominant": "anxious",
-                    "secondary": ["resolve"],
-                    "confidence": 0.8,
-                },
-                "immediate_tension": "Keep control",
-                "unspoken_subtext": "Cannot admit fear",
-                "physical_state": {
-                    "energy": 0.7,
-                    "injuries_or_constraints": "",
-                    "location": location,
-                    "current_activity": "waiting",
-                },
-                "knowledge_state": {
-                    "new_knowledge": [],
-                    "active_misbeliefs": [],
-                },
-            }
+        inferred_state=SnapshotInference(
+            emotional_summary="anxious",
+            immediate_tension="Keep control",
+            unspoken_subtext="Cannot admit fear",
+            physical_status="waiting",
+            location=location,
+            knowledge=[],
         ),
     )
 
@@ -125,8 +109,6 @@ class EventSimulationTests(unittest.TestCase):
         payload = BackgroundEventPayload(
             narrative_summary="Arya slips by without being seen.",
             outcomes=[],
-            relationship_deltas=[],
-            unexpected="",
         )
         client = build_client([json.dumps(payload.model_dump(mode="json"))])
         simulator = EventSimulator(client)
@@ -203,9 +185,7 @@ class EventSimulationTests(unittest.TestCase):
             [
                 json.dumps(setup),
                 json.dumps(beat_arya),
-                json.dumps(resolution_continue),
                 json.dumps(beat_sansa),
-                json.dumps(resolution_end),
             ]
         )
         simulator = EventSimulator(client)
@@ -238,18 +218,20 @@ class EventSimulationTests(unittest.TestCase):
                 ],
                 "sansa": [],
             },
-            max_beats=4,
+            max_beats=2,
+            use_unified=False,
         )
 
         self.assertEqual(len(result.transcript), 2)
         self.assertEqual(result.transcript[0].external["dialogue"], "Do not follow me.")
         self.assertEqual(result.private_state_by_agent["arya"][0]["thought"], "I cannot trust her")
         transport = client.transport
-        sansa_prompt = transport.prompts[3]
+        sansa_prompt = transport.prompts[2]
         self.assertNotIn('"thought": "I cannot trust her"', sansa_prompt.user)
         self.assertIn('"dialogue": "Do not follow me."', sansa_prompt.user)
         arya_prompt = transport.prompts[1]
-        self.assertIn('"name": "The Letter"', arya_prompt.user)
+        # Entity system disabled — world entities no longer appear in beat prompts.
+        self.assertNotIn('"name": "The Letter"', arya_prompt.user)
 
     def test_state_update_prompt_uses_agent_perspective(self) -> None:
         snapshot = make_snapshot("arya", "Arya", "courtyard", "escape")

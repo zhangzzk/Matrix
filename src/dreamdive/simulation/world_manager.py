@@ -31,6 +31,7 @@ class WorldManager:
         background_max_minutes: int = 10080,
         spotlight_threshold: float = 0.8,
         foreground_threshold: float = 0.4,
+        minimum_salience: float = 0.0,
         activation_threshold: float = 0.55,
         batched_projection_threshold: float = 0.7,
         tick_recovery_ticks: int = 2,
@@ -45,6 +46,7 @@ class WorldManager:
         self.background_max_minutes = background_max_minutes
         self.spotlight_threshold = spotlight_threshold
         self.foreground_threshold = foreground_threshold
+        self.minimum_salience = minimum_salience
         self.activation_threshold = activation_threshold
         self.batched_projection_threshold = batched_projection_threshold
         self.tick_recovery_ticks = max(0, tick_recovery_ticks)
@@ -116,6 +118,13 @@ class WorldManager:
             return "foreground"
         return "background"
 
+    def filter_below_minimum_salience(
+        self,
+        seeds: Iterable[SimulationSeed],
+    ) -> list[SimulationSeed]:
+        """Drop seeds below minimum_salience — these aren't worth simulating."""
+        return [seed for seed in seeds if seed.salience >= self.minimum_salience]
+
     def compute_activation_scores(
         self,
         snapshots: Iterable[CharacterSnapshot],
@@ -164,7 +173,6 @@ class WorldManager:
                 score += 0.05
 
         if snapshot.inferred_state is not None:
-            score += max(0.0, min(1.0, snapshot.inferred_state.emotional_state.confidence)) * 0.25
             if snapshot.inferred_state.immediate_tension:
                 score += 0.15
             if snapshot.inferred_state.unspoken_subtext:
@@ -341,7 +349,11 @@ class WorldManager:
         )
         participant_ids = {participant for participant in participants if participant}
         source_location_normalized = source_location.strip().lower()
-        bridge_events: list[ScheduledWorldEvent] = []
+
+        # Group eligible characters by their current location so we emit
+        # one bridge event per location instead of one per character.
+        from collections import defaultdict
+        location_groups: dict[str, list[str]] = defaultdict(list)
 
         for snapshot in snapshots:
             character_id = snapshot.identity.character_id
@@ -352,19 +364,21 @@ class WorldManager:
             target_location = str(snapshot.current_state.get("location") or "").strip()
             if not target_location or target_location.lower() == source_location_normalized:
                 continue
+            location_groups[target_location].append(character_id)
+
+        bridge_events: list[ScheduledWorldEvent] = []
+        delay = self._bridge_delay_minutes(salience)
+        urgency = self._bridge_urgency(salience)
+
+        for idx, (location, agent_ids) in enumerate(sorted(location_groups.items())):
             bridge_events.append(
                 ScheduledWorldEvent(
-                    event_id=f"{source_event_id}_bridge_{character_id}",
-                    trigger_timeline_index=replay_timeline_index + self._bridge_delay_minutes(salience),
-                    description=self._bridge_description(
-                        target_name=snapshot.identity.name,
-                        outcome_summary=outcome_summary,
-                        salience=salience,
-                        language_guidance=language_guidance,
-                    ),
-                    affected_agents=[character_id],
-                    urgency=self._bridge_urgency(salience),
-                    location=target_location,
+                    event_id=f"{source_event_id}_bridge_{idx:02d}",
+                    trigger_timeline_index=replay_timeline_index + delay,
+                    description=outcome_summary,
+                    affected_agents=sorted(agent_ids),
+                    urgency=urgency,
+                    location=location,
                 )
             )
 
@@ -386,43 +400,6 @@ class WorldManager:
             return "medium"
         return "low"
 
-    @staticmethod
-    def _bridge_description(
-        *,
-        target_name: str,
-        outcome_summary: str,
-        salience: float,
-        language_guidance: str = "",
-    ) -> str:
-        if WorldManager._prefers_chinese_bridge_text(
-            language_guidance=language_guidance,
-            target_name=target_name,
-            outcome_summary=outcome_summary,
-        ):
-            if salience >= 0.8:
-                return f"消息传到{target_name}耳中：{outcome_summary}"
-            return f"风声传到{target_name}耳中：{outcome_summary}"
-        if salience >= 0.8:
-            return f"News reaches {target_name}: {outcome_summary}"
-        return f"Rumor reaches {target_name}: {outcome_summary}"
-
-    @staticmethod
-    def _prefers_chinese_bridge_text(
-        *,
-        language_guidance: str,
-        target_name: str,
-        outcome_summary: str,
-    ) -> bool:
-        if "中文" in language_guidance:
-            return True
-        return any(
-            WorldManager._contains_cjk(text)
-            for text in (target_name, outcome_summary)
-        )
-
-    @staticmethod
-    def _contains_cjk(text: str) -> bool:
-        return any("\u4e00" <= char <= "\u9fff" for char in text)
 
     @staticmethod
     def _has_social_connection(
@@ -436,9 +413,7 @@ class WorldManager:
         for relation in source.relationships:
             if relation.to_character_id != target_id:
                 continue
-            if abs(relation.trust_value) >= trust_threshold:
-                return True
-            if relation.sentiment_shift or relation.reason:
+            if relation.summary or relation.reason:
                 return True
 
         if reverse_source is None:
@@ -447,8 +422,6 @@ class WorldManager:
         for relation in reverse_source.relationships:
             if relation.to_character_id != reverse_target_id:
                 continue
-            if abs(relation.trust_value) >= trust_threshold:
-                return True
-            if relation.sentiment_shift or relation.reason:
+            if relation.summary or relation.reason:
                 return True
         return False

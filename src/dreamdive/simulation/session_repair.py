@@ -13,8 +13,12 @@ from dreamdive.simulation.state_normalization import (
 
 _REPLAY_NORMALIZED_DIMENSIONS = {"emotional_state", "physical_state"}
 _LEGACY_TICK_JOBS = {"arc_update", "memory_compression"}
-_BRIDGE_DESCRIPTION_PATTERN = re.compile(
-    r"^(?P<prefix>Rumor reaches|News reaches) (?P<target>.+?): (?P<summary>.+)$"
+# Legacy bridge description patterns (kept for session migration).
+_BRIDGE_DESCRIPTION_PATTERN_EN = re.compile(
+    r"^(?:Rumor reaches|News reaches) .+?: (?P<summary>.+)$"
+)
+_BRIDGE_DESCRIPTION_PATTERN_ZH = re.compile(
+    r"^(?:消息传到|风声传到).+?耳中[：:]\s*(?P<summary>.+)$"
 )
 
 
@@ -152,16 +156,16 @@ def _normalize_bridge_event_record(
     *,
     language_guidance: str,
 ) -> dict:
+    """Strip legacy per-character wrapper from bridge descriptions.
+
+    Old format: "风声传到XXX耳中：actual summary" or "Rumor reaches XXX: actual summary"
+    New format: just the summary itself.
+    """
     normalized = dict(record)
     description = str(normalized.get("description", ""))
-    if "中文" not in language_guidance:
-        return normalized
-    match = _BRIDGE_DESCRIPTION_PATTERN.match(description)
-    if match is None:
-        return normalized
-    prefix = match.group("prefix")
-    target = match.group("target").strip()
-    summary = match.group("summary").strip()
-    localized_prefix = "消息传到" if prefix == "News reaches" else "风声传到"
-    normalized["description"] = f"{localized_prefix}{target}耳中：{summary}"
+    for pattern in (_BRIDGE_DESCRIPTION_PATTERN_EN, _BRIDGE_DESCRIPTION_PATTERN_ZH):
+        match = pattern.match(description)
+        if match:
+            normalized["description"] = match.group("summary").strip()
+            break
     return normalized

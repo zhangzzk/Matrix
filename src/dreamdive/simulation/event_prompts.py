@@ -4,6 +4,11 @@ import json
 from typing import Dict, List
 
 from dreamdive.language_guidance import format_language_guidance_block
+from dreamdive.prompts.common import (
+    build_character_isolation_header,
+    build_information_barrier,
+    build_multi_agent_preamble,
+)
 from dreamdive.schemas import (
     AgentContextPacket,
     BackgroundEventPayload,
@@ -12,6 +17,7 @@ from dreamdive.schemas import (
     ResolutionCheckPayload,
     SceneSetupPayload,
     StateUpdatePayload,
+    UnifiedScenePayload,
 )
 from dreamdive.simulation.seeds import SimulationSeed
 
@@ -32,9 +38,9 @@ def _compressed_snapshot(snapshot: CharacterSnapshot) -> Dict[str, object]:
     return {
         "character_id": snapshot.identity.character_id,
         "name": snapshot.identity.name,
-        "goal": snapshot.goals[0].goal if snapshot.goals else "",
+        "goal": snapshot.goals[0].description if snapshot.goals else "",
         "emotional_state": (
-            snapshot.inferred_state.emotional_state.model_dump(mode="json")
+            snapshot.inferred_state.emotional_summary
             if snapshot.inferred_state is not None
             else snapshot.current_state.get("emotional_state", "")
         ),
@@ -42,8 +48,7 @@ def _compressed_snapshot(snapshot: CharacterSnapshot) -> Dict[str, object]:
         "relationships": [
             {
                 "target_id": relation.to_character_id,
-                "trust_value": relation.trust_value,
-                "sentiment_shift": relation.sentiment_shift,
+                "summary": relation.summary,
             }
             for relation in snapshot.relationships
         ],
@@ -66,19 +71,9 @@ def build_background_event_prompt(
             "outcomes": [
                 {
                     "agent_id": "agent_a",
-                    "goal_status": "advanced",
                     "new_knowledge": "这个角色新获得的关键信息",
-                    "emotional_delta": "简洁的情绪变化",
                 }
             ],
-            "relationship_deltas": [
-                {
-                    "from_id": "agent_a",
-                    "to_id": "agent_b",
-                    "change": "一句简洁的关系变化",
-                }
-            ],
-            "unexpected": "",
         }
     )
     return PromptRequest(
@@ -277,6 +272,165 @@ def build_resolution_check_prompt(
     )
 
 
+def build_unified_scene_prompt(
+    *,
+    seed: SimulationSeed,
+    snapshots: List[CharacterSnapshot],
+    context_packets: Dict[str, AgentContextPacket],
+    narrative_phase: str,
+    tension_level: float,
+    relevant_threads: List[str],
+    voice_samples_by_agent: Dict[str, List[str]] | None = None,
+    max_beats: int = 8,
+    language_guidance: str = "",
+) -> PromptRequest:
+    """Build a single prompt that generates a complete scene with all beats.
+
+    Instead of calling the LLM once per beat, this prompt provides all
+    participant context and asks for the full scene in one response.
+    """
+    language_block = format_language_guidance_block(language_guidance)
+    voice_samples_by_agent = voice_samples_by_agent or {}
+
+    # Collision / seed record
+    collision_record = {
+        "seed_id": seed.seed_id,
+        "participants": seed.participants,
+        "location": seed.location,
+        "description": seed.description,
+        "salience": seed.salience,
+    }
+
+    # Build epistemically-isolated character blocks
+    agent_names = []
+    for snapshot in snapshots:
+        agent_names.append(snapshot.identity.name)
+
+    preamble = build_multi_agent_preamble(agent_names)
+
+    character_blocks: List[str] = []
+    prev_name = ""
+    for snapshot in snapshots:
+        agent_id = snapshot.identity.character_id
+        name = snapshot.identity.name
+        packet = context_packets.get(agent_id)
+        if packet is None:
+            continue
+
+        if prev_name:
+            character_blocks.append(
+                build_information_barrier(
+                    from_character=prev_name,
+                    to_character=name,
+                )
+            )
+
+        character_blocks.append(
+            build_character_isolation_header(
+                character_id=agent_id,
+                character_name=name,
+                role_instruction="Write beats for this character using ONLY their knowledge.",
+            )
+        )
+        voice = voice_samples_by_agent.get(agent_id, [])
+        character_blocks.append(
+            f"IDENTITY:\n{json.dumps(packet.identity, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
+            f"CURRENT STATE:\n{json.dumps(packet.current_state, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
+            f"WORKING MEMORY:\n{json.dumps(packet.working_memory, indent=2, ensure_ascii=False)}\n\n"
+            f"RELATIONSHIP CONTEXT:\n{json.dumps(packet.relationship_context, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
+            f"VOICE SAMPLES:\n{json.dumps(voice, indent=2, ensure_ascii=False)}\n"
+        )
+        prev_name = name
+
+    characters_text = "\n".join(character_blocks)
+
+    # Participant turn order for prompt guidance
+    turn_order = ", ".join(seed.participants)
+
+    output_contract = _json_contract(
+        {
+            "scene_opening": "一句到两句的开场概述",
+            "tension_signature": "一句简洁的张力概括",
+            "beats": [
+                {
+                    "agent_id": "character_id",
+                    "internal": {
+                        "thought": "一句简洁内心想法",
+                        "emotion_now": "当前情绪",
+                        "goal_update": "简短的目标变化",
+                        "what_i_noticed": "此刻注意到的关键细节",
+                    },
+                    "external": {
+                        "dialogue": "可选对白",
+                        "physical_action": "外显动作",
+                        "tone": "说话或行动的语气",
+                    },
+                    "held_back": "刻意压下没有说出的内容",
+                },
+            ],
+            "scene_summary": "2-3句场景结果总结",
+            "resolution": {
+                "resolved": True,
+                "resolution_type": "natural",
+                "scene_outcome": "一句简短的场景结果概括",
+            },
+        }
+    )
+
+    user = (
+        "You are the World Manager writing a complete scene for a story simulation.\n"
+        "You must produce the ENTIRE scene — opening, all character beats, and resolution — "
+        "in a single response.\n\n"
+        f"{language_block}"
+        f"{preamble}"
+        "SCENE SEED:\n"
+        f"{json.dumps(collision_record, indent=2, sort_keys=True, ensure_ascii=False)}\n\n"
+        "NARRATIVE CONTEXT:\n"
+        f"Current story phase: {narrative_phase}\n"
+        f"Tension level: {tension_level}\n"
+        f"Unresolved threads: {json.dumps(relevant_threads, ensure_ascii=False)}\n\n"
+        "CHARACTER DATA (each block is epistemically isolated):\n\n"
+        f"{characters_text}\n\n"
+        "SCENE WRITING INSTRUCTIONS:\n"
+        f"1. Write a scene_opening that sets the physical and emotional stage.\n"
+        f"2. Write {max_beats} beats (or fewer if the scene resolves naturally). "
+        f"Cycle through participants in order: {turn_order}. "
+        "Each beat must include BOTH internal (private thoughts only this character knows) "
+        "and external (visible dialogue/actions others can observe) layers.\n"
+        "3. EPISTEMIC ISOLATION — this is critical:\n"
+        "   - Each character can ONLY react to what they have seen/heard in previous EXTERNAL beats.\n"
+        "   - A character CANNOT know another character's internal thoughts or held_back content.\n"
+        "   - If character A holds back a reaction in beat 2, character B in beat 3 must NOT respond to it.\n"
+        "   - Base each character's reactions on their own knowledge, memories, and the externally "
+        "visible actions/dialogue of others.\n"
+        "4. Natural pacing: vary beat intensity. Not every beat needs dialogue. "
+        "Allow silence, hesitation, small gestures. Let tension build and release organically.\n"
+        "5. End with a scene_summary and resolution when a natural stopping point is reached "
+        "or all beats are used.\n\n"
+        "OUTPUT CONTRACT:\n"
+        f"{output_contract}"
+    )
+
+    return PromptRequest(
+        system=(
+            "You are a story simulation World Manager. "
+            "Write a complete scene with epistemically isolated character beats. "
+            "Each character only knows what they would realistically know. "
+            "Maintain internal/external layer separation. Return valid JSON only."
+        ),
+        user=user,
+        max_tokens=4_500,
+        stream=False,
+        metadata={
+            "prompt_name": "p2_6_unified_scene",
+            "response_schema": UnifiedScenePayload.__name__,
+            "seed_id": seed.seed_id,
+            "participant_count": len(seed.participants),
+            "max_beats": max_beats,
+        },
+    )
+
+
 def build_state_update_prompt(
     *,
     snapshot: CharacterSnapshot,
@@ -289,7 +443,6 @@ def build_state_update_prompt(
         {
             "emotional_delta": {
                 "dominant_now": "当前主导情绪",
-                "underneath": "底层情绪暗流",
                 "shift_reason": "情绪变化原因",
             },
             "goal_stack_update": {
@@ -301,8 +454,7 @@ def build_state_update_prompt(
             "relationship_updates": [
                 {
                     "target_id": "agent_b",
-                    "trust_delta": 0.0,
-                    "sentiment_shift": "一句简洁的关系变化",
+                    "summary": "用自然语言描述关系的当前状态和变化",
                     "pinned": False,
                     "pin_reason": "",
                 }
@@ -322,10 +474,10 @@ def build_state_update_prompt(
             "CORE IDENTITY (brief):\n"
             f"Primary drives: {', '.join(snapshot.identity.desires)}\n"
             f"Key values: {', '.join(snapshot.identity.values)}\n"
-            f"Prominent dimensions: {json.dumps(snapshot.identity.prominent_dimensions, sort_keys=True, ensure_ascii=False)}\n\n"
+            f"Personality: {snapshot.identity.personality_summary}\n\n"
             "STATE BEFORE THE EVENT:\n"
-            f"Emotional state: {snapshot.inferred_state.emotional_state.dominant if snapshot.inferred_state else snapshot.current_state.get('emotional_state', '')}\n"
-            f"Active goal: {snapshot.goals[0].goal if snapshot.goals else ''}\n"
+            f"Emotional state: {snapshot.inferred_state.emotional_summary if snapshot.inferred_state else snapshot.current_state.get('emotional_state', '')}\n"
+            f"Active goal: {snapshot.goals[0].description if snapshot.goals else ''}\n"
             f"Fear: {', '.join(snapshot.identity.fears)}\n\n"
             "WHAT JUST HAPPENED:\n"
             f"{event_outcome_from_agent_perspective}\n\n"

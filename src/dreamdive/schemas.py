@@ -41,21 +41,16 @@ class RelationshipLogEntry(BaseModel):
     to_character_id: str
     replay_key: ReplayKey
     event_id: Optional[str] = None
-    trust_delta: float = 0.0
-    trust_value: float
-    sentiment_shift: str = ""
+    summary: str = ""
     reason: str = ""
     pinned: bool = False
 
 
 class Goal(BaseModel):
     priority: int = Field(ge=1)
-    goal: str
-    motivation: str
-    obstacle: str
+    description: str
+    challenge: str = ""
     time_horizon: TimeHorizon
-    emotional_charge: str
-    abandon_condition: str
 
 
 class GoalStackSnapshot(BaseModel):
@@ -77,8 +72,8 @@ class EpisodicMemory(BaseModel):
     salience: float = Field(ge=0.0, le=1.0)
     pinned: bool = False
     compressed: bool = False
-    semantic_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
-    embedding: Optional[List[float]] = None
+    semantic_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, exclude=True)
+    embedding: Optional[List[float]] = Field(default=None, exclude=True)
 
 
 class NarrativeArcState(BaseModel):
@@ -104,35 +99,17 @@ class CharacterIdentity(BaseModel):
     values: List[str] = Field(default_factory=list)
     fears: List[str] = Field(default_factory=list)
     desires: List[str] = Field(default_factory=list)
-    universal_dimensions: Dict[str, float] = Field(default_factory=dict)
-    prominent_dimensions: Dict[str, float] = Field(default_factory=dict)
+    personality_summary: str = ""
     domain_attributes: Dict[str, JSONValue] = Field(default_factory=dict)
 
 
-class EmotionalState(BaseModel):
-    dominant: str
-    secondary: List[str] = Field(default_factory=list)
-    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
-
-
-class PhysicalState(BaseModel):
-    energy: float = Field(default=1.0, ge=0.0, le=1.0)
-    injuries_or_constraints: str = ""
-    location: str = ""
-    current_activity: str = ""
-
-
-class KnowledgeState(BaseModel):
-    new_knowledge: List[str] = Field(default_factory=list)
-    active_misbeliefs: List[str] = Field(default_factory=list)
-
-
 class SnapshotInference(BaseModel):
-    emotional_state: EmotionalState
+    emotional_summary: str
     immediate_tension: str
     unspoken_subtext: str
-    physical_state: PhysicalState
-    knowledge_state: KnowledgeState
+    physical_status: str = ""
+    location: str = ""
+    knowledge: List[str] = Field(default_factory=list)
 
 
 class GoalSeedPayload(BaseModel):
@@ -141,19 +118,46 @@ class GoalSeedPayload(BaseModel):
     most_uncertain_relationship: str = ""
 
 
-class TrajectoryContingency(BaseModel):
-    trigger: str
-    response: str
+class UnifiedInitPayload(BaseModel):
+    """Combined snapshot inference + goal seeding output for a single character."""
+
+    emotional_summary: str
+    immediate_tension: str
+    unspoken_subtext: str
+    physical_status: str = ""
+    location: str = ""
+    knowledge: List[str] = Field(default_factory=list)
+    goal_stack: List[Goal]
+    actively_avoiding: str = ""
+    most_uncertain_relationship: str = ""
+
+    def to_snapshot_inference(self) -> SnapshotInference:
+        return SnapshotInference(
+            emotional_summary=self.emotional_summary,
+            immediate_tension=self.immediate_tension,
+            unspoken_subtext=self.unspoken_subtext,
+            physical_status=self.physical_status,
+            location=self.location,
+            knowledge=list(self.knowledge),
+        )
+
+    def to_goal_seed(self) -> GoalSeedPayload:
+        return GoalSeedPayload(
+            goal_stack=self.goal_stack,
+            actively_avoiding=self.actively_avoiding,
+            most_uncertain_relationship=self.most_uncertain_relationship,
+        )
+
+
+class BatchedUnifiedInitPayload(BaseModel):
+    """Batched unified init results keyed by character_id."""
+
+    characters: Dict[str, UnifiedInitPayload] = Field(default_factory=dict)
 
 
 class TrajectoryProjectionPayload(BaseModel):
-    primary_intention: str
-    motivation: str = ""
-    immediate_next_action: str
-    contingencies: List[TrajectoryContingency] = Field(default_factory=list)
-    greatest_fear_this_horizon: str = ""
-    abandon_condition: str = ""
-    held_back_impulse: str = ""
+    intention: str
+    next_steps: str = ""
     projection_horizon: str = ""
 
 
@@ -165,6 +169,7 @@ class AgentContextPacket(BaseModel):
     identity: Dict[str, Any]
     current_state: Dict[str, JSONValue]
     working_memory: List[str] = Field(default_factory=list)
+    recent_events: List[str] = Field(default_factory=list)
     relationship_context: List[Dict[str, Any]] = Field(default_factory=list)
     world_entities: List[Dict[str, Any]] = Field(default_factory=list)
     scene_context: Dict[str, JSONValue] = Field(default_factory=dict)
@@ -194,7 +199,7 @@ class GoalTensionRecord(BaseModel):
     description: str
     information_asymmetry: Dict[str, str] = Field(default_factory=dict)
     stakes: Dict[str, str] = Field(default_factory=dict)
-    emergence_probability: float = Field(default=0.0, ge=0.0, le=1.0)
+    likelihood: str = ""
     salience_factors: List[str] = Field(default_factory=list)
 
 
@@ -216,24 +221,21 @@ class GoalCollisionBatchPayload(BaseModel):
     world_events: List[WorldEventSuggestion] = Field(default_factory=list)
 
 
+class UnifiedProjectionPayload(BaseModel):
+    trajectories: Dict[str, TrajectoryProjectionPayload] = Field(default_factory=dict)
+    goal_tensions: List[GoalTensionRecord] = Field(default_factory=list)
+    solo_seeds: List[SoloSeedSuggestion] = Field(default_factory=list)
+    world_events: List[WorldEventSuggestion] = Field(default_factory=list)
+
+
 class BackgroundAgentOutcome(BaseModel):
     agent_id: str
-    goal_status: str
     new_knowledge: str = ""
-    emotional_delta: str = ""
-
-
-class RelationshipDelta(BaseModel):
-    from_id: str
-    to_id: str
-    change: str
 
 
 class BackgroundEventPayload(BaseModel):
     narrative_summary: str
     outcomes: List[BackgroundAgentOutcome] = Field(default_factory=list)
-    relationship_deltas: List[RelationshipDelta] = Field(default_factory=list)
-    unexpected: str = ""
 
 
 class SceneResolutionConditions(BaseModel):
@@ -279,10 +281,41 @@ class ResolutionCheckPayload(BaseModel):
     )
 
 
+class UnifiedSceneBeat(BaseModel):
+    """A single beat within a unified scene response."""
+
+    agent_id: str
+    internal: AgentBeatInternal = Field(default_factory=AgentBeatInternal)
+    external: AgentBeatExternal = Field(default_factory=AgentBeatExternal)
+    held_back: str = ""
+
+
+class UnifiedSceneResolution(BaseModel):
+    """Resolution information returned as part of the unified scene."""
+
+    resolved: bool = True
+    resolution_type: str = "natural"
+    scene_outcome: str = ""
+
+
+class UnifiedScenePayload(BaseModel):
+    """Complete scene output from a single LLM call.
+
+    Replaces the beat-by-beat loop (scene setup + N beat calls +
+    resolution checks) with one structured response that contains
+    the full scene: opening, all beats, summary, and resolution.
+    """
+
+    scene_opening: str
+    tension_signature: str = ""
+    beats: List[UnifiedSceneBeat] = Field(default_factory=list)
+    scene_summary: str = ""
+    resolution: UnifiedSceneResolution = Field(default_factory=UnifiedSceneResolution)
+
+
 class StateUpdateRelationshipPayload(BaseModel):
     target_id: str
-    trust_delta: float = 0.0
-    sentiment_shift: str = ""
+    summary: str = ""
     pinned: bool = False
     pin_reason: str = ""
 
@@ -296,7 +329,6 @@ class GoalStackUpdatePayload(BaseModel):
 
 class EmotionalDeltaPayload(BaseModel):
     dominant_now: str
-    underneath: str = ""
     shift_reason: str = ""
 
 
@@ -374,6 +406,13 @@ class CharacterSnapshot(BaseModel):
     working_memory: List[EpisodicMemory]
     relationships: List[RelationshipLogEntry]
     inferred_state: Optional[SnapshotInference] = None
+
+
+class UnifiedSynthesisPayload(BaseModel):
+    """Combined chapter text + summary from a single LLM call."""
+
+    chapter_text: str
+    summary: str
 
 
 class LLMMessage(BaseModel):

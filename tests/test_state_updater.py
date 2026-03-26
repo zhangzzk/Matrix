@@ -56,36 +56,20 @@ def make_snapshot():
         goals=[
             Goal(
                 priority=1,
-                goal="protect the children",
-                motivation="duty",
-                obstacle="royal power",
+                description="protect the children; duty; grave resolve",
+                challenge="royal power; children are safe",
                 time_horizon="immediate",
-                emotional_charge="grave resolve",
-                abandon_condition="children are safe",
             )
         ],
         working_memory=[],
         relationships=[],
-        inferred_state=SnapshotInference.model_validate(
-            {
-                "emotional_state": {
-                    "dominant": "dread",
-                    "secondary": ["resolve"],
-                    "confidence": 0.9,
-                },
-                "immediate_tension": "Cersei already knows",
-                "unspoken_subtext": "This was never negotiation",
-                "physical_state": {
-                    "energy": 0.6,
-                    "injuries_or_constraints": "",
-                    "location": "throne_room",
-                    "current_activity": "standing firm",
-                },
-                "knowledge_state": {
-                    "new_knowledge": [],
-                    "active_misbeliefs": [],
-                },
-            }
+        inferred_state=SnapshotInference(
+            emotional_summary="dread",
+            immediate_tension="Cersei already knows",
+            unspoken_subtext="This was never negotiation",
+            physical_status="standing firm",
+            location="throne_room",
+            knowledge=[],
         ),
     )
 
@@ -95,7 +79,6 @@ class StateUpdaterTests(unittest.TestCase):
         response = {
             "emotional_delta": {
                 "dominant_now": "protective fury",
-                "underneath": "dread",
                 "shift_reason": "Threat to the children became explicit",
             },
             "goal_stack_update": {
@@ -115,8 +98,7 @@ class StateUpdaterTests(unittest.TestCase):
             "relationship_updates": [
                 {
                     "target_id": "cersei",
-                    "trust_delta": -0.4,
-                    "sentiment_shift": "wary respect -> open hostility",
+                    "summary": "wary respect -> open hostility",
                     "pinned": True,
                     "pin_reason": "The confrontation in the throne room",
                 }
@@ -138,8 +120,8 @@ class StateUpdaterTests(unittest.TestCase):
         self.assertEqual(result.state_changes[0].dimension, "emotional_state")
         self.assertEqual(result.state_changes[0].to_value, "protective fury")
         self.assertEqual(result.state_changes[1].dimension, "knowledge_state")
-        self.assertEqual(result.goal_stack.goals[0].goal, "protect the children")
-        self.assertEqual(result.goal_stack.goals[1].goal, "buy time to get the girls away")
+        self.assertIn("protect the children", result.goal_stack.goals[0].description)
+        self.assertIn("buy time to get the girls away", result.goal_stack.goals[1].description)
         self.assertTrue(result.needs_reprojection)
         self.assertEqual(result.relationship_changes[0].to_character_id, "cersei")
 

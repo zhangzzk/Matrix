@@ -30,13 +30,11 @@ def test_provider(name, api_key, base_url, model):
 {
   "emotional_state": {
     "dominant": "沮丧但保持冷静",
-    "secondary": ["焦虑", "期待"],
-    "confidence": 0.6
+    "secondary": ["焦虑", "期待"]
   },
   "immediate_tension": "刚被拒绝，站在雨中思考下一步",
   "unspoken_subtext": "不想让别人看到自己的脆弱",
   "physical_state": {
-    "energy": 0.4,
     "injuries_or_constraints": "淋雨有些冷",
     "location": "学校门口",
     "current_activity": "站着发呆"

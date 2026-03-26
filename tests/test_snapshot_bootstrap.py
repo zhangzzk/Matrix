@@ -38,12 +38,9 @@ class SnapshotBootstrapperTests(unittest.TestCase):
             goals=[
                 Goal(
                     priority=1,
-                    goal="protect Robert's legitimacy inquiry",
-                    motivation="duty",
-                    obstacle="court intrigue",
+                    description="protect Robert's legitimacy inquiry; duty; uneasy resolve",
+                    challenge="court intrigue; proof inquiry is false",
                     time_horizon=TimeHorizon.THIS_WEEK,
-                    emotional_charge="uneasy resolve",
-                    abandon_condition="proof inquiry is false",
                 )
             ],
         )
@@ -68,9 +65,7 @@ class SnapshotBootstrapperTests(unittest.TestCase):
                 from_character_id="ned",
                 to_character_id="cersei",
                 replay_key=replay_key,
-                trust_value=0.1,
-                trust_delta=-0.2,
-                sentiment_shift="wary respect -> suspicion",
+                summary="wary respect -> suspicion",
                 reason="contradictory story",
             )
         ]
@@ -87,7 +82,7 @@ class SnapshotBootstrapperTests(unittest.TestCase):
 
         self.assertEqual(snapshot.current_state["location"], "great_hall")
         self.assertEqual(snapshot.current_state["emotional_state"], "concern")
-        self.assertEqual(snapshot.goals[0].goal, "protect Robert's legitimacy inquiry")
+        self.assertEqual(snapshot.goals[0].description, "protect Robert's legitimacy inquiry; duty; uneasy resolve")
         self.assertEqual(
             [memory.summary for memory in snapshot.working_memory],
             ["Pinned confrontation", "Recent clue"],

@@ -48,6 +48,9 @@ env/
 # DreamDive runtime data
 .dreamdive/
 *.log
+debug/
+logs/
+jobs/
 
 # Test outputs
 .pytest_cache/

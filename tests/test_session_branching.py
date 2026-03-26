@@ -18,12 +18,9 @@ def make_runtime() -> AgentRuntimeState:
         goals=[
             Goal(
                 priority=1,
-                goal="escape the castle",
-                motivation="survival",
-                obstacle="closed gates",
+                description="escape the castle; survival; urgent",
+                challenge="closed gates; caught",
                 time_horizon="immediate",
-                emotional_charge="urgent",
-                abandon_condition="caught",
             )
         ],
         working_memory=[],
@@ -75,12 +72,9 @@ class SessionBranchingTests(unittest.TestCase):
                         "goals": [
                             {
                                 "priority": 1,
-                                "goal": "stay hidden",
-                                "motivation": "survival",
-                                "obstacle": "guards",
+                                "description": "stay hidden; survival; fear",
+                                "challenge": "guards; safe route opens",
                                 "time_horizon": "immediate",
-                                "emotional_charge": "fear",
-                                "abandon_condition": "safe route opens",
                             }
                         ],
                     },
@@ -90,12 +84,9 @@ class SessionBranchingTests(unittest.TestCase):
                         "goals": [
                             {
                                 "priority": 1,
-                                "goal": "escape the castle",
-                                "motivation": "survival",
-                                "obstacle": "closed gates",
+                                "description": "escape the castle; survival; urgent",
+                                "challenge": "closed gates; caught",
                                 "time_horizon": "immediate",
-                                "emotional_charge": "urgent",
-                                "abandon_condition": "caught",
                             }
                         ],
                     },
@@ -182,7 +173,7 @@ class SessionBranchingTests(unittest.TestCase):
         self.assertEqual(branched.current_timeline_index, 100)
         self.assertEqual(branched.arc_state.current_phase, "rising_action")
         self.assertEqual(branched.agents["arya"].snapshot.current_state["location"], "crypt")
-        self.assertEqual(branched.agents["arya"].snapshot.goals[0].goal, "escape the castle")
+        self.assertEqual(branched.agents["arya"].snapshot.goals[0].description, "escape the castle; survival; urgent")
         self.assertEqual(branched.pending_world_events[0]["event_id"], "evt_world")
         self.assertEqual(branched.pending_background_jobs, [])
         self.assertEqual(branched.metadata["suppressed_memory_ids_by_agent"].get("arya"), [])

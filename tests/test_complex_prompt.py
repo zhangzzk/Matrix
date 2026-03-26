@@ -16,9 +16,9 @@ def test_prompt_style(name, api_key, base_url, model, prompt_style):
     if prompt_style == "simple":
         prompt = PromptRequest(
             system="You are a helpful assistant. Return ONLY valid JSON.",
-            user="""Return JSON: {"emotional_state": {"dominant": "...", "secondary": [], "confidence": 0.5},
+            user="""Return JSON: {"emotional_state": {"dominant": "...", "secondary": []},
 "immediate_tension": "...", "unspoken_subtext": "...",
-"physical_state": {"energy": 0.5, "injuries_or_constraints": "", "location": "", "current_activity": ""},
+"physical_state": {"injuries_or_constraints": "", "location": "", "current_activity": ""},
 "knowledge_state": {"new_knowledge": [], "active_misbeliefs": []}}""",
             max_tokens=800,
             stream=False,

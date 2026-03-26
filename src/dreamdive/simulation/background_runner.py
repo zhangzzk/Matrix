@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Set
 
 from dreamdive.debug import DebugSession
@@ -58,12 +59,14 @@ class BackgroundMaintenanceRunner:
         high_salience_threshold: float = 0.7,
         discard_threshold: float = 0.2,
         debug_session: DebugSession | None = None,
+        max_workers: int = 4,
     ) -> None:
         self.llm_client = llm_client
         self.compression_age_threshold = compression_age_threshold
         self.high_salience_threshold = high_salience_threshold
         self.discard_threshold = discard_threshold
         self.debug_session = debug_session
+        self.max_workers = max(1, max_workers)
 
     def run_due_jobs(
         self,
@@ -105,11 +108,103 @@ class BackgroundMaintenanceRunner:
                 claimed_job_count=len(claimed_jobs),
                 queue_depth_before=queue.queued_count() + len(claimed_jobs),
             )
-        for job in claimed_jobs:
-            try:
-                if job.job_type == "memory_compression":
+        # Partition jobs: memory_compression jobs (per-character, independent) vs arc_update (shared state).
+        compression_jobs = [j for j in claimed_jobs if j.job_type == "memory_compression"]
+        arc_jobs = [j for j in claimed_jobs if j.job_type == "arc_update"]
+        other_jobs = [j for j in claimed_jobs if j.job_type not in ("memory_compression", "arc_update")]
+
+        # Run memory compression jobs in parallel — each targets a different character.
+        if len(compression_jobs) > 1 and self.max_workers > 1:
+            def _run_compression(job, client_clone, session_snapshot):
+                runner = BackgroundMaintenanceRunner(
+                    client_clone,
+                    compression_age_threshold=self.compression_age_threshold,
+                    high_salience_threshold=self.high_salience_threshold,
+                    discard_threshold=self.discard_threshold,
+                    max_workers=1,
+                )
+                return runner._run_memory_compression(session_snapshot, job.target_id)
+
+            with ThreadPoolExecutor(max_workers=min(len(compression_jobs), self.max_workers)) as executor:
+                future_to_job = {}
+                clones = []
+                for job in compression_jobs:
+                    clone = self.llm_client.clone()
+                    clones.append((job, clone))
+                    future_to_job[executor.submit(
+                        _run_compression, job, clone, updated,
+                    )] = (job, clone)
+
+                for future in as_completed(future_to_job):
+                    job, clone = future_to_job[future]
+                    self.llm_client.merge_records(clone)
+                    try:
+                        result = future.result()
+                        # Merge the memory changes from this compression into updated session.
+                        updated = self._merge_compression_result(updated, result, job.target_id)
+                        queue.acknowledge(job.queue_key())
+                        if self.debug_session is not None:
+                            self.debug_session.event(
+                                "background.job.done",
+                                job_id=job.queue_key(),
+                                job_type=job.job_type,
+                                target_id=job.target_id,
+                            )
+                    except Exception as exc:
+                        queue.fail(job.queue_key(), str(exc), requeue=True)
+                        recent_errors.append(
+                            {
+                                "job_id": job.queue_key(),
+                                "job_type": job.job_type,
+                                "target_id": job.target_id,
+                                "error": str(exc),
+                                "attempts": job.attempts,
+                            }
+                        )
+                        if self.debug_session is not None:
+                            self.debug_session.event(
+                                "background.job.failed",
+                                job_id=job.queue_key(),
+                                job_type=job.job_type,
+                                target_id=job.target_id,
+                                error=str(exc),
+                            )
+        else:
+            for job in compression_jobs:
+                try:
                     updated = self._run_memory_compression(updated, job.target_id)
-                elif job.job_type == "arc_update":
+                    queue.acknowledge(job.queue_key())
+                    if self.debug_session is not None:
+                        self.debug_session.event(
+                            "background.job.done",
+                            job_id=job.queue_key(),
+                            job_type=job.job_type,
+                            target_id=job.target_id,
+                        )
+                except Exception as exc:
+                    queue.fail(job.queue_key(), str(exc), requeue=True)
+                    recent_errors.append(
+                        {
+                            "job_id": job.queue_key(),
+                            "job_type": job.job_type,
+                            "target_id": job.target_id,
+                            "error": str(exc),
+                            "attempts": job.attempts,
+                        }
+                    )
+                    if self.debug_session is not None:
+                        self.debug_session.event(
+                            "background.job.failed",
+                            job_id=job.queue_key(),
+                            job_type=job.job_type,
+                            target_id=job.target_id,
+                            error=str(exc),
+                        )
+
+        # Arc updates and other jobs run sequentially (they touch shared state).
+        for job in [*arc_jobs, *other_jobs]:
+            try:
+                if job.job_type == "arc_update":
                     updated = self._run_arc_update(updated)
                 queue.acknowledge(job.queue_key())
                 if self.debug_session is not None:
@@ -174,6 +269,50 @@ class BackgroundMaintenanceRunner:
             }
         )
 
+    @staticmethod
+    def _merge_compression_result(
+        target: SimulationSessionState,
+        source: SimulationSessionState,
+        character_id: str,
+    ) -> SimulationSessionState:
+        """Merge memory compression results for a single character back into the target session."""
+        source_log = dict(source.append_only_log or {})
+        target_log = dict(target.append_only_log or {})
+
+        # Merge episodic memories: keep target's base, add new compressed entries from source.
+        target_event_ids = {
+            item.get("event_id") for item in target_log.get("episodic_memories", [])
+        }
+        merged_memories = list(target_log.get("episodic_memories", []))
+        for item in source_log.get("episodic_memories", []):
+            if item.get("event_id") not in target_event_ids:
+                merged_memories.append(item)
+        target_log["episodic_memories"] = merged_memories
+
+        # Merge maintenance log entries from source.
+        target_maintenance = list(target_log.get("maintenance_log", []))
+        source_maintenance = list(source_log.get("maintenance_log", []))
+        existing_count = len(target_maintenance)
+        if len(source_maintenance) > existing_count:
+            target_maintenance.extend(source_maintenance[existing_count:])
+        target_log["maintenance_log"] = target_maintenance
+
+        # Merge suppressed memory IDs for this character.
+        target_meta = dict(target.metadata)
+        source_meta = dict(source.metadata)
+        target_suppressed = dict(target_meta.get("suppressed_memory_ids_by_agent", {}))
+        source_suppressed = dict(source_meta.get("suppressed_memory_ids_by_agent", {}))
+        if character_id in source_suppressed:
+            target_suppressed[character_id] = source_suppressed[character_id]
+        target_meta["suppressed_memory_ids_by_agent"] = target_suppressed
+
+        return target.model_copy(
+            update={
+                "append_only_log": target_log,
+                "metadata": target_meta,
+            }
+        )
+
     def _run_memory_compression(
         self,
         session: SimulationSessionState,
@@ -217,7 +356,7 @@ class BackgroundMaintenanceRunner:
             character_name=identity.name,
             primary_drive=identity.desires[0] if identity.desires else "",
             values=identity.values,
-            top_concerns=[goal.goal for goal in runtime.snapshot.goals[:3]],
+            top_concerns=[goal.description for goal in runtime.snapshot.goals[:3]],
             episodic_entries=old_entries,
             pinned_entries=pinned_entries,
             age_threshold=self.compression_age_threshold,
@@ -321,7 +460,7 @@ class BackgroundMaintenanceRunner:
         agent_state_summary = [
             {
                 "agent_id": agent_id,
-                "goal": runtime.snapshot.goals[0].goal if runtime.snapshot.goals else "",
+                "goal": runtime.snapshot.goals[0].description if runtime.snapshot.goals else "",
                 "emotional_state": runtime.snapshot.current_state.get("emotional_state", ""),
                 "location": runtime.snapshot.current_state.get("location", ""),
                 "needs_reprojection": runtime.needs_reprojection,

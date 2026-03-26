@@ -47,7 +47,7 @@ def build_goal_collision_prompt(
                     "description": "一句简洁的冲突描述",
                     "information_asymmetry": {"agent_a": "这个角色尚不知道的事"},
                     "stakes": {"agent_a": "这个角色此刻面临的代价"},
-                    "emergence_probability": 0.7,
+                    "likelihood": "描述发生可能性，如'很可能'、'不太可能'",
                     "salience_factors": ["因素一", "因素二"],
                 }
             ],
@@ -120,12 +120,12 @@ class GoalCollisionDetector:
                     "character_id": character_id,
                     "name": snapshot.identity.name,
                     "location": snapshot.current_state.get("location", ""),
-                    "primary_intention": trajectory.primary_intention,
-                    "immediate_next_action": trajectory.immediate_next_action,
+                    "intention": trajectory.intention,
+                    "next_steps": trajectory.next_steps,
                     "planning_horizon": trajectory.projection_horizon,
-                    "active_goal": snapshot.goals[0].goal if snapshot.goals else "",
+                    "active_goal": snapshot.goals[0].description if snapshot.goals else "",
                     "emotional_state": (
-                        snapshot.inferred_state.emotional_state.dominant
+                        snapshot.inferred_state.emotional_summary
                         if snapshot.inferred_state is not None
                         else snapshot.current_state.get("emotional_state", "")
                     ),
@@ -148,6 +148,21 @@ class GoalCollisionDetector:
         )
 
     @staticmethod
+    def _likelihood_to_urgency(likelihood: str) -> float:
+        text = likelihood.lower().strip()
+        if any(w in text for w in ("inevitable", "certain", "imminent")):
+            return 0.9
+        if any(w in text for w in ("very likely", "highly", "strong")):
+            return 0.8
+        if any(w in text for w in ("likely", "probable")):
+            return 0.7
+        if any(w in text for w in ("possible", "moderate", "may")):
+            return 0.5
+        if any(w in text for w in ("unlikely", "low", "remote", "weak")):
+            return 0.3
+        return 0.5
+
+    @staticmethod
     def tensions_to_seeds(payload: GoalCollisionBatchPayload) -> List[SimulationSeed]:
         seeds: List[SimulationSeed] = []
         for tension in payload.goal_tensions:
@@ -158,7 +173,7 @@ class GoalCollisionDetector:
                     participants=tension.agents,
                     location=tension.location,
                     description=tension.description,
-                    urgency=tension.emergence_probability,
+                    urgency=GoalCollisionDetector._likelihood_to_urgency(tension.likelihood),
                     conflict=min(1.0, 0.4 + (0.2 * len(tension.salience_factors))),
                     emotional_charge=0.5 if tension.information_asymmetry else 0.3,
                     world_importance=0.5 if tension.stakes else 0.2,

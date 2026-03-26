@@ -58,11 +58,9 @@ class RelationshipLogRecord:
     tick: str
     timeline_index: int
     event_sequence: int
-    trust_value: float
     id: int = 0
     event_id: Optional[str] = None
-    trust_delta: float = 0.0
-    sentiment_shift: str = ""
+    summary: str = ""
     reason: str = ""
     pinned: bool = False
     created_at: datetime = field(default_factory=utc_now)

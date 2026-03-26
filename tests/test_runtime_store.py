@@ -40,12 +40,9 @@ def make_session() -> SimulationSessionState:
                     goals=[
                         Goal(
                             priority=1,
-                            goal="hide",
-                            motivation="survival",
-                            obstacle="guards",
+                            description="hide; survival; fear",
+                            challenge="guards; safe route opens",
                             time_horizon="immediate",
-                            emotional_charge="fear",
-                            abandon_condition="safe route opens",
                         )
                     ],
                     working_memory=[],
@@ -182,26 +179,13 @@ class RuntimeStoreTests(unittest.TestCase):
                                 "snapshot": base_session.agents["arya"].snapshot.model_copy(
                                     update={
                                         "current_state": {"location": "", "emotional_state": {"dominant": "fear"}},
-                                        "inferred_state": SnapshotInference.model_validate(
-                                            {
-                                                "emotional_state": {
-                                                    "dominant": "fear",
-                                                    "secondary": [],
-                                                    "confidence": 0.8,
-                                                },
-                                                "immediate_tension": "guards are near",
-                                                "unspoken_subtext": "",
-                                                "physical_state": {
-                                                    "energy": 0.6,
-                                                    "injuries_or_constraints": "",
-                                                    "location": "yard",
-                                                    "current_activity": "hiding",
-                                                },
-                                                "knowledge_state": {
-                                                    "new_knowledge": [],
-                                                    "active_misbeliefs": [],
-                                                },
-                                            }
+                                        "inferred_state": SnapshotInference(
+                                            emotional_summary="fear",
+                                            immediate_tension="guards are near",
+                                            unspoken_subtext="",
+                                            physical_status="hiding",
+                                            location="yard",
+                                            knowledge=[],
                                         ),
                                     }
                                 )
@@ -279,13 +263,14 @@ class RuntimeStoreTests(unittest.TestCase):
             self.assertEqual(loaded.pending_background_jobs[0]["schedule_basis"], "tick_count")
             self.assertEqual(loaded.metadata["tick_count"], 1)
             self.assertEqual(loaded.metadata["last_tick_minutes"], 60)
+            # Session repair strips legacy per-character wrappers from descriptions
             self.assertEqual(
                 loaded.append_only_log["scheduled_world_events"][0]["description"],
-                "风声传到艾莉亚耳中：Guards are closing in.",
+                "Guards are closing in.",
             )
             self.assertEqual(
                 loaded.pending_world_events[0]["description"],
-                "消息传到艾莉亚耳中：Guards are closing in.",
+                "Guards are closing in.",
             )
 
 

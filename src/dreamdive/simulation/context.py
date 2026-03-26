@@ -24,30 +24,24 @@ class ContextAssembler:
         time_label: str = "",
         world_entities: Optional[List[Dict[str, object]]] = None,
         episodic_memories: Optional[Sequence[EpisodicMemory]] = None,
-        max_memories: int = 5,
+        recent_events: Optional[Sequence[str]] = None,
+        max_memories: int = 3,
     ) -> AgentContextPacket:
         participants = list(scene_participants or [])
         relevant_relationships = [
             {
                 "target_id": relation.to_character_id,
-                "trust_value": relation.trust_value,
-                "sentiment_shift": relation.sentiment_shift,
+                "summary": relation.summary,
                 "reason": relation.reason,
             }
             for relation in snapshot.relationships
             if not participants or relation.to_character_id in participants
-        ][:5]
+        ][:4]
         location = str(snapshot.current_state.get("location", ""))
         current_state = {
             **dict(snapshot.current_state),
             "active_goals": [
-                {
-                    "priority": goal.priority,
-                    "goal": goal.goal,
-                    "obstacle": goal.obstacle,
-                    "motivation": goal.motivation,
-                    "emotional_charge": goal.emotional_charge,
-                }
+                {"priority": goal.priority, "description": goal.description, "challenge": goal.challenge}
                 for goal in sorted(snapshot.goals, key=lambda goal: goal.priority)[:3]
             ],
         }
@@ -59,16 +53,26 @@ class ContextAssembler:
             current_state=current_state,
             max_results=max_memories,
         )
+        # Compact identity — exclude verbose fields already covered by
+        # the identity anchor in the beat prompt to save tokens.
+        identity_data = snapshot.identity.model_dump(mode="json")
+        compact_identity = {
+            "character_id": identity_data.get("character_id"),
+            "name": identity_data.get("name"),
+            "background": identity_data.get("background"),
+            "core_traits": identity_data.get("core_traits", [])[:4],
+            "values": identity_data.get("values", [])[:3],
+            "desires": identity_data.get("desires", [])[:3],
+            "fears": identity_data.get("fears", [])[:2],
+            "personality_summary": identity_data.get("personality_summary", ""),
+        }
         return AgentContextPacket(
-            identity=snapshot.identity.model_dump(mode="json"),
+            identity=compact_identity,
             current_state=current_state,
             working_memory=[memory.summary for memory in memory_items],
+            recent_events=list(recent_events or []),
             relationship_context=relevant_relationships,
-            world_entities=self._filter_world_entities(
-                world_entities or [],
-                scene_description=scene_description,
-                current_state=current_state,
-            ),
+            world_entities=[],  # Entity system disabled — skip semantic scoring.
             scene_context={
                 "description": scene_description,
                 "time": time_label,

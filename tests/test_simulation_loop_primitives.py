@@ -20,44 +20,28 @@ def make_snapshot(
     character_id,
     name,
     location,
-    confidence=0.0,
+    has_emotion=False,
     tension="",
     goal_text=None,
 ):
     inferred = None
-    if confidence or tension:
-        inferred = SnapshotInference.model_validate(
-            {
-                "emotional_state": {
-                    "dominant": "fear" if confidence else "calm",
-                    "secondary": [],
-                    "confidence": confidence,
-                },
-                "immediate_tension": tension,
-                "unspoken_subtext": "hidden motive" if tension else "",
-                "physical_state": {
-                    "energy": 0.7,
-                    "injuries_or_constraints": "",
-                    "location": location,
-                    "current_activity": "waiting",
-                },
-                "knowledge_state": {
-                    "new_knowledge": [],
-                    "active_misbeliefs": [],
-                },
-            }
+    if has_emotion or tension:
+        inferred = SnapshotInference(
+            emotional_summary="fear" if has_emotion else "calm",
+            immediate_tension=tension,
+            unspoken_subtext="hidden motive" if tension else "",
+            physical_status="waiting",
+            location=location,
+            knowledge=[],
         )
     goals = []
     if goal_text:
         goals = [
             Goal(
                 priority=1,
-                goal=goal_text,
-                motivation="duty",
-                obstacle="risk",
+                description=f"{goal_text}; duty; urgent",
+                challenge="risk; mission complete",
                 time_horizon="immediate",
-                emotional_charge="urgent",
-                abandon_condition="mission complete",
             )
         ]
     return CharacterSnapshot(
@@ -78,7 +62,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="arya",
             name="Arya",
             location="courtyard",
-            confidence=0.9,
+            has_emotion=True,
             tension="Do not get caught",
             goal_text="escape the castle",
         )
@@ -86,7 +70,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="sansa",
             name="Sansa",
             location="courtyard",
-            confidence=0.2,
+            has_emotion=False,
             tension="",
             goal_text=None,
         )
@@ -106,7 +90,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="arya",
             name="Arya",
             location="courtyard",
-            confidence=0.8,
+            has_emotion=True,
             tension="Do not get caught",
             goal_text="escape the castle",
         )
@@ -114,7 +98,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="hotpie",
             name="Hot Pie",
             location="kitchen",
-            confidence=0.0,
+            has_emotion=False,
             tension="",
             goal_text=None,
         )
@@ -134,7 +118,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="arya",
             name="Arya",
             location="courtyard",
-            confidence=0.8,
+            has_emotion=True,
             tension="Do not get caught",
             goal_text="escape the castle",
         )
@@ -142,7 +126,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="gendry",
             name="Gendry",
             location="smithy",
-            confidence=0.0,
+            has_emotion=False,
             tension="",
             goal_text=None,
         ).model_copy(
@@ -152,9 +136,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
                         from_character_id="gendry",
                         to_character_id="arya",
                         replay_key=ReplayKey(tick="chapter_01", timeline_index=1),
-                        trust_value=0.5,
-                        trust_delta=0.1,
-                        sentiment_shift="protective",
+                        summary="protective",
                         reason="traveling together",
                     )
                 ]
@@ -164,7 +146,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="sansa",
             name="Sansa",
             location="courtyard",
-            confidence=0.0,
+            has_emotion=False,
             tension="",
             goal_text=None,
         )
@@ -232,7 +214,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="arya",
             name="Arya",
             location="courtyard",
-            confidence=0.8,
+            has_emotion=True,
             tension="Do not get caught",
             goal_text="escape the castle",
         )
@@ -240,7 +222,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="gendry",
             name="Gendry",
             location="smithy",
-            confidence=0.0,
+            has_emotion=False,
             tension="",
             goal_text=None,
         ).model_copy(
@@ -250,9 +232,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
                         from_character_id="gendry",
                         to_character_id="arya",
                         replay_key=ReplayKey(tick="chapter_01", timeline_index=1),
-                        trust_value=0.5,
-                        trust_delta=0.1,
-                        sentiment_shift="protective",
+                        summary="protective",
                         reason="traveling together",
                     )
                 ]
@@ -270,11 +250,11 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
         )
 
         self.assertEqual(len(bridge_events), 1)
-        self.assertEqual(bridge_events[0].event_id, "evt_100_001_bridge_gendry")
+        self.assertEqual(bridge_events[0].event_id, "evt_100_001_bridge_00")
         self.assertEqual(bridge_events[0].trigger_timeline_index, 130)
         self.assertEqual(bridge_events[0].location, "smithy")
         self.assertEqual(bridge_events[0].affected_agents, ["gendry"])
-        self.assertIn("Rumor reaches Gendry", bridge_events[0].description)
+        self.assertEqual(bridge_events[0].description, "Arya makes a dangerous move in the courtyard.")
 
     def test_world_manager_localizes_bridge_event_text_for_chinese_sessions(self) -> None:
         manager = WorldManager(foreground_threshold=0.4)
@@ -282,7 +262,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="Lu Mingfei",
             name="路明非",
             location="卧室",
-            confidence=0.8,
+            has_emotion=True,
             tension="别被看见",
             goal_text="离开房间",
         )
@@ -290,7 +270,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
             character_id="Chen Motong",
             name="陈墨瞳",
             location="学院",
-            confidence=0.0,
+            has_emotion=False,
             tension="",
             goal_text=None,
         ).model_copy(
@@ -300,9 +280,7 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
                         from_character_id="Chen Motong",
                         to_character_id="Lu Mingfei",
                         replay_key=ReplayKey(tick="chapter_01", timeline_index=1),
-                        trust_value=0.5,
-                        trust_delta=0.1,
-                        sentiment_shift="关注",
+                        summary="关注",
                         reason="保持联系",
                     )
                 ]
@@ -321,7 +299,9 @@ class SimulationLoopPrimitiveTests(unittest.TestCase):
         )
 
         self.assertEqual(len(bridge_events), 1)
-        self.assertIn("风声传到陈墨瞳耳中", bridge_events[0].description)
+        # Description is now just the outcome summary, no per-character wrapper
+        self.assertEqual(bridge_events[0].description, "路明非突然离开了房间。")
+        self.assertEqual(bridge_events[0].affected_agents, ["Chen Motong"])
 
     def test_salience_ranking_orders_more_urgent_seed_first(self) -> None:
         low = SimulationSeed(

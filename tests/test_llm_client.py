@@ -607,12 +607,12 @@ class StructuredLLMClientTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual(response.emotional_state.dominant, "惊惧与压抑并存")
+        self.assertEqual(response.emotional_summary, "惊惧与压抑并存")
         self.assertEqual(response.immediate_tension, "必须立刻判断眼前的异象是真是假")
-        self.assertEqual(response.physical_state.injuries_or_constraints, "冷汗和僵硬让他几乎无法放松")
-        self.assertEqual(
-            response.knowledge_state.new_knowledge,
-            ["只知道异象与自己有关，但不知道原因"],
+        self.assertIn("冷汗和僵硬让他几乎无法放松", response.physical_status)
+        self.assertIn(
+            "只知道异象与自己有关，但不知道原因",
+            response.knowledge,
         )
 
     def test_llm_client_normalizes_goal_seed_aliases(self) -> None:
@@ -654,9 +654,8 @@ class StructuredLLMClientTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual(response.goal_stack[0].goal, "先稳住局面，不让别人看出异常")
-        self.assertEqual(response.goal_stack[0].motivation, "避免局势彻底失控")
-        self.assertEqual(response.goal_stack[0].obstacle, "一旦暴露会立刻陷入被动")
+        self.assertIn("先稳住局面，不让别人看出异常", response.goal_stack[0].description)
+        self.assertIn("一旦暴露会立刻陷入被动", response.goal_stack[0].challenge)
         self.assertEqual(response.goal_stack[0].time_horizon.value, "today")
         self.assertEqual(response.actively_avoiding, "承认自己已经害怕了")
         self.assertEqual(response.most_uncertain_relationship, "楚子航")
@@ -795,10 +794,13 @@ class StructuredLLMClientTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual(response.greatest_fear_this_horizon, "being seen")
-        self.assertEqual(response.contingencies[0].trigger, "If the guard turns")
-        self.assertEqual(response.contingencies[0].response, "slip deeper into shadow.")
-        self.assertEqual(response.contingencies[1].trigger, "If Arya is spotted")
+        # Legacy fields are merged into the unified fields.
+        self.assertIn("stay hidden", response.intention)
+        self.assertIn("being seen", response.intention)
+        self.assertIn("safe route opens", response.intention)
+        self.assertIn("run immediately", response.intention)
+        self.assertIn("wait behind the crates", response.next_steps)
+        self.assertIn("If the guard turns", response.next_steps)
 
     def test_llm_client_normalizes_goal_collision_aliases(self) -> None:
         transport = FakeTransport(
@@ -855,7 +857,7 @@ class StructuredLLMClientTests(unittest.TestCase):
 
         self.assertEqual(response.goal_tensions[0].agents, ["arya", "gendry"])
         self.assertEqual(response.goal_tensions[0].type, "ethical_dissonance")
-        self.assertEqual(response.goal_tensions[0].emergence_probability, 0.8)
+        self.assertEqual(response.goal_tensions[0].likelihood, "0.8")
         self.assertEqual(response.solo_seeds[0].agent_id, "arya")
         self.assertEqual(response.solo_seeds[0].description, "Arya considers leaving alone.")
         self.assertEqual(response.world_events[0].urgency, "High")
@@ -941,7 +943,7 @@ class StructuredLLMClientTests(unittest.TestCase):
                                 "description": "Chu Zihang tries to recover the sample while Lu Mingfei wants complete isolation.",
                                 "information_asymmetry": {},
                                 "stakes": {},
-                                "emergence_probability": 0.8,
+                                "likelihood": "very likely",
                                 "salience_factors": ["conflicting goals", "personal exposure"],
                             }
                         ],
@@ -960,7 +962,7 @@ class StructuredLLMClientTests(unittest.TestCase):
                                 "description": "楚子航试图强行回收样本，而路明非只想把自己彻底隔绝起来。",
                                 "information_asymmetry": {},
                                 "stakes": {},
-                                "emergence_probability": 0.8,
+                                "likelihood": "very likely",
                                 "salience_factors": ["目标冲突", "身份暴露"],
                             }
                         ],
@@ -1067,7 +1069,6 @@ class StructuredLLMClientTests(unittest.TestCase):
         self.assertEqual(resolution.resolution_type, "continue")
         self.assertTrue(resolution.continue_scene)
         self.assertEqual(state_update.emotional_delta.dominant_now, "focus")
-        self.assertEqual(state_update.emotional_delta.underneath, "fear")
         self.assertEqual(state_update.goal_stack_update.resolved_goal, "stay hidden")
         self.assertTrue(state_update.needs_reprojection)
         self.assertEqual(state_update.relationship_updates[0].target_id, "gendry")

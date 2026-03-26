@@ -56,13 +56,18 @@ class SimulationSettings(BaseModel):
     tick_background_min_minutes: int = 1440
     tick_background_max_minutes: int = 10080
 
-    salience_spotlight_threshold: float = 0.8
-    salience_foreground_threshold: float = 0.4
+    activation_threshold: float = 0.55
+    batched_projection_threshold: float = 0.7
+    salience_spotlight_threshold: float = 0.75
+    salience_foreground_threshold: float = 0.35
+    salience_minimum: float = 0.25
     invalidation_emotion_threshold: float = 0.4
     invalidation_knowledge_threshold: float = 0.6
     horizon_multiplier: float = 4.0
     max_horizon_ticks: int = 50
-    tick_max_events: int = 15
+    tick_max_events: int = 6
+    max_spotlight_beats: int = 14
+    max_foreground_beats: int = 8
 
     compression_interval_ticks: int = 15
     compression_high_salience_threshold: float = 0.7

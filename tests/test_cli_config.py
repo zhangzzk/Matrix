@@ -35,12 +35,12 @@ class CliConfigTests(unittest.TestCase):
     def test_parse_simple_toml_supports_arrays(self) -> None:
         data = parse_simple_toml(
             """
-            [init-snapshot]
+            [init]
             character_ids = ["liu_bei", "cao_cao"]
             """
         )
 
-        self.assertEqual(data["init-snapshot"]["character_ids"], ["liu_bei", "cao_cao"])
+        self.assertEqual(data["init"]["character_ids"], ["liu_bei", "cao_cao"])
 
     def test_resolve_cli_config_path_finds_repo_and_nested_locations(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -76,7 +76,7 @@ class CliConfigTests(unittest.TestCase):
 
     def test_apply_cli_config_does_not_let_none_override_defaults(self) -> None:
         args = argparse.Namespace(
-            command="init-snapshot",
+            command="init",
             profile="",
             source="resources/redcliff.txt",
             chapter_id="001",
@@ -105,7 +105,7 @@ class CliConfigTests(unittest.TestCase):
     def test_apply_cli_config_includes_new_rerun_and_overwrite_defaults(self) -> None:
         ingest_args = argparse.Namespace(command="ingest", profile="", source="resources/redcliff.txt")
         init_args = argparse.Namespace(
-            command="init-snapshot",
+            command="init",
             profile="",
             source="resources/redcliff.txt",
             chapter_id="001",
@@ -117,7 +117,7 @@ class CliConfigTests(unittest.TestCase):
         )
         merged_init = apply_cli_config(
             init_args,
-            {"init-snapshot": {"overwrite": True}},
+            {"init": {"overwrite": True}},
         )
         merged_run = apply_cli_config(
             argparse.Namespace(command="run", profile="", ticks=5),

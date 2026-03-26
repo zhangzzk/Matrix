@@ -81,36 +81,20 @@ def make_snapshot():
         goals=[
             Goal(
                 priority=1,
-                goal="stay hidden",
-                motivation="survival",
-                obstacle="guards nearby",
+                description="stay hidden; survival; fear",
+                challenge="guards nearby; safe shelter found",
                 time_horizon="immediate",
-                emotional_charge="fear",
-                abandon_condition="safe shelter found",
             )
         ],
         working_memory=[],
         relationships=[],
-        inferred_state=SnapshotInference.model_validate(
-            {
-                "emotional_state": {
-                    "dominant": "fear",
-                    "secondary": ["resolve"],
-                    "confidence": 0.4,
-                },
-                "immediate_tension": "",
-                "unspoken_subtext": "",
-                "physical_state": {
-                    "energy": 0.7,
-                    "injuries_or_constraints": "",
-                    "location": "courtyard",
-                    "current_activity": "hiding",
-                },
-                "knowledge_state": {
-                    "new_knowledge": [],
-                    "active_misbeliefs": [],
-                },
-            }
+        inferred_state=SnapshotInference(
+            emotional_summary="fear",
+            immediate_tension="",
+            unspoken_subtext="",
+            physical_status="hiding",
+            location="courtyard",
+            knowledge=[],
         ),
     )
 
@@ -131,10 +115,14 @@ class StaticTrajectoryProjector:
         *,
         fail_batch=False,
         fail_individual_ids=None,
+        fail_unified=False,
+        collision_payload=None,
     ):
         self.projections = projections
         self.fail_batch = fail_batch
         self.fail_individual_ids = set(fail_individual_ids or [])
+        self.fail_unified = fail_unified
+        self.collision_payload = collision_payload
 
     def project(self, *, snapshot, **_kwargs):
         character_id = snapshot.identity.character_id
@@ -150,6 +138,18 @@ class StaticTrajectoryProjector:
             for snapshot in snapshots
             if snapshot.identity.character_id in self.projections
         }
+
+    def project_and_detect_collisions(self, *, snapshots, **_kwargs):
+        from dreamdive.schemas import GoalCollisionBatchPayload
+        if self.fail_unified:
+            raise RuntimeError("synthetic unified projection failure")
+        trajectories = {
+            snapshot.identity.character_id: self.projections[snapshot.identity.character_id]
+            for snapshot in snapshots
+            if snapshot.identity.character_id in self.projections
+        }
+        collision = self.collision_payload or GoalCollisionBatchPayload()
+        return trajectories, collision
 
 
 class FailingGoalCollisionDetector:
@@ -217,13 +217,8 @@ class TickRunnerTests(unittest.TestCase):
     def _make_projection(action: str) -> TrajectoryProjectionPayload:
         return TrajectoryProjectionPayload.model_validate(
             {
-                "primary_intention": "stay hidden",
-                "motivation": "survival",
-                "immediate_next_action": action,
-                "contingencies": [],
-                "greatest_fear_this_horizon": "being seen",
-                "abandon_condition": "safe path opens",
-                "held_back_impulse": "run immediately",
+                "intention": "stay hidden",
+                "next_steps": action,
                 "projection_horizon": "4 ticks (~120 minutes)",
             }
         )
@@ -232,18 +227,13 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
-                }
-            ),
-            json.dumps(
-                {
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
                     "goal_tensions": [],
                     "solo_seeds": [],
                     "world_events": [],
@@ -255,20 +245,15 @@ class TickRunnerTests(unittest.TestCase):
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -331,7 +316,7 @@ class TickRunnerTests(unittest.TestCase):
         self.assertEqual(len(store.world_snapshot), 1)
         self.assertEqual(len(store.event_log), 1)
         self.assertEqual(result.location_threads[0]["thread_id"], "courtyard")
-        self.assertEqual(result.agent_runtimes["arya"].trajectory.immediate_next_action, "wait behind the crates")
+        self.assertEqual(result.agent_runtimes["arya"].trajectory.next_steps, "wait behind the crates")
         self.assertEqual(
             result.agent_runtimes["arya"].snapshot.current_state["emotional_state"],
             "focused caution",
@@ -347,37 +332,33 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~120 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~120 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya stayed still and remembered where the letter was hidden.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The letter is still in the wall.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -454,37 +435,33 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~120 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~120 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya studies the gate and stays hidden.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The gate is still the best route.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -557,44 +534,41 @@ class TickRunnerTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(entity_repo.search_calls, 1)
-        self.assertEqual(result.agent_runtimes["arya"].world_entities[0]["entity_id"], "ent_gate")
+        # Entity system disabled — repository is never queried.
+        self.assertEqual(entity_repo.search_calls, 0)
+        self.assertEqual(result.agent_runtimes["arya"].world_entities, [])
 
     def test_tick_runner_consumes_scheduled_world_events(self) -> None:
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Word spread that the guard captain had changed the watch.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard captain changed the watch.",
-                            "emotional_delta": "fear sharpened into calculation",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "sharp focus",
-                        "underneath": "fear",
                         "shift_reason": "New information changed the tactical picture",
                     },
                     "goal_stack_update": {
@@ -661,37 +635,33 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya stayed still and learned the guard pattern.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -760,7 +730,7 @@ class TickRunnerTests(unittest.TestCase):
             language_guidance="- Primary language: English\n- Dialogue style: terse and tactical",
         )
 
-        self.assertEqual(client.transport.calls, 4)
+        self.assertEqual(client.transport.calls, 3)
         self.assertIn("arya", result.active_agent_scores)
         self.assertNotIn("hotpie", result.active_agent_scores)
         self.assertIsNone(result.agent_runtimes["hotpie"].trajectory)
@@ -769,51 +739,38 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "projections": {
+                    "trajectories": {
                         "arya": {
-                            "primary_intention": "stay hidden",
-                            "motivation": "survival",
-                            "immediate_next_action": "wait behind the crates",
-                            "contingencies": [],
-                            "greatest_fear_this_horizon": "being seen",
-                            "abandon_condition": "safe path opens",
-                            "held_back_impulse": "run immediately",
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
                             "projection_horizon": "4 ticks (~1920 minutes)",
                         },
                         "gendry": {
-                            "primary_intention": "find a way out",
-                            "motivation": "survival",
-                            "immediate_next_action": "watch the gate",
-                            "contingencies": [],
-                            "greatest_fear_this_horizon": "meeting guards",
-                            "abandon_condition": "path closes",
-                            "held_back_impulse": "bolt now",
+                            "intention": "find a way out",
+                            "next_steps": "watch the gate",
                             "projection_horizon": "4 ticks (~1920 minutes)",
                         },
-                    }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya stayed still and learned the guard pattern.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -853,36 +810,20 @@ class TickRunnerTests(unittest.TestCase):
             goals=[
                 Goal(
                     priority=1,
-                    goal="find a way out",
-                    motivation="survival",
-                    obstacle="guards",
+                    description="find a way out; survival; worry",
+                    challenge="guards; safe route appears",
                     time_horizon="immediate",
-                    emotional_charge="worry",
-                    abandon_condition="safe route appears",
                 )
             ],
             working_memory=[],
             relationships=[],
-            inferred_state=SnapshotInference.model_validate(
-                {
-                    "emotional_state": {
-                        "dominant": "wary",
-                        "secondary": [],
-                        "confidence": 0.3,
-                    },
-                    "immediate_tension": "",
-                    "unspoken_subtext": "",
-                    "physical_state": {
-                        "energy": 0.7,
-                        "injuries_or_constraints": "",
-                        "location": "smithy",
-                        "current_activity": "waiting",
-                    },
-                    "knowledge_state": {
-                        "new_knowledge": [],
-                        "active_misbeliefs": [],
-                    },
-                }
+            inferred_state=SnapshotInference(
+                emotional_summary="wary",
+                immediate_tension="",
+                unspoken_subtext="",
+                physical_status="waiting",
+                location="smithy",
+                knowledge=[],
             ),
         )
 
@@ -914,51 +855,35 @@ class TickRunnerTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(client.transport.calls, 4)
+        self.assertEqual(client.transport.calls, 3)
         self.assertEqual(
             client.transport.prompts[0].metadata["prompt_name"],
-            "p2_3_trajectory_projection_batched",
+            "p2_unified_projection_and_collision",
         )
         self.assertEqual(
-            result.agent_runtimes["arya"].trajectory.immediate_next_action,
+            result.agent_runtimes["arya"].trajectory.next_steps,
             "wait behind the crates",
         )
         self.assertEqual(
-            result.agent_runtimes["gendry"].trajectory.immediate_next_action,
+            result.agent_runtimes["gendry"].trajectory.next_steps,
             "watch the gate",
         )
 
     def test_tick_runner_batches_large_high_priority_projection_sets(self) -> None:
-        response_batch_one = {
-            "projections": {
+        unified_response = {
+            "trajectories": {
                 f"char_{index:03d}": {
-                    "primary_intention": "hold position",
-                    "motivation": "survival",
-                    "immediate_next_action": f"observe sector {index}",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "losing control",
-                    "abandon_condition": "a safer path appears",
-                    "held_back_impulse": "run immediately",
+                    "intention": "hold position",
+                    "next_steps": f"observe sector {index}",
                     "projection_horizon": "2 ticks (~120 minutes)",
                 }
-                for index in range(1, 6)
-            }
+                for index in range(1, 7)
+            },
+            "goal_tensions": [],
+            "solo_seeds": [],
+            "world_events": [],
         }
-        response_batch_two = {
-            "projections": {
-                "char_006": {
-                    "primary_intention": "hold position",
-                    "motivation": "survival",
-                    "immediate_next_action": "observe sector 6",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "losing control",
-                    "abandon_condition": "a safer path appears",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "2 ticks (~120 minutes)",
-                }
-            }
-        }
-        client = build_client([json.dumps(response_batch_one), json.dumps(response_batch_two)])
+        client = build_client([json.dumps(unified_response)])
         store = InMemoryStore()
         runner = SimulationTickRunner(
             world_manager=WorldManager(
@@ -987,26 +912,13 @@ class TickRunnerTests(unittest.TestCase):
                 }
             )
             snapshot.current_state = {"location": f"zone_{index}"}
-            snapshot.inferred_state = SnapshotInference.model_validate(
-                {
-                    "emotional_state": {
-                        "dominant": "fear",
-                        "secondary": ["resolve"],
-                        "confidence": 0.9,
-                    },
-                    "immediate_tension": "Immediate danger is closing in.",
-                    "unspoken_subtext": "They are close to panic.",
-                    "physical_state": {
-                        "energy": 0.7,
-                        "injuries_or_constraints": "",
-                        "location": f"zone_{index}",
-                        "current_activity": "waiting",
-                    },
-                    "knowledge_state": {
-                        "new_knowledge": [],
-                        "active_misbeliefs": [],
-                    },
-                }
+            snapshot.inferred_state = SnapshotInference(
+                emotional_summary="fear",
+                immediate_tension="Immediate danger is closing in.",
+                unspoken_subtext="They are close to panic.",
+                physical_status="waiting",
+                location=f"zone_{index}",
+                knowledge=[],
             )
             runtimes.append(AgentRuntime(snapshot=snapshot, needs_reprojection=True))
 
@@ -1025,22 +937,18 @@ class TickRunnerTests(unittest.TestCase):
             progress_callback=progress_events.append,
         )
 
-        self.assertEqual(client.transport.calls, 2)
+        self.assertEqual(client.transport.calls, 1)
         self.assertTrue(
             all(runtime.trajectory is not None for runtime in result.agent_runtimes.values())
         )
         projection_prompts = [
             prompt.metadata.get("prompt_name")
             for prompt in client.transport.prompts
-            if str(prompt.metadata.get("prompt_name", "")).startswith("p2_3_trajectory_projection")
+            if str(prompt.metadata.get("prompt_name", "")).startswith("p2_unified")
         ]
         self.assertEqual(
             projection_prompts,
-            ["p2_3_trajectory_projection_batched", "p2_3_trajectory_projection_batched"],
-        )
-        self.assertIn(
-            "projecting high-priority agents 1-5/6",
-            [str(event.get("message", "")) for event in progress_events],
+            ["p2_unified_projection_and_collision"],
         )
 
     def test_tick_runner_records_high_priority_projection_failure_and_continues(self) -> None:
@@ -1051,20 +959,15 @@ class TickRunnerTests(unittest.TestCase):
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -1086,7 +989,7 @@ class TickRunnerTests(unittest.TestCase):
             seed_detector=SeedDetector(GoalCollisionDetector(client)),
             trajectory_projector=StaticTrajectoryProjector(
                 {"arya": self._make_projection("wait behind the crates")},
-                fail_individual_ids={"arya"},
+                fail_unified=True,
             ),
             event_simulator=EventSimulator(client),
             state_updater=EventStateUpdater(client),
@@ -1128,7 +1031,8 @@ class TickRunnerTests(unittest.TestCase):
         self.assertIsNone(result.agent_runtimes["arya"].trajectory)
         self.assertTrue(
             any(
-                failure.stage == "trajectory_projection" and failure.seed_id == "arya"
+                failure.stage == "unified_projection_and_collision"
+                and failure.seed_id == "unified_projection_and_collision"
                 for failure in result.event_failures
             )
         )
@@ -1136,27 +1040,21 @@ class TickRunnerTests(unittest.TestCase):
 
     def test_tick_runner_falls_back_to_individual_projection_after_batch_failure(self) -> None:
         responses = [
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya stayed still and learned the guard pattern.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -1180,36 +1078,20 @@ class TickRunnerTests(unittest.TestCase):
             goals=[
                 Goal(
                     priority=1,
-                    goal="find a way out",
-                    motivation="survival",
-                    obstacle="guards",
+                    description="find a way out; survival; worry",
+                    challenge="guards; safe route appears",
                     time_horizon="immediate",
-                    emotional_charge="worry",
-                    abandon_condition="safe route appears",
                 )
             ],
             working_memory=[],
             relationships=[],
-            inferred_state=SnapshotInference.model_validate(
-                {
-                    "emotional_state": {
-                        "dominant": "wary",
-                        "secondary": [],
-                        "confidence": 0.3,
-                    },
-                    "immediate_tension": "",
-                    "unspoken_subtext": "",
-                    "physical_state": {
-                        "energy": 0.7,
-                        "injuries_or_constraints": "",
-                        "location": "smithy",
-                        "current_activity": "waiting",
-                    },
-                    "knowledge_state": {
-                        "new_knowledge": [],
-                        "active_misbeliefs": [],
-                    },
-                }
+            inferred_state=SnapshotInference(
+                emotional_summary="wary",
+                immediate_tension="",
+                unspoken_subtext="",
+                physical_status="waiting",
+                location="smithy",
+                knowledge=[],
             ),
         )
         runner = SimulationTickRunner(
@@ -1263,10 +1145,10 @@ class TickRunnerTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.agent_runtimes["arya"].trajectory.immediate_next_action, "wait behind the crates")
-        self.assertEqual(result.agent_runtimes["gendry"].trajectory.immediate_next_action, "watch the gate")
+        self.assertEqual(result.agent_runtimes["arya"].trajectory.next_steps, "wait behind the crates")
+        self.assertEqual(result.agent_runtimes["gendry"].trajectory.next_steps, "watch the gate")
         self.assertEqual(result.event_failures, [])
-        self.assertEqual(client.transport.calls, 3)
+        self.assertEqual(client.transport.calls, 2)
 
     def test_tick_runner_records_goal_collision_failure_and_continues(self) -> None:
         responses = [
@@ -1276,20 +1158,15 @@ class TickRunnerTests(unittest.TestCase):
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -1308,9 +1185,10 @@ class TickRunnerTests(unittest.TestCase):
         store = InMemoryStore()
         runner = SimulationTickRunner(
             world_manager=WorldManager(),
-            seed_detector=SeedDetector(FailingGoalCollisionDetector()),
+            seed_detector=SeedDetector(GoalCollisionDetector(client)),
             trajectory_projector=StaticTrajectoryProjector(
-                {"arya": self._make_projection("wait behind the crates")}
+                {"arya": self._make_projection("wait behind the crates")},
+                fail_unified=True,
             ),
             event_simulator=EventSimulator(client),
             state_updater=EventStateUpdater(client),
@@ -1351,7 +1229,7 @@ class TickRunnerTests(unittest.TestCase):
         self.assertEqual(len(store.event_log), 1)
         self.assertTrue(
             any(
-                failure.stage == "goal_collision_detection"
+                failure.stage == "unified_projection_and_collision"
                 for failure in result.event_failures
             )
         )
@@ -1361,17 +1239,18 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "scene_opening": "Arya makes a dangerous move in the courtyard.",
@@ -1412,7 +1291,6 @@ class TickRunnerTests(unittest.TestCase):
                 {
                     "emotional_delta": {
                         "dominant_now": "urgent focus",
-                        "underneath": "fear",
                         "shift_reason": "The window to act is closing",
                     },
                     "goal_stack_update": {
@@ -1457,9 +1335,7 @@ class TickRunnerTests(unittest.TestCase):
                     from_character_id="gendry",
                     to_character_id="arya",
                     replay_key=ReplayKey(tick="chapter_02", timeline_index=2),
-                    trust_value=0.6,
-                    trust_delta=0.1,
-                    sentiment_shift="protective",
+                    summary="protective",
                     reason="traveling together",
                 )
             ],
@@ -1505,17 +1381,18 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "scene_opening": "Arya makes a dangerous move in the courtyard.",
@@ -1556,7 +1433,6 @@ class TickRunnerTests(unittest.TestCase):
                 {
                     "emotional_delta": {
                         "dominant_now": "urgent focus",
-                        "underneath": "fear",
                         "shift_reason": "The window to act is closing",
                     },
                     "goal_stack_update": {
@@ -1603,9 +1479,7 @@ class TickRunnerTests(unittest.TestCase):
                     from_character_id="gendry",
                     to_character_id="arya",
                     replay_key=ReplayKey(tick="chapter_02", timeline_index=2),
-                    trust_value=0.6,
-                    trust_delta=0.1,
-                    sentiment_shift="protective",
+                    summary="protective",
                     reason="traveling together",
                 )
             ],
@@ -1643,28 +1517,33 @@ class TickRunnerTests(unittest.TestCase):
         )
 
         self.assertEqual(len(result.bridge_events), 1)
-        self.assertEqual(result.bridge_events[0]["event_id"], "evt_130_001_bridge_gendry")
+        self.assertEqual(result.bridge_events[0]["event_id"], "evt_130_001_bridge_00")
         self.assertEqual(len(scheduler.pending_events), 1)
         self.assertEqual(scheduler.pending_events[0].location, "smithy")
         self.assertEqual(scheduler.pending_events[0].affected_agents, ["gendry"])
-        self.assertIn("Your planning horizon: 5 ticks (~600 minutes)", client.transport.prompts[0].user)
+        self.assertIn("PLANNING HORIZON: 4 ticks (~480 minutes)", client.transport.prompts[0].user)
         self.assertIn("Dialogue style: terse and tactical", client.transport.prompts[0].user)
 
     def test_tick_runner_carries_forward_tick_recovery_after_spotlight_salience(self) -> None:
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~20 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "contingencies": [],
+                            "greatest_fear_this_horizon": "being seen",
+                            "abandon_condition": "safe path opens",
+                            "held_back_impulse": "run immediately",
+                            "projection_horizon": "4 ticks (~20 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "scene_opening": "Arya bolts for a dangerous gap in the patrol.",
@@ -1705,7 +1584,6 @@ class TickRunnerTests(unittest.TestCase):
                 {
                     "emotional_delta": {
                         "dominant_now": "shaken focus",
-                        "underneath": "relief",
                         "shift_reason": "She survived the immediate burst of danger",
                     },
                     "goal_stack_update": {
@@ -1719,7 +1597,7 @@ class TickRunnerTests(unittest.TestCase):
                     "reprojection_reason": "",
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
+            json.dumps({"trajectories": {}, "goal_tensions": [], "solo_seeds": [], "world_events": []}),
         ]
         client = build_client(responses)
         store = InMemoryStore()
@@ -1782,17 +1660,18 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
         ]
         client = build_client(responses)
         store = InMemoryStore()
@@ -1846,37 +1725,33 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya stayed still and learned the guard pattern.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "The guard circles every five minutes.",
-                            "emotional_delta": "fear hardening into patience",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -1943,37 +1818,33 @@ class TickRunnerTests(unittest.TestCase):
         responses = [
             json.dumps(
                 {
-                    "primary_intention": "stay hidden",
-                    "motivation": "survival",
-                    "immediate_next_action": "wait behind the crates",
-                    "contingencies": [],
-                    "greatest_fear_this_horizon": "being seen",
-                    "abandon_condition": "safe path opens",
-                    "held_back_impulse": "run immediately",
-                    "projection_horizon": "4 ticks (~1920 minutes)",
+                    "trajectories": {
+                        "arya": {
+                            "intention": "stay hidden",
+                            "next_steps": "wait behind the crates",
+                            "projection_horizon": "4 ticks (~1920 minutes)",
+                        }
+                    },
+                    "goal_tensions": [],
+                    "solo_seeds": [],
+                    "world_events": [],
                 }
             ),
-            json.dumps({"goal_tensions": [], "solo_seeds": [], "world_events": []}),
             json.dumps(
                 {
                     "narrative_summary": "Arya watched the patrol and tested Gendry's trust.",
                     "outcomes": [
                         {
                             "agent_id": "arya",
-                            "goal_status": "advanced",
                             "new_knowledge": "Gendry is nearby.",
-                            "emotional_delta": "fear hardening into focus",
                         }
                     ],
-                    "relationship_deltas": [],
-                    "unexpected": "",
                 }
             ),
             json.dumps(
                 {
                     "emotional_delta": {
                         "dominant_now": "focused caution",
-                        "underneath": "fear",
                         "shift_reason": "Observation created a tactical opening",
                     },
                     "goal_stack_update": {
@@ -1985,8 +1856,7 @@ class TickRunnerTests(unittest.TestCase):
                     "relationship_updates": [
                         {
                             "target_id": "gendry",
-                            "trust_delta": 0.2,
-                            "sentiment_shift": "more trusting",
+                            "summary": "more trusting",
                             "pinned": False,
                             "pin_reason": "",
                         }

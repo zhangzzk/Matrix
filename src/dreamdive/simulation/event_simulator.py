@@ -10,6 +10,7 @@ from dreamdive.schemas import (
     CharacterSnapshot,
     ResolutionCheckPayload,
     SceneSetupPayload,
+    UnifiedScenePayload,
 )
 from dreamdive.simulation.context import ContextAssembler
 from dreamdive.simulation.event_prompts import (
@@ -17,6 +18,7 @@ from dreamdive.simulation.event_prompts import (
     build_background_event_prompt,
     build_resolution_check_prompt,
     build_spotlight_setup_prompt,
+    build_unified_scene_prompt,
 )
 from dreamdive.simulation.seeds import SimulationSeed
 
@@ -61,7 +63,7 @@ class EventSimulator:
         )
         return asyncio.run(self.llm_client.call_json(prompt, BackgroundEventPayload))
 
-    def simulate_spotlight(
+    def simulate_unified(
         self,
         *,
         seed: SimulationSeed,
@@ -74,6 +76,145 @@ class EventSimulator:
         max_beats: int = 8,
         language_guidance: str = "",
     ) -> SpotlightResult:
+        """Generate a complete scene with a single LLM call.
+
+        This replaces the beat-by-beat loop (1 setup + N beat + resolution
+        check calls) with one unified prompt that produces the entire scene.
+        """
+        snapshot_by_id = {s.identity.character_id: s for s in snapshots}
+
+        # Pre-assemble context packets for every participant so the unified
+        # prompt can include each character's epistemically-isolated context.
+        context_packets = {}
+        for snapshot in snapshots:
+            agent_id = snapshot.identity.character_id
+            context_packets[agent_id] = self.context_assembler.assemble(
+                snapshot=snapshot,
+                scene_description=seed.description,
+                scene_participants=seed.participants,
+                time_label=seed.location,
+                world_entities=(world_entities_by_agent or {}).get(agent_id, []),
+            )
+
+        prompt = build_unified_scene_prompt(
+            seed=seed,
+            snapshots=snapshots,
+            context_packets=context_packets,
+            narrative_phase=narrative_phase,
+            tension_level=tension_level,
+            relevant_threads=relevant_threads,
+            voice_samples_by_agent=voice_samples_by_agent,
+            max_beats=max_beats,
+            language_guidance=language_guidance,
+        )
+
+        scene = asyncio.run(self.llm_client.call_json(prompt, UnifiedScenePayload))
+
+        # Convert the unified response into the same SpotlightResult that
+        # downstream code already consumes.
+        transcript: List[SpotlightTurn] = []
+        private_state: Dict[str, List[Dict[str, object]]] = {
+            agent_id: [] for agent_id in seed.participants
+        }
+
+        for beat_index, beat in enumerate(scene.beats):
+            turn = SpotlightTurn(
+                agent_id=beat.agent_id,
+                internal=beat.internal.model_dump(mode="json"),
+                external=beat.external.model_dump(mode="json"),
+                held_back=beat.held_back,
+                beat_index=beat_index,
+            )
+            transcript.append(turn)
+            if beat.agent_id in private_state:
+                private_state[beat.agent_id].append(turn.internal)
+
+        # Build a SceneSetupPayload from the unified response so callers
+        # that inspect scene_setup still get meaningful data.
+        scene_setup = SceneSetupPayload(
+            scene_opening=scene.scene_opening,
+            resolution_conditions={
+                "primary": scene.resolution.scene_outcome,
+                "secondary": "",
+                "forced_exit": "",
+            },
+            agent_perceptions={},
+            tension_signature=scene.tension_signature,
+        )
+
+        resolution = ResolutionCheckPayload(
+            resolved=scene.resolution.resolved,
+            resolution_type=scene.resolution.resolution_type,
+            scene_outcome=scene.resolution.scene_outcome,
+            continue_scene=not scene.resolution.resolved,
+        )
+
+        return SpotlightResult(
+            scene_setup=scene_setup,
+            transcript=transcript,
+            resolution=resolution,
+            private_state_by_agent=private_state,
+        )
+
+    def simulate_spotlight(
+        self,
+        *,
+        seed: SimulationSeed,
+        snapshots: List[CharacterSnapshot],
+        narrative_phase: str,
+        tension_level: float,
+        relevant_threads: List[str],
+        voice_samples_by_agent: Optional[Dict[str, List[str]]] = None,
+        world_entities_by_agent: Optional[Dict[str, List[Dict[str, object]]]] = None,
+        max_beats: int = 8,
+        language_guidance: str = "",
+        use_unified: bool = True,
+    ) -> SpotlightResult:
+        """Simulate a spotlight scene.
+
+        When *use_unified* is True (the default), the scene is generated in
+        a single LLM call via :meth:`simulate_unified`.  Set it to False to
+        fall back to the legacy beat-by-beat loop.
+        """
+        if use_unified:
+            return self.simulate_unified(
+                seed=seed,
+                snapshots=snapshots,
+                narrative_phase=narrative_phase,
+                tension_level=tension_level,
+                relevant_threads=relevant_threads,
+                voice_samples_by_agent=voice_samples_by_agent,
+                world_entities_by_agent=world_entities_by_agent,
+                max_beats=max_beats,
+                language_guidance=language_guidance,
+            )
+
+        return self._simulate_spotlight_legacy(
+            seed=seed,
+            snapshots=snapshots,
+            narrative_phase=narrative_phase,
+            tension_level=tension_level,
+            relevant_threads=relevant_threads,
+            voice_samples_by_agent=voice_samples_by_agent,
+            world_entities_by_agent=world_entities_by_agent,
+            max_beats=max_beats,
+            language_guidance=language_guidance,
+        )
+
+    def _simulate_spotlight_legacy(
+        self,
+        *,
+        seed: SimulationSeed,
+        snapshots: List[CharacterSnapshot],
+        narrative_phase: str,
+        tension_level: float,
+        relevant_threads: List[str],
+        voice_samples_by_agent: Optional[Dict[str, List[str]]] = None,
+        world_entities_by_agent: Optional[Dict[str, List[Dict[str, object]]]] = None,
+        max_beats: int = 8,
+        language_guidance: str = "",
+    ) -> SpotlightResult:
+        """Original beat-by-beat spotlight simulation (kept for backward compatibility)."""
         snapshot_by_id = {snapshot.identity.character_id: snapshot for snapshot in snapshots}
         setup_prompt = build_spotlight_setup_prompt(
             seed=seed,
@@ -139,7 +280,7 @@ class EventSimulator:
                 resolution = asyncio.run(
                     self.llm_client.call_json(resolution_prompt, ResolutionCheckPayload)
                 )
-            
+
             beat_index += 1
             if resolution.resolved or not resolution.continue_scene:
                 break

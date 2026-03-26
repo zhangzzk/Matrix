@@ -7,6 +7,6 @@ def require_language_guidance(language_guidance: str, *, context: str) -> str:
         return cleaned
     raise ValueError(
         "Language guidance is missing for {}. Re-run `ingest` so the meta layer includes "
-        "`language_context`, then re-run `init-snapshot` to refresh the session before "
+        "`language_context`, then re-run `init` to refresh the session before "
         "continuing.".format(context)
     )

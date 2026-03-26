@@ -22,7 +22,7 @@ def normalize_current_state(
             ).strip()
         )
     elif not str(emotional or "").strip() and inferred_state is not None:
-        state["emotional_state"] = inferred_state.emotional_state.dominant
+        state["emotional_state"] = inferred_state.emotional_summary
 
     physical = state.get("physical_state")
     if isinstance(physical, dict):
@@ -35,26 +35,23 @@ def normalize_current_state(
             ).strip()
         )
     elif not str(physical or "").strip() and inferred_state is not None:
-        physical_summary = (
-            inferred_state.physical_state.current_activity
-            or inferred_state.physical_state.injuries_or_constraints
-        ).strip()
+        physical_summary = inferred_state.physical_status.strip()
         if physical_summary:
             state["physical_state"] = physical_summary
 
     if not str(state.get("location") or "").strip() and inferred_state is not None:
-        inferred_location = inferred_state.physical_state.location.strip()
+        inferred_location = inferred_state.location.strip()
         if inferred_location:
             state["location"] = inferred_location
 
     if not str(state.get("current_activity") or "").strip() and inferred_state is not None:
-        current_activity = inferred_state.physical_state.current_activity.strip()
+        current_activity = inferred_state.physical_status.strip()
         if current_activity:
             state["current_activity"] = current_activity
 
     if "knowledge_state" not in state and inferred_state is not None:
-        if inferred_state.knowledge_state.new_knowledge:
-            state["knowledge_state"] = list(inferred_state.knowledge_state.new_knowledge)
+        if inferred_state.knowledge:
+            state["knowledge_state"] = list(inferred_state.knowledge)
 
     if not str(state.get("immediate_tension") or "").strip() and inferred_state is not None:
         if inferred_state.immediate_tension.strip():

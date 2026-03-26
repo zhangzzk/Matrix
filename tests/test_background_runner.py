@@ -52,12 +52,9 @@ def make_snapshot():
         goals=[
             Goal(
                 priority=1,
-                goal="escape",
-                motivation="survival",
-                obstacle="guards",
+                description="escape; survival; urgent",
+                challenge="guards; safe route opens",
                 time_horizon="immediate",
-                emotional_charge="urgent",
-                abandon_condition="safe route opens",
             )
         ],
         working_memory=[],

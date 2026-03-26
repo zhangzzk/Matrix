@@ -34,12 +34,9 @@ def make_session() -> SimulationSessionState:
                     goals=[
                         Goal(
                             priority=1,
-                            goal="hide",
-                            motivation="survival",
-                            obstacle="guards",
+                            description="hide; survival; fear",
+                            challenge="guards; safe route opens",
                             time_horizon="immediate",
-                            emotional_charge="fear",
-                            abandon_condition="safe route opens",
                         )
                     ],
                     working_memory=[],
@@ -63,12 +60,9 @@ def make_session() -> SimulationSessionState:
                     "goals": [
                         {
                             "priority": 1,
-                            "goal": "hide",
-                            "motivation": "survival",
-                            "obstacle": "guards",
+                            "description": "hide; survival; fear",
+                            "challenge": "guards; safe route opens",
                             "time_horizon": "immediate",
-                            "emotional_charge": "fear",
-                            "abandon_condition": "safe route opens",
                         }
                     ],
                 }

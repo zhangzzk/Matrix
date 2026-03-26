@@ -69,26 +69,13 @@ class SnapshotInitializationTests(unittest.TestCase):
         )
         goal_prompt = build_goal_seed_prompt(
             identity=identity,
-            inferred_state=SnapshotInference.model_validate(
-                {
-                    "emotional_state": {
-                        "dominant": "fear",
-                        "secondary": ["defiance"],
-                        "confidence": 0.8,
-                    },
-                    "immediate_tension": "Avoid discovery",
-                    "unspoken_subtext": "She wants revenge.",
-                    "physical_state": {
-                        "energy": 0.6,
-                        "injuries_or_constraints": "",
-                        "location": "courtyard",
-                        "current_activity": "hiding",
-                    },
-                    "knowledge_state": {
-                        "new_knowledge": ["The guard changed routes."],
-                        "active_misbeliefs": [],
-                    },
-                }
+            inferred_state=SnapshotInference(
+                emotional_summary="fear",
+                immediate_tension="Avoid discovery",
+                unspoken_subtext="She wants revenge.",
+                physical_status="hiding",
+                location="courtyard",
+                knowledge=["The guard changed routes."],
             ),
             recent_events=["She escaped the castle."],
             relationships=[],
@@ -109,12 +96,10 @@ class SnapshotInitializationTests(unittest.TestCase):
                 "emotional_state": {
                     "dominant": "fear",
                     "secondary": ["defiance"],
-                    "confidence": 0.9,
                 },
                 "immediate_tension": "Avoid discovery",
                 "unspoken_subtext": "She wants to strike back but cannot yet.",
                 "physical_state": {
-                    "energy": 0.5,
                     "injuries_or_constraints": "minor bruising",
                     "location": "courtyard",
                     "current_activity": "hiding",
@@ -130,12 +115,9 @@ class SnapshotInitializationTests(unittest.TestCase):
                 "goal_stack": [
                     {
                         "priority": 1,
-                        "goal": "escape the castle unnoticed",
-                        "motivation": "survival",
-                        "obstacle": "guards sweeping the yard",
+                        "description": "escape the castle unnoticed; survival; urgent fear",
+                        "challenge": "guards sweeping the yard; find safe allies",
                         "time_horizon": "immediate",
-                        "emotional_charge": "urgent fear",
-                        "abandon_condition": "find safe allies",
                     }
                 ],
                 "actively_avoiding": "thinking about her father",
@@ -173,9 +155,7 @@ class SnapshotInitializationTests(unittest.TestCase):
                     from_character_id="arya",
                     to_character_id="sansa",
                     replay_key=replay_key,
-                    trust_value=0.4,
-                    trust_delta=-0.1,
-                    sentiment_shift="strained worry",
+                    summary="strained worry",
                     reason="conflicting choices",
                 )
             ],
@@ -188,7 +168,7 @@ class SnapshotInitializationTests(unittest.TestCase):
 
         self.assertEqual(snapshot.current_state["location"], "courtyard")
         self.assertEqual(snapshot.inferred_state.immediate_tension, "Avoid discovery")
-        self.assertEqual(snapshot.goals[0].goal, "escape the castle unnoticed")
+        self.assertEqual(snapshot.goals[0].description, "escape the castle unnoticed; survival; urgent fear")
         self.assertEqual(
             [event["stage"] for event in events],
             ["snapshot_inference", "goal_seeding"],
@@ -251,8 +231,8 @@ class SnapshotInitializationTests(unittest.TestCase):
         issues = client.drain_issue_records()
 
         self.assertEqual(snapshot.current_state["location"], "宿舍")
-        self.assertEqual(snapshot.inferred_state.emotional_state.dominant, "心神不宁")
-        self.assertEqual(snapshot.goals[0].goal, "先稳住局面")
+        self.assertEqual(snapshot.inferred_state.emotional_summary, "心神不宁")
+        self.assertIn("先稳住局面", snapshot.goals[0].description)
         self.assertEqual(
             [event["stage"] for event in events],
             [

@@ -23,8 +23,10 @@ CLI_DEFAULTS: Dict[str, Dict[str, object]] = {
         "rerun_meta_layer": False,
         "skip_entities": False,
         "rerun_entities": False,
+        "max_workers": 4,
+        "section_max_workers": 4,
     },
-    "init-snapshot": {
+    "init": {
         "source": "",
         "chapter_id": "",
         "workspace": ".dreamdive",
@@ -51,6 +53,7 @@ CLI_DEFAULTS: Dict[str, Dict[str, object]] = {
     "background": {
         "workspace": ".dreamdive",
         "max_jobs": 0,
+        "max_workers": 4,
         "session_id": "default",
         "overwrite": True,
     },
@@ -60,6 +63,14 @@ CLI_DEFAULTS: Dict[str, Dict[str, object]] = {
         "session_id": "default",
         "output_session_id": "",
         "overwrite": False,
+    },
+    "synthesize": {
+        "workspace": ".dreamdive",
+        "session_id": "default",
+        "start_tick": None,
+        "end_tick": None,
+        "output_dir": "",
+        "chapter_number": None,
     },
     "migrate": {
         "database_url": "",
@@ -195,11 +206,17 @@ def apply_cli_config(
     command = parsed_args.command
     profile = getattr(parsed_args, "profile", "")
 
+    # Normalize legacy aliases
+    _COMMAND_ALIASES: Dict[str, str] = {"init-snapshot": "init"}
+    canonical_command = _COMMAND_ALIASES.get(command, command)
+
     merged: Dict[str, object] = {}
     merged.update(CLI_DEFAULTS.get("_common", {}))
-    merged.update(CLI_DEFAULTS.get(command, {}))
+    merged.update(CLI_DEFAULTS.get(canonical_command, {}))
     merged.update(_mapping(config_data, "defaults"))
-    merged.update(_mapping(config_data, command))
+    # Support both old and new config section names
+    merged.update(_mapping(config_data, "init-snapshot") if canonical_command == "init" else {})
+    merged.update(_mapping(config_data, canonical_command))
     if profile:
         merged.update(_mapping(config_data, "profiles", profile))
         merged.update(_mapping(config_data, "profiles", profile, command))

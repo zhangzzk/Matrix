@@ -11,7 +11,9 @@ from pydantic import BaseModel
 from dreamdive.ingestion.chunker import TextChunk, chunk_text, estimate_token_count
 from dreamdive.ingestion.models import (
     AccumulatedExtraction,
-    EntityExtractionPayload,
+    DramaticBlueprintRecord,
+
+    FateLayerRecord,
     MetaLayerRecord,
     StructuralScanPayload,
 )
@@ -66,7 +68,7 @@ class IngestionManifest:
     structural_scan: StructuralScanState = field(default_factory=StructuralScanState)
     chapters: Dict[str, ChapterCheckpoint] = field(default_factory=dict)
     meta_layer: AnalysisPassState = field(default_factory=AnalysisPassState)
-    entity_extraction: AnalysisPassState = field(default_factory=AnalysisPassState)
+    dramatic_blueprint: AnalysisPassState = field(default_factory=AnalysisPassState)
 
 
 IngestionProgressCallback = Callable[[str, Dict[str, Any]], None]
@@ -96,7 +98,7 @@ class ExtractionBackend(Protocol):
     ) -> object:
         ...
 
-    def run_entity_pass(
+    def run_dramatic_blueprint_pass(
         self,
         accumulated: AccumulatedExtraction,
     ) -> object:
@@ -121,7 +123,6 @@ class ManifestStore:
             structural_scan=structural,
             chapters=chapters,
             meta_layer=AnalysisPassState(**self._state_payload(data.get("meta_layer", {}))),
-            entity_extraction=AnalysisPassState(**self._state_payload(data.get("entity_extraction", {}))),
         )
 
     def save(self, manifest: IngestionManifest) -> None:
@@ -130,9 +131,8 @@ class ManifestStore:
             "structural_scan": asdict(manifest.structural_scan),
             "chapters": {chapter_id: asdict(checkpoint) for chapter_id, checkpoint in manifest.chapters.items()},
             "meta_layer": asdict(manifest.meta_layer),
-            "entity_extraction": asdict(manifest.entity_extraction),
         }
-        self.path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        self.path.write_text(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False), encoding="utf-8")
 
     @staticmethod
     def _state_payload(payload: dict) -> dict:
@@ -149,7 +149,7 @@ class ArtifactStore:
         self.base_dir.mkdir(parents=True, exist_ok=True)
         path = self.base_dir / "structural_scan.json"
         path.write_text(
-            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True),
+            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False),
             encoding="utf-8",
         )
 
@@ -174,7 +174,7 @@ class ArtifactStore:
         chapter_dir.mkdir(parents=True, exist_ok=True)
         path = chapter_dir / self._chapter_filename(chapter.chapter_id, chapter.order_index)
         path.write_text(
-            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True),
+            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False),
             encoding="utf-8",
         )
 
@@ -200,7 +200,7 @@ class ArtifactStore:
         self.base_dir.mkdir(parents=True, exist_ok=True)
         path = self.base_dir / "meta_layer.json"
         path.write_text(
-            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True),
+            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False),
             encoding="utf-8",
         )
 
@@ -216,23 +216,23 @@ class ArtifactStore:
         if path.exists():
             path.unlink()
 
-    def save_entity_extraction(self, payload: EntityExtractionPayload) -> None:
+    def save_fate(self, payload: FateLayerRecord) -> None:
         self.base_dir.mkdir(parents=True, exist_ok=True)
-        path = self.base_dir / "entities.json"
+        path = self.base_dir / "fate.json"
         path.write_text(
-            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True),
+            json.dumps(payload.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False),
             encoding="utf-8",
         )
 
-    def load_entity_extraction(self) -> Optional[EntityExtractionPayload]:
-        path = self.base_dir / "entities.json"
+    def load_fate(self) -> Optional[FateLayerRecord]:
+        path = self.base_dir / "fate.json"
         if not path.exists():
             return None
         data = json.loads(path.read_text(encoding="utf-8"))
-        return EntityExtractionPayload.model_validate(data)
+        return FateLayerRecord.model_validate(data)
 
-    def clear_entity_extraction(self) -> None:
-        path = self.base_dir / "entities.json"
+    def clear_fate(self) -> None:
+        path = self.base_dir / "fate.json"
         if path.exists():
             path.unlink()
 
@@ -405,21 +405,83 @@ class IngestionPipeline:
             self.artifact_store.save_meta_layer(validated)
         return validated
 
-    def run_entity_extraction(
+    def run_genre_taste(
+        self,
+        meta: MetaLayerRecord,
+        *,
+        web_searcher: object,
+        llm_client: object,
+        progress_callback: Optional[IngestionProgressCallback] = None,
+    ) -> MetaLayerRecord:
+        """Enrich the meta layer with a genre taste benchmark.
+
+        Runs a web search to find the most acclaimed authors in the
+        detected genre, then synthesises their shared taste into a
+        concise profile that guides the simulation.
+
+        Returns an updated MetaLayerRecord with ``genre_taste`` populated.
+        """
+        import asyncio as _asyncio
+
+        from dreamdive.ingestion.author_research import GenreTasteAgent
+
+        _emit_progress(progress_callback, "genre_taste")
+
+        # Already populated?  Skip unless empty.
+        if meta.genre_taste.taste_profile:
+            _emit_progress(progress_callback, "genre_taste", cached=True)
+            return meta
+
+        # Derive genres from authorial themes + tone
+        genres: List[str] = []
+        for theme in meta.authorial.themes:
+            if theme.name:
+                genres.append(theme.name)
+        if meta.authorial.dominant_tone:
+            genres.append(meta.authorial.dominant_tone)
+        if not genres:
+            return meta
+
+        style_desc = meta.writing_style.prose_description or ""
+        primary_lang = meta.language_context.primary_language or ""
+
+        agent = GenreTasteAgent(
+            web_searcher=web_searcher,  # type: ignore[arg-type]
+            llm_client=llm_client,  # type: ignore[arg-type]
+        )
+        try:
+            taste = _asyncio.run(
+                agent.research(
+                    genres=genres[:5],
+                    style_description=style_desc,
+                    primary_language=primary_lang,
+                )
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).warning("Genre taste research failed, skipping")
+            return meta
+
+        enriched = meta.model_copy(update={"genre_taste": taste})
+        if self.artifact_store is not None:
+            self.artifact_store.save_meta_layer(enriched)
+        return enriched
+
+    def run_dramatic_blueprint(
         self,
         accumulated: AccumulatedExtraction,
         backend: ExtractionBackend,
         *,
         force_rerun: bool = False,
         progress_callback: Optional[IngestionProgressCallback] = None,
-    ) -> EntityExtractionPayload:
+    ) -> FateLayerRecord:
         manifest = self.manifest_store.load()
         checksum = hashlib.sha256(
-            json.dumps(accumulated.model_dump(mode="json"), sort_keys=True).encode("utf-8")
+            json.dumps(accumulated.model_dump(mode="json"), sort_keys=True, ensure_ascii=False).encode("utf-8")
         ).hexdigest()
         _emit_progress(
             progress_callback,
-            "entity_extraction",
+            "dramatic_blueprint",
             character_count=len(accumulated.characters),
             event_count=len(accumulated.events),
         )
@@ -427,34 +489,35 @@ class IngestionPipeline:
         if (
             not force_rerun
             and (
-            manifest.entity_extraction.completed
-            and manifest.entity_extraction.checksum == checksum
-            and manifest.entity_extraction.version == INGESTION_CACHE_VERSION
+            manifest.dramatic_blueprint.completed
+            and manifest.dramatic_blueprint.checksum == checksum
+            and manifest.dramatic_blueprint.version == INGESTION_CACHE_VERSION
             )
         ):
             _emit_progress(
                 progress_callback,
-                "entity_extraction",
+                "dramatic_blueprint",
                 character_count=len(accumulated.characters),
                 event_count=len(accumulated.events),
                 cached=True,
             )
             if self.artifact_store is not None:
-                saved = self.artifact_store.load_entity_extraction()
+                saved = self.artifact_store.load_fate()
                 if saved is not None:
                     return saved
 
-        raw = backend.run_entity_pass(accumulated)
-        validated = self.validator.validate_payload(raw, EntityExtractionPayload)
-        manifest.entity_extraction = AnalysisPassState(
+        raw = backend.run_dramatic_blueprint_pass(accumulated)
+        validated = self.validator.validate_payload(raw, DramaticBlueprintRecord)
+        fate = FateLayerRecord(extracted=validated)
+        manifest.dramatic_blueprint = AnalysisPassState(
             checksum=checksum,
             completed=True,
             version=INGESTION_CACHE_VERSION,
         )
         self.manifest_store.save(manifest)
         if self.artifact_store is not None:
-            self.artifact_store.save_entity_extraction(validated)
-        return validated
+            self.artifact_store.save_fate(fate)
+        return fate
 
     def run_chapter_passes(
         self,
@@ -465,6 +528,7 @@ class IngestionPipeline:
         force_rerun: bool = False,
         progress_callback: Optional[IngestionProgressCallback] = None,
         max_workers: int = 4,
+        section_max_workers: int = 1,
     ) -> AccumulatedExtraction:
         accumulated = initial_accumulated or AccumulatedExtraction()
         if force_rerun:
@@ -493,12 +557,13 @@ class IngestionPipeline:
                     chapter_count=chapter_count,
                     force_rerun=force_rerun,
                     progress_callback=progress_callback,
+                    section_max_workers=section_max_workers,
                 )
                 accumulated = result.accumulated
             return accumulated
 
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        
+
         # In parallel mode, we process all chapters concurrently.
         # Note: Since they are independent extracts, we merge them at the end.
         results: List[ChapterRunResult] = []
@@ -514,6 +579,7 @@ class IngestionPipeline:
                     chapter_count=chapter_count,
                     force_rerun=force_rerun,
                     progress_callback=progress_callback,
+                    section_max_workers=section_max_workers,
                 ): chapter
                 for i, chapter in enumerate(ordered_chapters)
             }
@@ -542,6 +608,7 @@ class IngestionPipeline:
         chapter_count: int | None = None,
         force_rerun: bool = False,
         progress_callback: Optional[IngestionProgressCallback] = None,
+        section_max_workers: int = 1,
     ) -> ChapterRunResult:
         manifest = self.manifest_store.load()
         checkpoint = manifest.chapters.get(chapter.chapter_id)
@@ -576,18 +643,49 @@ class IngestionPipeline:
                 accumulated=restored or accumulated,
             )
 
-        validated = accumulated
-        for section in self._chapter_sections(chapter):
-            validated = self._run_section_with_fallback(
-                section=section,
-                backend=backend,
-                accumulated=validated,
-                structural_scan=structural_scan,
-                chapter_title=chapter_title,
-                chapter_index=chapter_index,
-                chapter_count=chapter_count,
-                progress_callback=progress_callback,
-            )
+        sections = self._chapter_sections(chapter)
+
+        if section_max_workers > 1 and len(sections) > 1:
+            # Parallel section processing: extract each section independently, then merge.
+            from concurrent.futures import ThreadPoolExecutor, as_completed as _as_completed
+
+            section_results: List[AccumulatedExtraction] = []
+            with ThreadPoolExecutor(max_workers=min(len(sections), section_max_workers)) as pool:
+                future_to_idx = {
+                    pool.submit(
+                        self._run_section_with_fallback,
+                        section=section,
+                        backend=backend,
+                        accumulated=accumulated,
+                        structural_scan=structural_scan,
+                        chapter_title=chapter_title,
+                        chapter_index=chapter_index,
+                        chapter_count=chapter_count,
+                        progress_callback=progress_callback,
+                    ): idx
+                    for idx, section in enumerate(sections)
+                }
+                indexed_results = []
+                for future in _as_completed(future_to_idx):
+                    indexed_results.append((future_to_idx[future], future.result()))
+            indexed_results.sort(key=lambda pair: pair[0])
+            validated = accumulated
+            for _, section_accumulated in indexed_results:
+                validated = merge_accumulated_extraction(validated, section_accumulated)
+        else:
+            validated = accumulated
+            for section in sections:
+                validated = self._run_section_with_fallback(
+                    section=section,
+                    backend=backend,
+                    accumulated=validated,
+                    structural_scan=structural_scan,
+                    chapter_title=chapter_title,
+                    chapter_index=chapter_index,
+                    chapter_count=chapter_count,
+                    progress_callback=progress_callback,
+                )
+
         manifest.chapters[chapter.chapter_id] = ChapterCheckpoint(
             chapter_id=chapter.chapter_id,
             checksum=chapter.checksum,

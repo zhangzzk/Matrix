@@ -19,6 +19,7 @@ from dreamdive.schemas import (
     AgentBeatPayload,
     BackgroundEventPayload,
     BatchedTrajectoryProjectionPayload,
+    BatchedUnifiedInitPayload,
     GoalSeedPayload,
     GoalCollisionBatchPayload,
     NarrativeArcUpdatePayload,
@@ -28,6 +29,8 @@ from dreamdive.schemas import (
     SnapshotInference,
     StateUpdatePayload,
     TrajectoryProjectionPayload,
+    UnifiedInitPayload,
+    UnifiedProjectionPayload,
 )
 
 TModel = TypeVar("TModel", bound=BaseModel)
@@ -121,6 +124,17 @@ class StructuredLLMClient:
         """Merge issue and success records from *other* into this client."""
         self.issue_records.extend(other.issue_records)
         self.success_records.extend(other.success_records)
+
+    async def call_text(self, prompt: PromptRequest) -> str:
+        """Call the LLM and return the raw text response."""
+        for profile in self.profiles:
+            for attempt in range(self.retry_attempts):
+                try:
+                    return await self.transport.complete(profile, prompt)
+                except Exception:
+                    await asyncio.sleep(self.retry_delay_seconds)
+                    continue
+        raise RuntimeError("All LLM profiles exhausted for call_text")
 
     async def call_json(self, prompt: PromptRequest, schema: type[TModel]) -> TModel:
         last_error: Optional[Exception] = None
@@ -432,12 +446,18 @@ def _normalize_payload_for_schema(data: Any, schema: type[BaseModel]) -> Any:
         return _normalize_snapshot_inference_payload(data)
     if schema is GoalSeedPayload:
         return _normalize_goal_seed_payload(data)
+    if schema is UnifiedInitPayload:
+        return _normalize_unified_init_payload(data)
+    if schema is BatchedUnifiedInitPayload:
+        return _normalize_batched_unified_init_payload(data)
     if schema is TrajectoryProjectionPayload:
         return _normalize_trajectory_projection_payload(data)
     if schema is BatchedTrajectoryProjectionPayload:
         return _normalize_batched_trajectory_projection_payload(data)
     if schema is GoalCollisionBatchPayload:
         return _normalize_goal_collision_batch_payload(data)
+    if schema is UnifiedProjectionPayload:
+        return _normalize_unified_projection_payload(data)
     if schema is BackgroundEventPayload:
         return _normalize_background_event_payload(data)
     if schema is SceneSetupPayload:
@@ -457,14 +477,57 @@ def _normalize_trajectory_projection_payload(data: Any) -> Any:
     if not isinstance(data, dict):
         return data
     normalized = dict(data)
-    if "greatest_fear_this_horizon" not in normalized and "greatest_fear" in normalized:
-        normalized["greatest_fear_this_horizon"] = normalized.get("greatest_fear", "")
-    contingencies = normalized.get("contingencies", [])
-    if isinstance(contingencies, list):
-        normalized["contingencies"] = [
-            _normalize_contingency(item)
-            for item in contingencies
-        ]
+
+    # Build intention: prefer new field, fall back to legacy primary_intention + motivation + considering
+    intention = str(normalized.get("intention") or "").strip()
+    if not intention:
+        parts: list[str] = []
+        primary = str(normalized.get("primary_intention", "")).strip()
+        if primary:
+            parts.append(primary)
+        motivation = str(normalized.get("motivation", "")).strip()
+        if motivation:
+            parts.append(motivation)
+        considering = str(normalized.get("considering", "")).strip()
+        if considering:
+            parts.append(considering)
+        # Also merge legacy fear/abandon/held_back fields
+        for key in ("greatest_fear_this_horizon", "greatest_fear",
+                     "abandon_condition", "held_back_impulse", "held_back"):
+            value = str(normalized.get(key, "")).strip()
+            if value:
+                parts.append(value)
+        intention = "; ".join(parts)
+    normalized["intention"] = intention
+
+    # Build next_steps: prefer new field, fall back to legacy immediate_next_action + contingencies
+    next_steps = str(normalized.get("next_steps") or "").strip()
+    if not next_steps:
+        parts = []
+        immediate = str(normalized.get("immediate_next_action", "")).strip()
+        if immediate:
+            parts.append(immediate)
+        contingencies = normalized.get("contingencies", [])
+        if isinstance(contingencies, list):
+            for item in contingencies:
+                if isinstance(item, dict):
+                    trigger = str(item.get("trigger", "")).strip()
+                    response = str(item.get("response", "")).strip()
+                    if trigger or response:
+                        parts.append(f"{trigger}: {response}".strip(": "))
+                elif isinstance(item, str) and item.strip():
+                    parts.append(item.strip())
+        next_steps = "; ".join(parts)
+    normalized["next_steps"] = next_steps
+
+    normalized.setdefault("projection_horizon", "")
+
+    # Remove legacy fields
+    for key in ("primary_intention", "motivation", "immediate_next_action",
+                "contingencies", "considering", "greatest_fear_this_horizon",
+                "greatest_fear", "abandon_condition", "held_back_impulse", "held_back"):
+        normalized.pop(key, None)
+
     return normalized
 
 
@@ -592,11 +655,25 @@ def _normalize_snapshot_inference_payload(data: Any) -> Any:
         return data
     normalized = dict(data)
 
-    emotional_state = normalized.get(
-        "emotional_state",
-        normalized.get("psychological_state", normalized.get("emotion", {})),
-    )
-    normalized["emotional_state"] = _normalize_emotional_state_payload(emotional_state)
+    # Build emotional_summary: accept new field or fall back to legacy nested emotional_state
+    emotional_summary = normalized.get("emotional_summary") or ""
+    if not str(emotional_summary).strip():
+        legacy_emotional = normalized.get(
+            "emotional_state",
+            normalized.get("psychological_state", normalized.get("emotion", {})),
+        )
+        if isinstance(legacy_emotional, dict):
+            emotional_summary = str(
+                legacy_emotional.get("dominant")
+                or legacy_emotional.get("dominant_emotion")
+                or legacy_emotional.get("primary_emotion")
+                or legacy_emotional.get("summary")
+                or legacy_emotional.get("state")
+                or ""
+            )
+        elif isinstance(legacy_emotional, str):
+            emotional_summary = legacy_emotional
+    normalized["emotional_summary"] = str(emotional_summary).strip()
 
     normalized["immediate_tension"] = str(
         normalized.get("immediate_tension")
@@ -613,11 +690,60 @@ def _normalize_snapshot_inference_payload(data: Any) -> Any:
         or ""
     )
 
-    physical_state = normalized.get("physical_state", normalized.get("body_state", {}))
-    normalized["physical_state"] = _normalize_physical_state_payload(physical_state)
+    # Build physical_status + location: accept new fields or fall back to legacy nested physical_state
+    physical_status = normalized.get("physical_status") or ""
+    location = normalized.get("location") or ""
+    legacy_physical = normalized.get("physical_state", normalized.get("body_state", {}))
+    if isinstance(legacy_physical, dict):
+        if not str(physical_status).strip():
+            physical_status = str(
+                legacy_physical.get("current_activity")
+                or legacy_physical.get("injuries_or_constraints")
+                or legacy_physical.get("constraints")
+                or legacy_physical.get("bodily_condition")
+                or legacy_physical.get("state")
+                or legacy_physical.get("activity")
+                or legacy_physical.get("doing")
+                or ""
+            )
+        if not str(location).strip():
+            location = str(legacy_physical.get("location") or legacy_physical.get("place") or "")
+    elif isinstance(legacy_physical, str) and not str(physical_status).strip():
+        physical_status = legacy_physical
+    normalized["physical_status"] = str(physical_status).strip()
+    normalized["location"] = str(location).strip()
 
-    knowledge_state = normalized.get("knowledge_state", normalized.get("cognitive_state", {}))
-    normalized["knowledge_state"] = _normalize_knowledge_state_payload(knowledge_state)
+    # Build knowledge: accept new field or fall back to legacy nested knowledge_state
+    knowledge = normalized.get("knowledge")
+    if knowledge is None:
+        legacy_knowledge = normalized.get("knowledge_state", normalized.get("cognitive_state", {}))
+        if isinstance(legacy_knowledge, dict):
+            new_knowledge = legacy_knowledge.get(
+                "new_knowledge",
+                legacy_knowledge.get("known_now", legacy_knowledge.get("realizations", [])),
+            )
+            active_misbeliefs = legacy_knowledge.get(
+                "active_misbeliefs",
+                legacy_knowledge.get("misbeliefs", legacy_knowledge.get("false_assumptions", [])),
+            )
+            if isinstance(new_knowledge, str):
+                new_knowledge = [new_knowledge] if new_knowledge.strip() else []
+            if isinstance(active_misbeliefs, str):
+                active_misbeliefs = [active_misbeliefs] if active_misbeliefs.strip() else []
+            knowledge = _string_list(new_knowledge) + _string_list(active_misbeliefs)
+        elif isinstance(legacy_knowledge, str):
+            knowledge = [legacy_knowledge] if legacy_knowledge.strip() else []
+        else:
+            knowledge = []
+    if isinstance(knowledge, str):
+        knowledge = [knowledge] if knowledge.strip() else []
+    normalized["knowledge"] = _string_list(knowledge)
+
+    # Remove legacy fields so they don't cause validation errors
+    for key in ("emotional_state", "physical_state", "knowledge_state",
+                "psychological_state", "emotion", "body_state", "cognitive_state"):
+        normalized.pop(key, None)
+
     return normalized
 
 
@@ -647,12 +773,52 @@ def _normalize_goal_seed_payload(data: Any) -> Any:
     return normalized
 
 
+def _normalize_unified_init_payload(data: Any) -> Any:
+    """Normalize UnifiedInitPayload by applying snapshot inference + goal seed normalization."""
+    if not isinstance(data, dict):
+        return data
+    normalized = _normalize_snapshot_inference_payload(data)
+    goal_stack = normalized.get("goal_stack", normalized.get("goals", []))
+    if isinstance(goal_stack, dict):
+        goal_stack = list(goal_stack.values())
+    normalized["goal_stack"] = [
+        _normalize_goal_seed_goal(item, index)
+        for index, item in enumerate(_ensure_list(goal_stack))
+    ]
+    normalized["actively_avoiding"] = str(
+        normalized.get("actively_avoiding")
+        or normalized.get("avoiding")
+        or normalized.get("what_they_are_avoiding")
+        or ""
+    )
+    normalized["most_uncertain_relationship"] = str(
+        normalized.get("most_uncertain_relationship")
+        or normalized.get("uncertain_relationship")
+        or normalized.get("relationship_uncertainty")
+        or ""
+    )
+    return normalized
+
+
+def _normalize_batched_unified_init_payload(data: Any) -> Any:
+    """Normalize BatchedUnifiedInitPayload by normalizing each character entry."""
+    if not isinstance(data, dict):
+        return data
+    normalized = dict(data)
+    characters = normalized.get("characters", {})
+    if isinstance(characters, dict):
+        normalized["characters"] = {
+            key: _normalize_unified_init_payload(value)
+            for key, value in characters.items()
+        }
+    return normalized
+
+
 def _normalize_emotional_state_payload(value: Any) -> dict[str, Any]:
     if isinstance(value, str):
         return {
             "dominant": value,
             "secondary": [],
-            "confidence": 0.5,
         }
     payload = dict(value) if isinstance(value, dict) else {}
     dominant = (
@@ -666,28 +832,21 @@ def _normalize_emotional_state_payload(value: Any) -> dict[str, Any]:
     secondary = payload.get("secondary", payload.get("secondary_emotions", []))
     if isinstance(secondary, str):
         secondary = [secondary]
-    confidence = _coerce_float(
-        payload.get("confidence", payload.get("certainty"))
-    )
     return {
         "dominant": str(dominant),
         "secondary": _string_list(secondary),
-        "confidence": confidence if confidence is not None else 0.5,
     }
 
 
 def _normalize_physical_state_payload(value: Any) -> dict[str, Any]:
     if isinstance(value, str):
         return {
-            "energy": 0.5,
             "injuries_or_constraints": value,
             "location": "",
             "current_activity": "",
         }
     payload = dict(value) if isinstance(value, dict) else {}
-    energy = _coerce_float(payload.get("energy", payload.get("stamina")))
     return {
-        "energy": energy if energy is not None else 0.5,
         "injuries_or_constraints": str(
             payload.get("injuries_or_constraints")
             or payload.get("constraints")
@@ -735,54 +894,55 @@ def _normalize_goal_seed_goal(item: Any, index: int) -> dict[str, Any]:
         text = str(item).strip()
         return {
             "priority": index + 1,
-            "goal": text,
-            "motivation": "",
-            "obstacle": "",
+            "description": text,
+            "challenge": "",
             "time_horizon": "today",
-            "emotional_charge": "",
-            "abandon_condition": "",
         }
     priority = _coerce_int(item.get("priority"))
+
+    # Build description: prefer new field, fall back to legacy goal+motivation+emotional_charge
+    description = str(item.get("description") or "").strip()
+    if not description:
+        parts: list[str] = []
+        for key in ("goal", "action", "actionable_goal", "intent", "objective"):
+            val = str(item.get(key) or "").strip()
+            if val:
+                parts.append(val)
+                break
+        for key in ("motivation", "why", "reason", "drive"):
+            val = str(item.get(key) or "").strip()
+            if val:
+                parts.append(val)
+                break
+        for key in ("emotional_charge", "emotion", "stakes", "affect"):
+            val = str(item.get(key) or "").strip()
+            if val:
+                parts.append(val)
+                break
+        description = "; ".join(parts)
+
+    # Build challenge: prefer new field, fall back to legacy obstacle+abandon_condition
+    challenge = str(item.get("challenge") or "").strip()
+    if not challenge:
+        parts2: list[str] = []
+        for key in ("obstacle", "risk", "constraint", "friction"):
+            val = str(item.get(key) or "").strip()
+            if val:
+                parts2.append(val)
+                break
+        for key in ("abandon_condition", "failure_condition", "stop_when", "reconsider_when"):
+            val = str(item.get(key) or "").strip()
+            if val:
+                parts2.append(val)
+                break
+        challenge = "; ".join(parts2)
+
     return {
         "priority": priority if priority is not None and priority >= 1 else index + 1,
-        "goal": str(
-            item.get("goal")
-            or item.get("action")
-            or item.get("actionable_goal")
-            or item.get("intent")
-            or item.get("objective")
-            or ""
-        ),
-        "motivation": str(
-            item.get("motivation")
-            or item.get("why")
-            or item.get("reason")
-            or item.get("drive")
-            or ""
-        ),
-        "obstacle": str(
-            item.get("obstacle")
-            or item.get("risk")
-            or item.get("constraint")
-            or item.get("friction")
-            or ""
-        ),
+        "description": description,
+        "challenge": challenge,
         "time_horizon": _normalize_time_horizon_value(
             item.get("time_horizon", item.get("horizon"))
-        ),
-        "emotional_charge": str(
-            item.get("emotional_charge")
-            or item.get("emotion")
-            or item.get("stakes")
-            or item.get("affect")
-            or ""
-        ),
-        "abandon_condition": str(
-            item.get("abandon_condition")
-            or item.get("failure_condition")
-            or item.get("stop_when")
-            or item.get("reconsider_when")
-            or ""
         ),
     }
 
@@ -835,6 +995,40 @@ def _normalize_goal_collision_batch_payload(data: Any) -> Any:
     return normalized
 
 
+def _normalize_unified_projection_payload(data: Any) -> Any:
+    if not isinstance(data, dict):
+        return data
+    normalized = dict(data)
+
+    # Handle common alias: LLM may return "projections" instead of "trajectories"
+    trajectories = normalized.get("trajectories", normalized.get("projections", {}))
+    if isinstance(trajectories, dict):
+        normalized["trajectories"] = {
+            character_id: _normalize_trajectory_projection_payload(payload)
+            for character_id, payload in trajectories.items()
+        }
+    else:
+        normalized["trajectories"] = {}
+
+    # Normalize collision fields using existing helpers
+    goal_tensions = normalized.get("goal_tensions", normalized.get("tensions", []))
+    solo_seeds = normalized.get("solo_seeds", [])
+    world_events = normalized.get("world_events", normalized.get("events", []))
+    normalized["goal_tensions"] = [
+        _normalize_goal_tension_record(item, index)
+        for index, item in enumerate(goal_tensions)
+    ]
+    normalized["solo_seeds"] = [
+        _normalize_solo_seed_suggestion(item)
+        for item in solo_seeds
+    ]
+    normalized["world_events"] = [
+        _normalize_world_event_suggestion(item)
+        for item in world_events
+    ]
+    return normalized
+
+
 def _normalize_background_event_payload(data: Any) -> Any:
     if not isinstance(data, dict):
         return data
@@ -853,18 +1047,9 @@ def _normalize_background_event_payload(data: Any) -> Any:
         _normalize_background_agent_outcome(item, index)
         for index, item in enumerate(outcomes)
     ]
-    relationship_deltas = normalized.get("relationship_deltas", [])
-    if isinstance(relationship_deltas, dict):
-        relationship_deltas = [
-            {
-                "from_id": key,
-                "to_id": "",
-                "change": value if isinstance(value, str) else json.dumps(value, ensure_ascii=False),
-            }
-            for key, value in relationship_deltas.items()
-        ]
-    normalized["relationship_deltas"] = relationship_deltas
-    normalized.setdefault("unexpected", normalized.get("twist", ""))
+    # Silently drop removed fields for backward compat
+    for key in ("relationship_deltas", "unexpected", "twist"):
+        normalized.pop(key, None)
     return normalized
 
 
@@ -956,7 +1141,6 @@ def _normalize_state_update_payload(data: Any) -> Any:
             or emotional_delta.get("dominant")
             or ""
         ),
-        "underneath": emotional_delta.get("underneath") or emotional_delta.get("from") or "",
         "shift_reason": (
             emotional_delta.get("shift_reason")
             or emotional_delta.get("reason")
@@ -975,7 +1159,7 @@ def _normalize_state_update_payload(data: Any) -> Any:
     new_goal = goal_stack_update.get("new_goal")
     if new_goal is None:
         candidate = goal_stack_update.get("current_primary_goal")
-        if isinstance(candidate, dict) and candidate.get("goal"):
+        if isinstance(candidate, dict) and (candidate.get("description") or candidate.get("goal")):
             new_goal = candidate
     if "top_goal_status" in goal_stack_update:
         top_goal_status = goal_stack_update["top_goal_status"]
@@ -992,7 +1176,7 @@ def _normalize_state_update_payload(data: Any) -> Any:
     normalized["goal_stack_update"] = {
         "top_goal_status": top_goal_status,
         "top_goal_still_priority": top_goal_still_priority,
-        "new_goal": new_goal if isinstance(new_goal, dict) else None,
+        "new_goal": _normalize_goal_seed_goal(new_goal, 0) if isinstance(new_goal, dict) else None,
         "resolved_goal": resolved_goal,
     }
 
@@ -1136,16 +1320,10 @@ def _normalize_goal_tension_record(item: Any, index: int) -> dict[str, Any]:
             "description": str(item),
             "information_asymmetry": {},
             "stakes": {},
-            "emergence_probability": 0.5,
+            "likelihood": "",
             "salience_factors": [],
         }
-    emergence_probability = item.get("emergence_probability")
-    if emergence_probability is None:
-        emergence_probability = item.get("severity", 0.5)
-    try:
-        emergence_probability = float(emergence_probability)
-    except (TypeError, ValueError):
-        emergence_probability = 0.5
+    likelihood = str(item.get("likelihood") or item.get("emergence_probability") or item.get("severity") or "")
     return {
         "tension_id": str(item.get("tension_id") or item.get("id") or f"tension_{index + 1:03d}"),
         "type": str(item.get("type") or item.get("tension_type") or "goal"),
@@ -1154,7 +1332,7 @@ def _normalize_goal_tension_record(item: Any, index: int) -> dict[str, Any]:
         "description": str(item.get("description") or item.get("summary") or ""),
         "information_asymmetry": item.get("information_asymmetry") if isinstance(item.get("information_asymmetry"), dict) else {},
         "stakes": item.get("stakes") if isinstance(item.get("stakes"), dict) else {},
-        "emergence_probability": max(0.0, min(1.0, emergence_probability)),
+        "likelihood": likelihood,
         "salience_factors": list(item.get("salience_factors") or []),
     }
 
@@ -1422,11 +1600,16 @@ def _normalize_character_relationship_state(item: Any) -> dict[str, Any]:
             or ""
         ),
         "type": item.get("type", item.get("relation")),
-        "trust": _coerce_float(item.get("trust")),
-        "sentiment": item.get("sentiment", item.get("sentiment_shift")),
+        "summary": str(
+            item.get("summary")
+            or item.get("sentiment")
+            or item.get("sentiment_shift")
+            or item.get("trust")
+            or ""
+        ),
         "shared_history_summary": item.get(
             "shared_history_summary",
-            item.get("reason", item.get("summary")),
+            item.get("reason", ""),
         ),
     }
 
@@ -1649,15 +1832,11 @@ def _normalize_background_agent_outcome(item: Any, index: int) -> dict[str, str]
     if not isinstance(item, dict):
         return {
             "agent_id": f"agent_{index + 1:03d}",
-            "goal_status": "",
-            "new_knowledge": "",
-            "emotional_delta": str(item),
+            "new_knowledge": str(item),
         }
     return {
         "agent_id": str(item.get("agent_id") or item.get("character_id") or f"agent_{index + 1:03d}"),
-        "goal_status": str(item.get("goal_status") or item.get("status") or ""),
         "new_knowledge": str(item.get("new_knowledge") or ""),
-        "emotional_delta": str(item.get("emotional_delta") or item.get("emotion") or ""),
     }
 
 
@@ -1666,8 +1845,13 @@ def _normalize_state_update_relationship_payload(target_id: str, payload: Any) -
         payload = {}
     return {
         "target_id": str(payload.get("target_id") or payload.get("target") or target_id),
-        "trust_delta": _coerce_float(payload.get("trust_delta"), default=0.0),
-        "sentiment_shift": str(payload.get("sentiment_shift") or payload.get("status") or payload.get("change") or ""),
+        "summary": str(
+            payload.get("summary")
+            or payload.get("sentiment_shift")
+            or payload.get("status")
+            or payload.get("change")
+            or ""
+        ),
         "pinned": bool(payload.get("pinned", False)),
         "pin_reason": str(payload.get("pin_reason") or payload.get("note") or payload.get("reasoning") or ""),
     }
@@ -1939,20 +2123,9 @@ def _string_values(value: Any) -> list[str]:
 
 def _strings_from_trajectory_payload(data: dict[str, Any]) -> list[str]:
     strings = [
-        str(data.get("primary_intention", "")),
-        str(data.get("motivation", "")),
-        str(data.get("immediate_next_action", "")),
-        str(data.get("greatest_fear_this_horizon", "")),
-        str(data.get("abandon_condition", "")),
-        str(data.get("held_back_impulse", "")),
+        str(data.get("intention", "") or data.get("primary_intention", "")),
+        str(data.get("next_steps", "") or data.get("immediate_next_action", "")),
     ]
-    contingencies = data.get("contingencies", [])
-    if isinstance(contingencies, list):
-        for item in contingencies:
-            if not isinstance(item, dict):
-                continue
-            strings.append(str(item.get("trigger", "")))
-            strings.append(str(item.get("response", "")))
     return strings
 
 
@@ -1988,19 +2161,11 @@ def _strings_from_goal_collision_payload(data: dict[str, Any]) -> list[str]:
 
 
 def _strings_from_background_event_payload(data: dict[str, Any]) -> list[str]:
-    strings = [str(data.get("narrative_summary", "")), str(data.get("unexpected", ""))]
+    strings = [str(data.get("narrative_summary", ""))]
     for item in data.get("outcomes", []):
         if not isinstance(item, dict):
             continue
-        strings.extend(
-            [
-                str(item.get("new_knowledge", "")),
-                str(item.get("emotional_delta", "")),
-            ]
-        )
-    for item in data.get("relationship_deltas", []):
-        if isinstance(item, dict):
-            strings.append(str(item.get("change", "")))
+        strings.append(str(item.get("new_knowledge", "")))
     return strings
 
 
@@ -2038,11 +2203,8 @@ def _strings_from_state_update_payload(data: dict[str, Any]) -> list[str]:
         if isinstance(new_goal, dict):
             strings.extend(
                 [
-                    str(new_goal.get("goal", "")),
-                    str(new_goal.get("motivation", "")),
-                    str(new_goal.get("obstacle", "")),
-                    str(new_goal.get("emotional_charge", "")),
-                    str(new_goal.get("abandon_condition", "")),
+                    str(new_goal.get("description", "") or new_goal.get("goal", "")),
+                    str(new_goal.get("challenge", "") or new_goal.get("obstacle", "")),
                 ]
             )
         strings.append(str(goal_stack_update.get("resolved_goal", "")))
@@ -2051,7 +2213,7 @@ def _strings_from_state_update_payload(data: dict[str, Any]) -> list[str]:
             continue
         strings.extend(
             [
-                str(item.get("sentiment_shift", "")),
+                str(item.get("summary", "")),
                 str(item.get("pin_reason", "")),
             ]
         )
